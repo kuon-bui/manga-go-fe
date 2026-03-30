@@ -9,6 +9,8 @@ Welcome to the Manga Go Frontend documentation! This directory contains comprehe
 - File and component naming conventions
 - TypeScript usage and type safety
 - Code formatting with Prettier
+- **Mobile-first responsive design patterns**
+- **Touch-friendly design guidelines**
 - ESLint rules and best practices
 - Import organization
 - Error handling patterns
@@ -17,7 +19,8 @@ Welcome to the Manga Go Frontend documentation! This directory contains comprehe
 - Are new to the project
 - Need to understand naming conventions
 - Want to know how to format code
-- Need to understand TypeScript patterns used in the project
+- **Need mobile-first responsive design guidelines**
+- Want to understand TypeScript patterns used in the project
 
 ---
 
@@ -29,7 +32,9 @@ Welcome to the Manga Go Frontend documentation! This directory contains comprehe
 - Routing with Next.js App Router
 - Data flow patterns
 - Styling architecture with Tailwind CSS
-- Performance considerations
+- **Mobile-first responsive strategy**
+- **Performance optimizations for mobile**
+- **Touch interactions and gestures**
 
 **Read this if you:**
 - Want to understand the overall project structure
@@ -37,6 +42,8 @@ Welcome to the Manga Go Frontend documentation! This directory contains comprehe
 - Want to understand how data flows through the app
 - Need to understand Server Components vs Client Components
 - Are working on routing or navigation
+- **Need mobile-first architecture patterns**
+- **Want to optimize for mobile performance**
 
 ---
 
@@ -46,6 +53,10 @@ Welcome to the Manga Go Frontend documentation! This directory contains comprehe
 - Component structure templates
 - Props design best practices
 - Styling with Tailwind CSS
+- **Comprehensive responsive design patterns**
+- **Mobile-first component development**
+- **Touch-optimized components**
+- **Responsive navigation, forms, and modals**
 - Accessibility guidelines
 - Performance optimization
 - Common patterns (loading states, compound components)
@@ -54,6 +65,9 @@ Welcome to the Manga Go Frontend documentation! This directory contains comprehe
 - Are creating new components
 - Need component structure templates
 - Want to understand the variant pattern
+- **Need responsive component examples**
+- **Want mobile-first design patterns**
+- **Need touch-optimized UI components**
 - Need accessibility guidelines
 - Want to optimize component performance
 - Need examples of common component patterns
@@ -110,6 +124,9 @@ Welcome to the Manga Go Frontend documentation! This directory contains comprehe
 |------|---------------|
 | Creating a new page | [ARCHITECTURE.md](./ARCHITECTURE.md) - Routing section |
 | Creating a UI component | [COMPONENT_GUIDELINES.md](./COMPONENT_GUIDELINES.md) - UI Components |
+| **Building mobile-first components** | [COMPONENT_GUIDELINES.md](./COMPONENT_GUIDELINES.md) - Responsive Design |
+| **Implementing responsive layouts** | [CODING_CONVENTIONS.md](./CODING_CONVENTIONS.md) - Responsive Design |
+| **Optimizing for mobile performance** | [ARCHITECTURE.md](./ARCHITECTURE.md) - Mobile-First Strategy |
 | Adding global state | [STATE_MANAGEMENT.md](./STATE_MANAGEMENT.md) - Store Structure |
 | Styling a component | [COMPONENT_GUIDELINES.md](./COMPONENT_GUIDELINES.md) - Styling section |
 | Implementing dark mode | [ARCHITECTURE.md](./ARCHITECTURE.md) - Dark Mode section |
@@ -132,18 +149,21 @@ Welcome to the Manga Go Frontend documentation! This directory contains comprehe
 1. ✅ Follow naming conventions (kebab-case files, PascalCase components)
 2. ✅ Use TypeScript types for all props and functions
 3. ✅ Use `@/` imports for internal modules
-4. ✅ Include dark mode styles
-5. ✅ Make components responsive
-6. ✅ Add accessibility attributes
+4. ✅ **Start with mobile styles (mobile-first approach)**
+5. ✅ **Ensure touch targets are minimum 44x44px**
+6. ✅ Include dark mode styles
+7. ✅ Make components responsive
+8. ✅ Add accessibility attributes
 
 ### Before Committing
 
 1. ✅ Run `npm run format` (Prettier)
 2. ✅ Run `npm run lint` (ESLint)
 3. ✅ Test your changes manually
-4. ✅ Check responsive design
-5. ✅ Verify dark mode works
-6. ✅ Ensure accessibility
+4. ✅ **Check responsive design on mobile, tablet, desktop**
+5. ✅ **Test touch interactions on mobile devices or DevTools**
+6. ✅ Verify dark mode works
+7. ✅ Ensure accessibility
 
 ## 📖 Documentation Standards
 

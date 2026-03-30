@@ -10,6 +10,8 @@ This document provides a comprehensive overview of the Manga Go Frontend archite
 - [Routing](#routing)
 - [Data Flow](#data-flow)
 - [Styling Architecture](#styling-architecture)
+- [Mobile-First Responsive Strategy](#mobile-first-responsive-strategy)
+- [Performance Considerations](#performance-considerations)
 
 ## Technology Stack
 
@@ -403,6 +405,166 @@ theme: {
   },
 }
 ```
+
+## Mobile-First Responsive Strategy
+
+### Philosophy
+
+**Manga Go prioritizes mobile users.** The majority of manga readers access content on mobile devices, so our architecture is built mobile-first from the ground up.
+
+### Core Strategy
+
+1. **Mobile is the baseline** - All components start with mobile styles (320px+)
+2. **Progressive enhancement** - Add complexity and features for larger screens
+3. **Performance first** - Optimize bundle size, images, and network requests for mobile
+4. **Touch-optimized** - All interactions designed for touch, enhanced for mouse/keyboard
+
+### Implementation Guidelines
+
+#### Component Development
+```typescript
+// ✅ Correct: Mobile-first component
+export function MangaCard() {
+  return (
+    <div
+      className={cn(
+        // Mobile base styles (no prefix)
+        'flex flex-col gap-3 p-3',
+        // Tablet enhancements
+        'sm:gap-4 sm:p-4',
+        // Desktop enhancements
+        'lg:hover:shadow-lg lg:transition-shadow'
+      )}
+    >
+      {/* Content */}
+    </div>
+  );
+}
+```
+
+#### Layout Strategy
+
+```typescript
+// Mobile: Vertical stack
+// Tablet: 2 columns
+// Desktop: 3-4 columns
+<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 lg:grid-cols-3 xl:grid-cols-4">
+  {items.map((item) => <Card key={item.id} item={item} />)}
+</div>
+```
+
+#### Navigation Pattern
+
+- **Mobile**: Hamburger menu, full-screen overlay
+- **Tablet**: Condensed navigation bar
+- **Desktop**: Full horizontal navigation
+
+#### Content Priority
+
+On mobile, show:
+1. Most important content first (manga cover, title, latest chapter)
+2. Hide secondary information (detailed descriptions, metadata)
+3. Provide "Show more" interactions for additional content
+
+```typescript
+{/* Show full description only on desktop */}
+<p className="hidden lg:block lg:line-clamp-3">
+  {manga.description}
+</p>
+```
+
+### Performance Optimizations for Mobile
+
+#### Image Optimization
+```typescript
+<Image
+  src={manga.cover}
+  alt={manga.title}
+  width={300}
+  height={450}
+  // Load smaller images on mobile
+  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+  // Lazy load below-the-fold images
+  loading="lazy"
+  // Lower quality on mobile to save bandwidth
+  quality={isMobile ? 75 : 90}
+/>
+```
+
+#### Code Splitting for Mobile
+```typescript
+// Load heavy components only on desktop
+const AdvancedFilters = dynamic(() => import('./advanced-filters'), {
+  ssr: false,
+  loading: () => <Skeleton />,
+});
+
+export function SearchPage() {
+  const isDesktop = useMediaQuery('(min-width: 1024px)');
+
+  return (
+    <div>
+      <BasicSearch />
+      {isDesktop && <AdvancedFilters />}
+    </div>
+  );
+}
+```
+
+#### Bundle Size Management
+- Server Components by default (reduce client JS)
+- Dynamic imports for non-critical features
+- Tree-shake unused Tailwind classes
+- Optimize font loading for mobile
+
+### Touch Interactions
+
+#### Minimum Touch Targets
+All interactive elements must meet minimum touch target sizes:
+- **Minimum**: 44x44px (iOS/Android guidelines)
+- **Preferred**: 48x48px for primary actions
+
+```typescript
+// Touch-friendly button
+<button className="h-11 w-11 sm:h-10 sm:w-10">
+  <Icon />
+</button>
+```
+
+#### Swipe Gestures
+Implement swipe gestures for manga reading:
+- Swipe left/right to navigate chapters
+- Swipe up/down to scroll pages
+- Pinch to zoom on manga pages
+
+### Mobile Testing Strategy
+
+#### Required Testing
+- [ ] Test on actual mobile devices (iOS and Android)
+- [ ] Simulate slow 3G network (Network throttling in DevTools)
+- [ ] Test in portrait and landscape orientations
+- [ ] Test with touch interactions (tap, swipe, long-press)
+- [ ] Verify touch target sizes (minimum 44x44px)
+- [ ] Test form inputs on mobile keyboards
+- [ ] Verify scroll behavior and touch gestures
+
+#### Browser DevTools
+```bash
+# Chrome DevTools Device Emulation
+- iPhone SE (375x667) - Small mobile
+- iPhone 14 Pro (393x852) - Modern mobile
+- iPad (768x1024) - Tablet
+- Responsive mode (320px - 1920px)
+```
+
+### Accessibility on Mobile
+
+- Large enough tap targets (44x44px minimum)
+- Sufficient color contrast for outdoor viewing
+- Support for system font size settings
+- Screen reader optimization
+- Keyboard navigation support
+- Focus indicators visible on all devices
 
 ## Performance Considerations
 

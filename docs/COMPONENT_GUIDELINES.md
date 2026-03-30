@@ -8,6 +8,7 @@ This guide provides best practices and patterns for developing React components 
 - [Component Structure](#component-structure)
 - [Props Design](#props-design)
 - [Styling Components](#styling-components)
+- [Responsive Design](#responsive-design)
 - [Accessibility](#accessibility)
 - [Performance](#performance)
 - [Testing](#testing)
@@ -416,6 +417,573 @@ Always include dark mode variants:
 </div>
 ```
 
+## Responsive Design
+
+### Mobile-First Component Development
+
+**All components must be designed mobile-first.** Start with mobile styles and progressively enhance for larger screens. This ensures optimal experience for the majority of manga readers who use mobile devices.
+
+### Core Responsive Principles
+
+1. **Mobile is the default** - Base styles target mobile (320px+)
+2. **Progressive enhancement** - Add features/complexity for larger screens
+3. **Touch-first interactions** - Design for touch, enhance for mouse
+4. **Performance priority** - Optimize for mobile networks and devices
+5. **Content priority** - Show most important content first on mobile
+
+### Responsive Layout Patterns
+
+#### 1. Responsive Grid/List
+
+```typescript
+// Mobile: Single column, Tablet: 2 columns, Desktop: 3+ columns
+export function MangaGrid({ items }: { items: Manga[] }) {
+  return (
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 lg:grid-cols-3 xl:grid-cols-4">
+      {items.map((manga) => (
+        <MangaCard key={manga.id} manga={manga} />
+      ))}
+    </div>
+  );
+}
+
+// Mobile: Stack, Desktop: Horizontal list with scroll
+export function HorizontalList({ items }: { items: Item[] }) {
+  return (
+    <div className="flex flex-col gap-4 sm:flex-row sm:overflow-x-auto sm:gap-6">
+      {items.map((item) => (
+        <Card key={item.id} className="w-full flex-shrink-0 sm:w-64">
+          {/* Content */}
+        </Card>
+      ))}
+    </div>
+  );
+}
+```
+
+#### 2. Responsive Card Component
+
+```typescript
+import { type HTMLAttributes, forwardRef } from 'react';
+import { cn } from '@/lib/utils';
+import Image from 'next/image';
+
+interface MangaCardProps extends HTMLAttributes<HTMLDivElement> {
+  manga: Manga;
+  variant?: 'compact' | 'detailed';
+}
+
+// Mobile-first card that adapts layout based on screen size
+const MangaCard = forwardRef<HTMLDivElement, MangaCardProps>(
+  ({ manga, variant = 'compact', className, ...props }, ref) => {
+    return (
+      <div
+        ref={ref}
+        className={cn(
+          // Mobile: Vertical layout, compact
+          'flex flex-col gap-3 rounded-lg bg-white p-3 shadow-sm dark:bg-gray-800',
+          // Tablet+: More padding, larger gaps
+          'sm:gap-4 sm:p-4',
+          // Desktop: Enhanced shadows
+          'lg:shadow-md lg:hover:shadow-lg lg:transition-shadow',
+          className
+        )}
+        {...props}
+      >
+        {/* Image - Responsive aspect ratio */}
+        <div className="relative aspect-[3/4] w-full overflow-hidden rounded-md">
+          <Image
+            src={manga.coverImage}
+            alt={manga.title}
+            fill
+            className="object-cover"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          />
+        </div>
+
+        {/* Content - Responsive typography */}
+        <div className="flex flex-col gap-1 sm:gap-2">
+          <h3 className="line-clamp-2 text-sm font-semibold sm:text-base lg:text-lg">
+            {manga.title}
+          </h3>
+
+          {/* Show more details on larger screens */}
+          {variant === 'detailed' && (
+            <p className="hidden text-xs text-gray-600 dark:text-gray-400 sm:line-clamp-2 sm:block">
+              {manga.description}
+            </p>
+          )}
+
+          <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 sm:text-sm">
+            <span>{manga.genre}</span>
+            <span>•</span>
+            <span>Ch. {manga.latestChapter}</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+);
+
+MangaCard.displayName = 'MangaCard';
+
+export { MangaCard };
+```
+
+#### 3. Responsive Navigation
+
+```typescript
+'use client';
+
+import { useState } from 'react';
+import Link from 'next/link';
+import { cn } from '@/lib/utils';
+
+export function Navigation() {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <nav className="border-b bg-white dark:bg-gray-900">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header Bar */}
+        <div className="flex h-16 items-center justify-between sm:h-20">
+          {/* Logo - Responsive sizing */}
+          <Link
+            href="/"
+            className="text-lg font-bold sm:text-xl lg:text-2xl"
+          >
+            Manga Go
+          </Link>
+
+          {/* Desktop Navigation */}
+          <div className="hidden items-center gap-6 lg:flex lg:gap-8">
+            <NavLink href="/browse">Browse</NavLink>
+            <NavLink href="/popular">Popular</NavLink>
+            <NavLink href="/new">New Releases</NavLink>
+            <NavLink href="/genres">Genres</NavLink>
+          </div>
+
+          {/* Mobile Menu Button - Touch-friendly size */}
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="flex h-11 w-11 items-center justify-center rounded-md lg:hidden"
+            aria-label="Toggle menu"
+            aria-expanded={isOpen}
+          >
+            {isOpen ? <CloseIcon /> : <MenuIcon />}
+          </button>
+        </div>
+
+        {/* Mobile Menu - Slides from top */}
+        {isOpen && (
+          <div className="border-t py-4 lg:hidden">
+            <div className="flex flex-col gap-4">
+              <MobileNavLink href="/browse">Browse</MobileNavLink>
+              <MobileNavLink href="/popular">Popular</MobileNavLink>
+              <MobileNavLink href="/new">New Releases</MobileNavLink>
+              <MobileNavLink href="/genres">Genres</MobileNavLink>
+            </div>
+          </div>
+        )}
+      </div>
+    </nav>
+  );
+}
+
+// Desktop nav link
+function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <Link
+      href={href}
+      className="text-sm font-medium text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+    >
+      {children}
+    </Link>
+  );
+}
+
+// Mobile nav link - larger touch target
+function MobileNavLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <Link
+      href={href}
+      className="block py-3 text-base font-medium text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+    >
+      {children}
+    </Link>
+  );
+}
+```
+
+#### 4. Responsive Forms
+
+```typescript
+export function SearchForm() {
+  return (
+    <form className="w-full">
+      {/* Mobile: Stack, Desktop: Horizontal */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
+        {/* Search Input - Full width on mobile */}
+        <input
+          type="search"
+          placeholder="Search manga..."
+          className={cn(
+            'w-full rounded-md border px-4 py-3',
+            'text-sm sm:text-base',
+            'focus:outline-none focus:ring-2 focus:ring-primary-500'
+          )}
+        />
+
+        {/* Filters - Show as row on mobile, keep with search on desktop */}
+        <div className="flex gap-2 sm:gap-3">
+          <select className="flex-1 rounded-md border px-3 py-3 text-sm sm:flex-none sm:px-4 sm:text-base">
+            <option>All Genres</option>
+            <option>Action</option>
+            <option>Romance</option>
+          </select>
+
+          {/* Search Button - Touch-friendly size */}
+          <button
+            type="submit"
+            className="rounded-md bg-primary-600 px-6 py-3 text-sm font-medium text-white hover:bg-primary-700 sm:px-8 sm:text-base"
+          >
+            Search
+          </button>
+        </div>
+      </div>
+    </form>
+  );
+}
+```
+
+#### 5. Responsive Modal/Dialog
+
+```typescript
+'use client';
+
+import { useEffect } from 'react';
+import { cn } from '@/lib/utils';
+
+interface ModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+  title?: string;
+}
+
+export function Modal({ isOpen, onClose, children, title }: ModalProps) {
+  // Prevent scroll on mobile when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/50"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+
+      {/* Modal - Slides up on mobile, centered on desktop */}
+      <div
+        className={cn(
+          // Mobile: Full width, bottom sheet
+          'relative w-full rounded-t-2xl bg-white dark:bg-gray-900',
+          'max-h-[85vh] overflow-y-auto',
+          // Tablet+: Centered, max width
+          'sm:max-h-[90vh] sm:max-w-lg sm:rounded-2xl',
+          // Desktop: Larger
+          'lg:max-w-2xl'
+        )}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={title ? 'modal-title' : undefined}
+      >
+        {/* Header */}
+        {title && (
+          <div className="sticky top-0 z-10 border-b bg-white px-4 py-4 dark:bg-gray-900 sm:px-6">
+            <div className="flex items-center justify-between">
+              <h2
+                id="modal-title"
+                className="text-lg font-semibold sm:text-xl"
+              >
+                {title}
+              </h2>
+              <button
+                onClick={onClose}
+                className="flex h-10 w-10 items-center justify-center rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
+                aria-label="Close modal"
+              >
+                <CloseIcon />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Content - Responsive padding */}
+        <div className="p-4 sm:p-6 lg:p-8">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+```
+
+### Responsive Utilities Hook
+
+```typescript
+// src/hooks/use-media-query.ts
+'use client';
+
+import { useEffect, useState } from 'react';
+
+export function useMediaQuery(query: string): boolean {
+  const [matches, setMatches] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia(query);
+
+    // Set initial value
+    setMatches(media.matches);
+
+    // Listen for changes
+    const listener = (e: MediaQueryListEvent) => setMatches(e.matches);
+    media.addEventListener('change', listener);
+
+    return () => media.removeEventListener('change', listener);
+  }, [query]);
+
+  return matches;
+}
+
+// Usage in components
+export function ResponsiveComponent() {
+  const isMobile = useMediaQuery('(max-width: 768px)');
+  const isTablet = useMediaQuery('(min-width: 769px) and (max-width: 1024px)');
+  const isDesktop = useMediaQuery('(min-width: 1025px)');
+
+  return (
+    <div>
+      {isMobile && <MobileView />}
+      {isTablet && <TabletView />}
+      {isDesktop && <DesktopView />}
+    </div>
+  );
+}
+```
+
+### Responsive Images Pattern
+
+```typescript
+// Responsive manga cover image
+export function MangaCover({ manga }: { manga: Manga }) {
+  return (
+    <div
+      className={cn(
+        // Mobile: Full width
+        'relative aspect-[2/3] w-full',
+        // Tablet: Limited width
+        'sm:aspect-[3/4] sm:max-w-sm',
+        // Desktop: Even more limited
+        'lg:max-w-md'
+      )}
+    >
+      <Image
+        src={manga.coverImage}
+        alt={manga.title}
+        fill
+        className="rounded-lg object-cover"
+        // Responsive sizes for optimal image loading
+        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 384px, 448px"
+        priority={false}
+      />
+    </div>
+  );
+}
+
+// Responsive chapter page image
+export function ChapterPage({ page }: { page: ChapterPage }) {
+  return (
+    <div className="relative mx-auto w-full max-w-full sm:max-w-2xl lg:max-w-4xl">
+      <Image
+        src={page.imageUrl}
+        alt={`Page ${page.number}`}
+        width={page.width}
+        height={page.height}
+        className="h-auto w-full"
+        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 672px, 896px"
+        priority={page.number === 1}
+      />
+    </div>
+  );
+}
+```
+
+### Touch-Optimized Components
+
+```typescript
+// Touch-friendly button sizes
+export function TouchButton({ children, ...props }: ButtonProps) {
+  return (
+    <button
+      className={cn(
+        // Mobile: Larger touch target (min 44x44px)
+        'min-h-[44px] px-4 py-3',
+        // Desktop: Standard size
+        'sm:min-h-[40px] sm:px-4 sm:py-2',
+        'rounded-md bg-primary-600 text-white font-medium',
+        'active:scale-95 transition-transform'
+      )}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+}
+
+// Swipeable card for mobile
+'use client';
+
+export function SwipeableCard({ children }: { children: React.ReactNode }) {
+  const [touchStart, setTouchStart] = useState(0);
+  const [touchEnd, setTouchEnd] = useState(0);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (touchStart - touchEnd > 150) {
+      // Swipe left
+      console.log('Swiped left');
+    }
+    if (touchStart - touchEnd < -150) {
+      // Swipe right
+      console.log('Swiped right');
+    }
+  };
+
+  return (
+    <div
+      className="touch-pan-x"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      {children}
+    </div>
+  );
+}
+```
+
+### Responsive Typography
+
+```typescript
+// Responsive heading component
+export function ResponsiveHeading({
+  level,
+  children
+}: {
+  level: 1 | 2 | 3 | 4;
+  children: React.ReactNode;
+}) {
+  const Tag = `h${level}` as const;
+
+  const sizeClasses = {
+    1: 'text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold',
+    2: 'text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold',
+    3: 'text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold',
+    4: 'text-base sm:text-lg md:text-xl lg:text-2xl font-semibold',
+  };
+
+  return (
+    <Tag className={cn(sizeClasses[level], 'leading-tight')}>
+      {children}
+    </Tag>
+  );
+}
+
+// Responsive body text
+export function BodyText({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="text-sm leading-relaxed sm:text-base lg:text-lg">
+      {children}
+    </p>
+  );
+}
+```
+
+### Responsive Testing Checklist
+
+When developing components, test on:
+
+- [ ] **Mobile (320px - 640px)** - iPhone SE, small Android phones
+- [ ] **Tablet (641px - 1024px)** - iPad, Android tablets
+- [ ] **Desktop (1025px+)** - Laptops, monitors
+- [ ] **Touch interactions** - Tap targets, swipe gestures
+- [ ] **Orientation changes** - Portrait and landscape
+- [ ] **Slow 3G network** - Simulate mobile network conditions
+- [ ] **Screen reader** - Test accessibility on mobile
+
+### Performance Optimization for Mobile
+
+```typescript
+// Lazy load heavy components on mobile
+import dynamic from 'next/dynamic';
+
+const HeavyComponent = dynamic(() => import('./heavy-component'), {
+  loading: () => <Skeleton className="h-64 w-full" />,
+  ssr: false, // Skip SSR if not critical
+});
+
+// Conditionally load based on viewport
+export function OptimizedComponent() {
+  const isDesktop = useMediaQuery('(min-width: 1024px)');
+
+  return (
+    <div>
+      {isDesktop ? (
+        <DesktopVersion />
+      ) : (
+        <LightweightMobileVersion />
+      )}
+    </div>
+  );
+}
+
+// Optimize images for mobile
+export function OptimizedImage({ src, alt }: { src: string; alt: string }) {
+  const isMobile = useMediaQuery('(max-width: 768px)');
+
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      width={isMobile ? 400 : 800}
+      height={isMobile ? 600 : 1200}
+      quality={isMobile ? 75 : 90}
+      loading="lazy"
+    />
+  );
+}
+```
+
 ## Accessibility
 
 ### Semantic HTML
@@ -662,7 +1230,11 @@ Before considering a component complete, verify:
 - [ ] Supports `className` prop for customization
 - [ ] Uses `cn` utility for class merging
 - [ ] Includes dark mode styles
-- [ ] Is responsive (tests on mobile, tablet, desktop)
+- [ ] **Mobile-first responsive design** (starts with mobile styles)
+- [ ] **Touch targets minimum 44x44px** on mobile
+- [ ] **Responsive typography** (scales across breakpoints)
+- [ ] **Responsive images** with proper `sizes` attribute
+- [ ] **Tested on mobile, tablet, and desktop** viewports
 - [ ] Has proper ARIA labels and accessibility
 - [ ] Handles loading/error states when applicable
 - [ ] Exports component and types
