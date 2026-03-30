@@ -161,6 +161,21 @@ The Tailwind config (`tailwind.config.ts`) extends the default theme with:
 4. **New hook**: Create `src/hooks/use-<name>.ts`
 5. **New types**: Add to `src/types/index.ts`
 
+## Documentation
+
+Comprehensive development guides are available in the [`docs/`](./docs) directory:
+
+- **[Coding Conventions](./docs/CODING_CONVENTIONS.md)** - Naming, TypeScript, formatting, and style guidelines
+- **[Architecture](./docs/ARCHITECTURE.md)** - Project structure, data flow, and architectural decisions
+- **[Component Guidelines](./docs/COMPONENT_GUIDELINES.md)** - Component development patterns and best practices
+- **[State Management](./docs/STATE_MANAGEMENT.md)** - Zustand stores, patterns, and optimization
+
+**Quick Links:**
+- New to the project? Start with [Coding Conventions](./docs/CODING_CONVENTIONS.md)
+- Building components? Check [Component Guidelines](./docs/COMPONENT_GUIDELINES.md)
+- Working with state? Read [State Management](./docs/STATE_MANAGEMENT.md)
+- Understanding the architecture? See [Architecture](./docs/ARCHITECTURE.md)
+
 ## License
 
 MIT
