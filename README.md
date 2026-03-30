@@ -1,6 +1,6 @@
 # Manga Go Frontend
 
-A modern manga reading platform built with Next.js, Tailwind CSS, and Zustand.
+A modern, **mobile-first** manga reading platform built with Next.js, Tailwind CSS, and Zustand. Optimized for manga readers on all devices, with special focus on mobile user experience.
 
 ## Tech Stack
 
@@ -89,6 +89,15 @@ src/
 
 ## Key Features
 
+### Mobile-First Design
+
+The platform is built with a mobile-first approach, ensuring optimal performance and user experience on smartphones and tablets:
+
+- **Touch-optimized interfaces** - Minimum 44x44px tap targets, swipe gestures
+- **Responsive layouts** - Adapts seamlessly from mobile (320px) to desktop (1920px+)
+- **Performance-optimized** - Optimized images, code splitting, and lazy loading for mobile networks
+- **Progressive enhancement** - Base functionality on mobile, enhanced features on larger screens
+
 ### Dark Mode
 
 Dark mode is supported via Tailwind's `class` strategy. The `useTheme` hook manages theme persistence in localStorage and respects the user's system preference on first visit.
@@ -141,6 +150,8 @@ import { cn } from '@/lib/utils';
 
 - **File names**: `kebab-case` (e.g., `button.tsx`, `use-theme.ts`)
 - **Component names**: `PascalCase` (e.g., `Button`, `Header`)
+- **Mobile-first**: Start with mobile styles, add breakpoints for larger screens
+- **Touch-friendly**: Minimum 44x44px touch targets on mobile devices
 - **Client Components**: Add `'use client'` only when needed (event handlers, hooks, browser APIs)
 - **Server Components**: Default – no `'use client'` directive
 
