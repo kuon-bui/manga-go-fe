@@ -149,7 +149,7 @@ import { cn } from '@/lib/utils';
 The Tailwind config (`tailwind.config.ts`) extends the default theme with:
 
 - Custom `primary` and `secondary` color palettes
-- Custom fonts (`--font-geist-sans`, `--font-geist-mono`)
+- Custom system font stack (`sans`, `mono`)
 - Additional spacing values (`18`, `88`, `112`, `128`)
 - Extra breakpoint (`xs: 475px`)
 
