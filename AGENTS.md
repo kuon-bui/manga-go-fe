@@ -30,20 +30,6 @@ Do NOT modify these areas without explicit human approval:
 
 - **GitHub Workflows:** `.github/workflows/`
 - **Base Config Files:** `tailwind.config.ts`, `next.config.ts`, `tsconfig.json`, `eslint.config.mjs`, `.prettierrc`
-- **Existing docs:** `docs/ARCHITECTURE.md`, `docs/CODING_CONVENTIONS.md`, `docs/COMPONENT_GUIDELINES.md`, `docs/STATE_MANAGEMENT.md`
-
-## Coding Conventions
-
-Strictly follow `docs/CODING_CONVENTIONS.md` and `docs/COMPONENT_GUIDELINES.md`. Key rules:
-
-- **Files:** kebab-case (e.g., `manga-card.tsx`) — PascalCase files are rejected
-- **Imports:** Always use `@/` path alias — never relative `../..` from `src/`
-- **TypeScript:** Strict mode; export types alongside their components; use `interface` over `type` for object shapes
-- **Components:** `forwardRef` on all UI primitives; `displayName` set; `className` prop always accepted; `cn()` for class merging
-- **Dark mode:** All new components must include `dark:` variants for background/text/border colors
-- **Responsive:** Mobile-first — start with base (mobile) style, add `sm:` `md:` `lg:` `xl:` progressively
-- **Touch targets:** Minimum 44×44px on mobile
-- **Formatting:** `yarn format` before committing (single quotes, semi-colons, 100-char line, 2-space indent)
 
 ## Agent Behaviors
 
@@ -151,12 +137,8 @@ These rules apply to ALL sessions with this codebase:
 
 ## Key Reference Documents
 
-- **Product Requirements (What to build):** `docs/frontend-prd.md`
-- **Technical Design (How to build):** `docs/frontend-tech-design.md`
-- **Component Patterns:** `docs/COMPONENT_GUIDELINES.md`
-- **State Management Patterns:** `docs/STATE_MANAGEMENT.md`
-- **Architecture Overview:** `docs/ARCHITECTURE.md`
-- **Coding Conventions:** `docs/CODING_CONVENTIONS.md`
+- **Product Requirements (What to build):** `docs/PRD-MangaReader-MVP.md`
+- **Technical Design (How to build):** `docs/TechDesign-MangaReader-MVP.md`
 - **Tech Stack Detail:** `agent_docs/tech_stack.md`
 - **Full Feature List:** `agent_docs/product_requirements.md`
 - **Testing Strategy:** `agent_docs/testing.md`

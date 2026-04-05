@@ -6,19 +6,20 @@ DO NOT delete historical context if it is still relevant. Compress older complet
 
 ## 🏗️ Active Phase & Goal
 
-**Current Phase:** Phase 1 — Foundation & Auth  
-**Goal:** Establish the app shell (route groups, layout, navigation) and all authentication flows so every subsequent phase has a working, authenticated context to build on.
+**Current Phase:** Phase 2 — Content Discovery  
+**Goal:** Build the Home page (hero banner, trending, recently updated, genre chips), MangaCard component, Advanced Search, Browse page, and Library page.
 
 **Next Steps:**
-1. Create `(auth)` and `(main)` route groups under `src/app/`
-2. Build site `Header` (desktop nav) and `BottomNav` (mobile tab bar)
-3. Implement `Login`, `Register`, `ForgotPassword`, `ResetPassword` pages
-4. Create `useAuthStore` Zustand store (user, token, logout)
-5. Create `src/middleware.ts` for route protection
-6. Create `ThemeProvider` and `useThemeStore` (light/dark/system)
-7. Create `src/lib/api-client.ts` with auth Bearer interceptor
+1. Install additional shadcn components: `badge avatar skeleton tabs scroll-area`
+2. Create `MangaCard` component (`src/components/features/content/manga-card.tsx`)
+3. Build Home page (`src/app/(main)/page.tsx`) with hero + trending + recent sections
+4. Build Advanced Search page (`src/app/(main)/search/page.tsx`)
+5. Build Browse page (`src/app/(main)/browse/page.tsx`)
+6. Build Library page (`src/app/(main)/library/page.tsx`)
 
 ## 📂 Architectural Decisions
+
+- **2026-04-05** — Phase 1 complete. Auth pages (login/register/forgot-password/reset-password) were pre-built. `useSearchParams()` wrapped in `<Suspense>` in login and reset-password pages (Next.js 15 requirement). `src/lib/query-keys.ts` added. `src/types/index.ts` re-exports from `src/types/auth.ts` and adds content/comment/notification types. `src/types/auth.ts` extended with `displayName` and `bio` on User. Sonner toast installed; `<Toaster />` in root layout. shadcn Phase 1 components installed (button, input, label, card, separator, sonner).
 
 *(Log specific choices made during the build here so future agents respect them)*
 
@@ -36,7 +37,7 @@ DO NOT delete historical context if it is still relevant. Compress older complet
 
 ## 📜 Phase Progress
 
-- [ ] **Phase 1** — Foundation & Auth
+- [x] **Phase 1** — Foundation & Auth
 - [ ] **Phase 2** — Content Discovery
 - [ ] **Phase 3** — Detail Pages & Comments
 - [ ] **Phase 4** — Readers (Novel + Manga × 3 modes)
