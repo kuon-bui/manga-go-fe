@@ -29,4 +29,16 @@ export const queryKeys = {
     results: (query: string, filters: Record<string, unknown>) =>
       ['search', query, filters] as const,
   },
+  home: {
+    trending: () => ['home', 'trending'] as const,
+    recentlyUpdated: () => ['home', 'recently-updated'] as const,
+    genres: () => ['home', 'genres'] as const,
+  },
+  genres: {
+    all: () => ['genres'] as const,
+  },
+  browse: {
+    results: (filters: Record<string, unknown>) =>
+      ['browse', filters] as const,
+  },
 } as const;
