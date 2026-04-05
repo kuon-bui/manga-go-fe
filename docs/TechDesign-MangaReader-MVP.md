@@ -8,19 +8,179 @@
 
 ## Table of Contents
 
-1. [Component Architecture](#1-component-architecture)
-2. [Theme System](#2-theme-system)
-3. [Reading Mode Architecture](#3-reading-mode-architecture)
-4. [UI-level RBAC Implementation](#4-ui-level-rbac-implementation)
-5. [State Management Architecture](#5-state-management-architecture)
-6. [Comment System Architecture](#6-comment-system-architecture)
-7. [Performance Patterns](#7-performance-patterns)
-8. [Backend API Integration Plan](#8-backend-api-integration-plan)
-9. [New File Map](#9-new-file-map)
+1. [shadcn/ui Integration](#1-shadcnui-integration)
+2. [Component Architecture](#2-component-architecture)
+3. [Theme System](#3-theme-system)
+4. [Reading Mode Architecture](#4-reading-mode-architecture)
+5. [UI-level RBAC Implementation](#5-ui-level-rbac-implementation)
+6. [State Management Architecture](#6-state-management-architecture)
+7. [Comment System Architecture](#7-comment-system-architecture)
+8. [Performance Patterns](#8-performance-patterns)
+9. [Backend API Integration Plan](#9-backend-api-integration-plan)
+10. [New File Map](#10-new-file-map)
 
 ---
 
-## 1. Component Architecture
+## 1. shadcn/ui Integration
+
+### 1.1 Overview
+
+**shadcn/ui** is the primary UI component library for Manga Go. It is **not** a traditional npm package — components are scaffolded directly into `src/components/ui/` via the CLI, making them fully owned and customizable. Internally they use **Radix UI primitives** for accessibility and **class-variance-authority (cva)** for variant management.
+
+### 1.2 Initial Setup
+
+```bash
+npx shadcn@latest init
+```
+
+Select during init:
+- **Style:** Default
+- **Base color:** Slate
+- **CSS variables:** Yes (required for theme system — see Section 3)
+- **RSC:** Yes
+
+This creates/updates:
+- `src/components/ui/` — component output folder
+- `src/lib/utils.ts` — adds `cn()` helper (already in project ✅)
+- `components.json` — shadcn config file (do not delete)
+- `app/globals.css` — adds CSS variable definitions for light/dark
+
+### 1.3 Component Installation Map
+
+Install components as each phase requires them. Never install components not yet needed.
+
+**Phase 1 (Auth & Shell):**
+```bash
+npx shadcn@latest add button input label card separator
+```
+
+**Phase 2 (Content Discovery):**
+```bash
+npx shadcn@latest add badge skeleton scroll-area checkbox radio-group select
+npx shadcn@latest add sheet          # filter panel drawer on mobile
+npx shadcn@latest add command        # search suggestions dropdown
+npx shadcn@latest add sonner         # toast notifications
+```
+
+**Phase 3 (Detail Pages):**
+```bash
+npx shadcn@latest add dialog tabs avatar textarea progress alert
+npx shadcn@latest add dropdown-menu  # chapter list actions menu
+npx shadcn@latest add popover        # rating widget popover
+```
+
+**Phase 4 (Readers):**
+```bash
+npx shadcn@latest add slider         # typography controls (font size, line height)
+npx shadcn@latest add drawer         # mobile reader settings bottom sheet
+npx shadcn@latest add switch         # toggle controls in settings
+```
+
+**Phase 5 (Dashboard):**
+```bash
+npx shadcn@latest add table          # member table, uploads table
+npx shadcn@latest add alert-dialog   # delete confirmation dialogs
+```
+
+### 1.4 Component Mapping
+
+| UI Element | shadcn Component | Custom? |
+|---|---|---|
+| Buttons | `Button` (`default`, `outline`, `ghost`, `destructive`, `link`) | No |
+| Text inputs | `Input`, `Textarea`, `Label` | No |
+| Cards | `Card`, `CardHeader`, `CardTitle`, `CardContent`, `CardFooter` | No |
+| Badges (status, type) | `Badge` + custom variants via `cva` | Extend |
+| User avatars | `Avatar`, `AvatarImage`, `AvatarFallback` | No |
+| Modals/Dialogs | `Dialog`, `DialogContent`, `DialogHeader`, `DialogTitle` | No |
+| Confirmation dialogs | `AlertDialog` | No |
+| Bottom sheet (mobile) | `Drawer` (vaul, via shadcn) | No |
+| Side panels (filter, settings) | `Sheet`, `SheetContent` | No |
+| Tab navigation | `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent` | No |
+| Loading skeletons | `Skeleton` | No |
+| Toast notifications | `Sonner` (`toast()` function) | No |
+| Range sliders | `Slider` (reader typography controls) | No |
+| Dropdowns / selects | `Select`, `DropdownMenu` | No |
+| Search with suggestions | `Command`, `CommandInput`, `CommandList` | No |
+| Chapter list actions | `DropdownMenu` | No |
+| Tables (dashboard) | `Table`, `TableHeader`, `TableRow`, `TableCell` | No |
+| Scroll area (long lists) | `ScrollArea` | No |
+| Toggles | `Switch` | No |
+| Checkboxes / radios | `Checkbox`, `RadioGroup` | No |
+| Reading progress bar | — | **Custom** (`progress-bar.tsx`) |
+| Star rating widget | — | **Custom** (`star-rating.tsx`) |
+| Bottom nav (mobile) | — | **Custom** (`bottom-nav.tsx`) |
+| Manga page image | — | **Custom** (`manga-page-image.tsx`) |
+
+### 1.5 Extending shadcn Components
+
+Since shadcn components live in `src/components/ui/`, they are fully yours. Add Manga Go-specific variants using `cva`:
+
+```typescript
+// src/components/ui/badge.tsx — extended with status/type variants
+const badgeVariants = cva(
+  'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors',
+  {
+    variants: {
+      variant: {
+        // shadcn defaults
+        default: 'border-transparent bg-primary text-primary-foreground',
+        secondary: 'border-transparent bg-secondary text-secondary-foreground',
+        destructive: 'border-transparent bg-destructive text-destructive-foreground',
+        outline: 'text-foreground',
+        // Manga Go custom: content status
+        ongoing: 'border-transparent bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+        completed: 'border-transparent bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+        hiatus: 'border-transparent bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+        cancelled: 'border-transparent bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+        // Manga Go custom: content type
+        manga: 'border-transparent bg-sky-100 text-sky-800 dark:bg-sky-900 dark:text-sky-200',
+        novel: 'border-transparent bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+      },
+    },
+    defaultVariants: { variant: 'default' },
+  }
+);
+```
+
+### 1.6 Dark Mode with shadcn
+
+shadcn/ui uses CSS variables for theming which integrate with Tailwind's `class` dark mode strategy (already configured in this project). The CSS variables are defined in `globals.css`:
+
+```css
+/* globals.css — shadcn injects these on init */
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --primary: 199 89% 48%;       /* sky-500 — matches project primary */
+    /* ... more variables ... */
+  }
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    /* ... dark overrides ... */
+  }
+}
+```
+
+**Note:** The reader themes (Day/Night/Sepia) use a **separate** `.reader-root[data-theme=...]` CSS variable scope to avoid conflicts with the app-level shadcn theme. See Section 3.
+
+### 1.7 Sheet vs Drawer vs Dialog
+
+Use the right shadcn primitive for each interaction pattern:
+
+| Pattern | Component | When |
+|---|---|---|
+| Confirmation (irreversible action) | `AlertDialog` | Delete chapter, delete group |
+| Form modal (add/edit) | `Dialog` | Rate title, invite member |
+| Mobile filter panel (bottom) | `Drawer` | Search filters on mobile |
+| Desktop settings panel (side) | `Sheet` side="right" | Reader settings on desktop |
+| Mobile reader settings (bottom) | `Drawer` | Reader settings on mobile |
+| Notification dropdown | Custom (absolute positioned panel) | Notification bell |
+
+---
+
+## 2. Component Architecture
 
 ### 1.1 Directory Structure
 
@@ -55,21 +215,38 @@ src/
 │       └── page.tsx                # Novel reader (Client-heavy)
 │
 ├── components/
-│   ├── ui/                         # Primitive, reusable, zero business logic
-│   │   ├── button.tsx
-│   │   ├── card.tsx
-│   │   ├── input.tsx
-│   │   ├── badge.tsx               # Status / type badges
-│   │   ├── avatar.tsx              # Avatar with fallback initials
-│   │   ├── modal.tsx               # Generic dialog/modal wrapper
-│   │   ├── bottom-sheet.tsx        # Mobile bottom drawer
-│   │   ├── tabs.tsx                # Tab navigation component
-│   │   ├── skeleton.tsx            # Loading skeleton
-│   │   ├── toast.tsx               # Toast notification
-│   │   ├── star-rating.tsx         # Star rating display + interactive
-│   │   ├── progress-bar.tsx        # Thin reading progress bar
-│   │   ├── slider.tsx              # Range slider for settings
-│   │   └── dropdown.tsx            # Select / dropdown menu
+│   ├── ui/                         # shadcn/ui components (scaffolded via CLI) + custom
+│   │   │                           # shadcn components — run: npx shadcn@latest add <name>
+│   │   ├── button.tsx              # [shadcn] Button
+│   │   ├── card.tsx                # [shadcn] Card, CardHeader, CardContent, CardFooter
+│   │   ├── input.tsx               # [shadcn] Input
+│   │   ├── label.tsx               # [shadcn] Label
+│   │   ├── textarea.tsx            # [shadcn] Textarea
+│   │   ├── badge.tsx               # [shadcn + extended] status/type variants added
+│   │   ├── avatar.tsx              # [shadcn] Avatar, AvatarImage, AvatarFallback
+│   │   ├── dialog.tsx              # [shadcn] Dialog — form modals
+│   │   ├── alert-dialog.tsx        # [shadcn] AlertDialog — confirmations
+│   │   ├── drawer.tsx              # [shadcn] Drawer (vaul) — mobile bottom sheet
+│   │   ├── sheet.tsx               # [shadcn] Sheet — slide-in side panels
+│   │   ├── tabs.tsx                # [shadcn] Tabs
+│   │   ├── skeleton.tsx            # [shadcn] Skeleton
+│   │   ├── sonner.tsx              # [shadcn] Sonner — toast notifications
+│   │   ├── slider.tsx              # [shadcn] Slider — typography controls
+│   │   ├── select.tsx              # [shadcn] Select — form dropdowns
+│   │   ├── dropdown-menu.tsx       # [shadcn] DropdownMenu — action menus
+│   │   ├── command.tsx             # [shadcn] Command — search suggestions
+│   │   ├── checkbox.tsx            # [shadcn] Checkbox
+│   │   ├── radio-group.tsx         # [shadcn] RadioGroup
+│   │   ├── switch.tsx              # [shadcn] Switch — toggles
+│   │   ├── scroll-area.tsx         # [shadcn] ScrollArea
+│   │   ├── separator.tsx           # [shadcn] Separator
+│   │   ├── popover.tsx             # [shadcn] Popover
+│   │   ├── progress.tsx            # [shadcn] Progress bar (upload progress)
+│   │   ├── alert.tsx               # [shadcn] Alert — inline notifications
+│   │   ├── table.tsx               # [shadcn] Table — dashboard tables
+│   │   │                           # Custom components (not available in shadcn)
+│   │   ├── star-rating.tsx         # [custom] Star rating display + interactive
+│   │   └── progress-bar.tsx        # [custom] Thin reading progress bar (top strip)
 │   │
 │   ├── layout/                     # Structural layout components
 │   │   ├── header.tsx              # Site header (Client — auth state + notifications)
