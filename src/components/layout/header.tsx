@@ -6,6 +6,7 @@ import { BookOpen, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/layout/theme-toggle';
+import { NotificationBell } from '@/components/layout/notification-bell';
 import { useAuthStore } from '@/stores/auth-store';
 
 const NAV_LINKS = [
@@ -55,6 +56,7 @@ export function Header() {
               <Search className="h-4 w-4" />
             </Link>
           </Button>
+          {isAuthenticated && <NotificationBell />}
           <ThemeToggle />
           {isAuthenticated && user ? (
             <div className="flex items-center gap-2">
