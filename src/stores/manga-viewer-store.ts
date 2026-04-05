@@ -8,9 +8,9 @@ interface MangaViewerState {
   currentPage: number      // 0-indexed
   settingsOpen: boolean
 
-  setMode: (mode: ViewerMode) => void
-  setCurrentPage: (page: number) => void
-  nextPage: (total: number) => void
+  setMode: (_mode: ViewerMode) => void
+  setCurrentPage: (_page: number) => void
+  nextPage: (_total: number) => void
   prevPage: () => void
   toggleSettings: () => void
   reset: () => void

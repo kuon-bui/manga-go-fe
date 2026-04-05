@@ -118,7 +118,7 @@ export function TitleHero({ manga, onRateClick }: TitleHeroProps) {
         {/* Action buttons */}
         <div className="flex flex-wrap items-center gap-2 pt-1">
           <Button asChild>
-            <Link href={firstChapterId ? `/read/${firstChapterId}` : '#'}>
+            <Link href={firstChapterId ? `/read/manga/${firstChapterId}` : '#'}>
               <BookOpen className="h-4 w-4" />
               Read First Chapter
             </Link>
