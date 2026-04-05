@@ -1,6 +1,10 @@
 import { Suspense } from 'react'
+import dynamic from 'next/dynamic'
 
-import { NovelReader } from '@/components/reader/novel/novel-reader'
+const NovelReader = dynamic(
+  () => import('@/components/reader/novel/novel-reader').then((m) => ({ default: m.NovelReader })),
+  { ssr: false }
+)
 
 interface PageProps {
   params: Promise<{ chapterId: string }>

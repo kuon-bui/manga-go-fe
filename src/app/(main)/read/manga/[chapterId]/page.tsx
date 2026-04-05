@@ -1,6 +1,10 @@
 import { Suspense } from 'react'
+import dynamic from 'next/dynamic'
 
-import { MangaReader } from '@/components/reader/manga/manga-reader'
+const MangaReader = dynamic(
+  () => import('@/components/reader/manga/manga-reader').then((m) => ({ default: m.MangaReader })),
+  { ssr: false }
+)
 
 interface PageProps {
   params: Promise<{ chapterId: string }>
