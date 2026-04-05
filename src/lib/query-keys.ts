@@ -14,9 +14,6 @@ export const queryKeys = {
   chapter: {
     detail: (id: string) => ['chapter', 'detail', id] as const,
   },
-  comments: {
-    list: (mangaId: string) => ['comments', mangaId] as const,
-  },
   library: {
     all: () => ['library'] as const,
     entry: (mangaId: string) => ['library', mangaId] as const,
@@ -28,6 +25,15 @@ export const queryKeys = {
   search: {
     results: (query: string, filters: Record<string, unknown>) =>
       ['search', query, filters] as const,
+  },
+  follow: {
+    status: (mangaId: string) => ['follow', mangaId] as const,
+  },
+  rating: {
+    user: (mangaId: string) => ['rating', 'user', mangaId] as const,
+  },
+  comments: {
+    list: (mangaId: string) => ['comments', mangaId] as const,
   },
   home: {
     trending: () => ['home', 'trending'] as const,
