@@ -8,7 +8,8 @@
       "Bash(yarn lint:*)",
       "Bash(yarn build:*)",
       "Bash(yarn add:*)",
-      "Bash(node -e \"const p = require\\('./package.json'\\); console.log\\(JSON.stringify\\(Object.keys\\(p.dependencies\\), null, 2\\)\\)\")"
+      "Bash(node -e \"const p = require\\('./package.json'\\); console.log\\(JSON.stringify\\(Object.keys\\(p.dependencies\\), null, 2\\)\\)\")",
+      "Bash(node -e \"const p=require\\('d:/Code/sung-nung-web/manga-go-fe/package.json'\\); console.log\\('@tanstack/react-virtual' in p.dependencies ? 'INSTALLED' : 'MISSING'\\)\")"
     ]
   }
 }

@@ -80,6 +80,20 @@ export interface Chapter extends ChapterSummary {
   nextChapterId: string | null;
 }
 
+// ─── Rating & Follow ──────────────────────────────────────────────────────────
+
+export interface UserRating {
+  mangaId: string
+  score: number // 1–10
+  createdAt: string
+  updatedAt: string
+}
+
+export interface FollowStatus {
+  mangaId: string
+  isFollowing: boolean
+}
+
 // ─── Library ─────────────────────────────────────────────────────────────────
 
 export interface LibraryEntry {

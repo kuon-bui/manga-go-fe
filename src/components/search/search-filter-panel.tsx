@@ -12,7 +12,7 @@ import type { SearchFilters, SortOption } from '@/types'
 
 interface SearchFilterPanelProps {
   filters: SearchFilters
-  onChange: (updates: Partial<SearchFilters>) => void
+  onChange: (_updates: Partial<SearchFilters>) => void
 }
 
 const SORT_OPTIONS: { label: string; value: SortOption }[] = [
