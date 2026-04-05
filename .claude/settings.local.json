@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Skill(frontend-design)",
-      "Skill(frontend-design:*)"
+      "Skill(frontend-design:*)",
+      "Bash(npx shadcn@latest add button input label card separator --overwrite)",
+      "Bash(npx shadcn@latest add sonner --yes)",
+      "Bash(yarn lint:*)",
+      "Bash(yarn build:*)"
     ]
   }
 }
