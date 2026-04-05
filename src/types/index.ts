@@ -111,6 +111,40 @@ export interface Comment {
   updatedAt: string;
 }
 
+// ─── Search & Discovery ───────────────────────────────────────────────────────
+
+export type SortOption =
+  | 'latest'
+  | 'oldest'
+  | 'title_asc'
+  | 'title_desc'
+  | 'rating'
+  | 'most_followed'
+  | 'most_read'
+
+export interface SearchFilters {
+  query?: string
+  type?: ContentType
+  status?: ContentStatus
+  genres?: string[]
+  tags?: string[]
+  ratingMin?: number
+  ratingMax?: number
+  yearMin?: number
+  yearMax?: number
+  sort?: SortOption
+  page?: number
+  pageSize?: number
+}
+
+export interface BrowseFilters {
+  genre?: string
+  tag?: string
+  status?: ContentStatus
+  sort?: SortOption
+  page?: number
+}
+
 // ─── Notifications ────────────────────────────────────────────────────────────
 
 export type NotificationType = 'new_chapter' | 'comment_reply' | 'system';

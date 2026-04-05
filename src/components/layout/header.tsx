@@ -2,16 +2,16 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/layout/theme-toggle';
 import { useAuthStore } from '@/stores/auth-store';
 
 const NAV_LINKS = [
-  { href: '/manga', label: 'Manga' },
-  { href: '/novel', label: 'Novel' },
-  { href: '/latest', label: 'Latest' },
+  { href: '/browse', label: 'Browse' },
+  { href: '/browse?type=manga', label: 'Manga' },
+  { href: '/browse?type=novel', label: 'Novel' },
   { href: '/library', label: 'My Library' },
 ] as const;
 
@@ -48,8 +48,13 @@ export function Header() {
           })}
         </nav>
 
-        {/* Right side: theme toggle + auth */}
+        {/* Right side: search + theme toggle + auth */}
         <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" asChild aria-label="Search">
+            <Link href="/search">
+              <Search className="h-4 w-4" />
+            </Link>
+          </Button>
           <ThemeToggle />
           {isAuthenticated && user ? (
             <div className="flex items-center gap-2">
