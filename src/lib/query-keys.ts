@@ -43,6 +43,12 @@ export const queryKeys = {
   genres: {
     all: () => ['genres'] as const,
   },
+  dashboard: {
+    titles: () => ['dashboard', 'titles'] as const,
+    groups: () => ['dashboard', 'groups'] as const,
+    group: (groupId: string) => ['dashboard', 'group', groupId] as const,
+    groupMembers: (groupId: string) => ['dashboard', 'group', groupId, 'members'] as const,
+  },
   browse: {
     results: (filters: Record<string, unknown>) =>
       ['browse', filters] as const,

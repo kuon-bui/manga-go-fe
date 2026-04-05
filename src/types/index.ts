@@ -159,6 +159,67 @@ export interface BrowseFilters {
   page?: number
 }
 
+// ─── Translator Dashboard ─────────────────────────────────────────────────────
+
+export type GroupRole = 'admin' | 'member'
+
+export interface GroupMember {
+  id: string
+  userId: string
+  username: string
+  displayName: string
+  avatarUrl: string | null
+  role: GroupRole
+  joinedAt: string
+}
+
+export interface Group {
+  id: string
+  name: string
+  slug: string
+  logoUrl: string | null
+  description: string | null
+  memberCount: number
+  titleCount: number
+  createdAt: string
+}
+
+export interface DashboardTitle {
+  id: string
+  title: string
+  coverUrl: string
+  type: ContentType
+  status: ContentStatus
+  chapterCount: number
+  lastUploadedAt: string | null
+  groups: Pick<Group, 'id' | 'name'>[]
+}
+
+export interface UploadChapterPayload {
+  mangaId: string
+  groupId: string
+  number: number
+  title: string | null
+  /** manga: ordered image URLs; novel: empty */
+  pages: string[]
+  /** novel: HTML content; manga: null */
+  content: string | null
+}
+
+export interface CreateTitlePayload {
+  title: string
+  alternativeTitles: string[]
+  type: ContentType
+  status: ContentStatus
+  description: string
+  author: string
+  artist: string | null
+  genres: string[]
+  tags: string[]
+  year: number | null
+  coverFile?: File
+}
+
 // ─── Notifications ────────────────────────────────────────────────────────────
 
 export type NotificationType = 'new_chapter' | 'comment_reply' | 'system';
