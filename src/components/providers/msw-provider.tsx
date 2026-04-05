@@ -1,27 +1,21 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 
 export function MSWProvider({ children }: { children: React.ReactNode }) {
-  const [ready, setReady] = useState(false)
-
   useEffect(() => {
-    if (process.env.NEXT_PUBLIC_API_MOCKING !== 'enabled') {
-      setReady(true)
-      return
-    }
+    if (process.env.NEXT_PUBLIC_API_MOCKING !== 'enabled') return
 
     import('@/mocks/browser').then(({ worker }) => {
-      worker
-        .start({
-          onUnhandledRequest: 'bypass', // don't warn for Next.js internal requests
-          serviceWorker: { url: '/mockServiceWorker.js' },
-        })
-        .then(() => setReady(true))
+      // Only start if not already active (avoids double-start in dev hot reload)
+      if (worker.listHandlers().length > 0 && 'state' in worker) return
+
+      worker.start({
+        onUnhandledRequest: 'bypass',
+        serviceWorker: { url: '/mockServiceWorker.js' },
+      })
     })
   }, [])
-
-  if (!ready) return null
 
   return <>{children}</>
 }

@@ -57,6 +57,7 @@ export function TitleDetailView({ id }: TitleDetailViewProps) {
             chapters={chaptersData?.data ?? []}
             isLoading={chaptersLoading}
             mangaId={id}
+            contentType={manga.type}
           />
         </TabsContent>
 

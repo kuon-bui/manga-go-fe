@@ -7,7 +7,7 @@ import { Clock } from 'lucide-react'
 
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
-import type { ChapterSummary } from '@/types'
+import type { ChapterSummary, ContentType } from '@/types'
 
 const ROW_HEIGHT = 56 // px — each chapter row
 
@@ -15,9 +15,10 @@ interface ChapterListProps {
   chapters: ChapterSummary[]
   isLoading: boolean
   mangaId: string
+  contentType: ContentType
 }
 
-export function ChapterList({ chapters, isLoading, mangaId: _mangaId }: ChapterListProps) {
+export function ChapterList({ chapters, isLoading, mangaId: _mangaId, contentType }: ChapterListProps) {
   const parentRef = useRef<HTMLDivElement>(null)
 
   const virtualizer = useVirtualizer({
@@ -71,7 +72,7 @@ export function ChapterList({ chapters, isLoading, mangaId: _mangaId }: ChapterL
                 transform: `translateY(${virtualRow.start}px)`,
               }}
             >
-              <ChapterRow chapter={chapter} isLast={virtualRow.index === chapters.length - 1} />
+              <ChapterRow chapter={chapter} isLast={virtualRow.index === chapters.length - 1} contentType={contentType} />
             </div>
           )
         })}
@@ -85,16 +86,19 @@ export function ChapterList({ chapters, isLoading, mangaId: _mangaId }: ChapterL
 function ChapterRow({
   chapter,
   isLast,
+  contentType,
 }: {
   chapter: ChapterSummary
   isLast: boolean
+  contentType: ContentType
 }) {
   const uploadDate = new Date(chapter.uploadedAt)
   const isRecent = Date.now() - uploadDate.getTime() < 1000 * 60 * 60 * 24 * 3 // 3 days
+  const readerPath = contentType === 'novel' ? 'novel' : 'manga'
 
   return (
     <Link
-      href={`/read/${chapter.id}`}
+      href={`/read/${readerPath}/${chapter.id}`}
       className={cn(
         'flex items-center justify-between px-4 py-3 transition-colors hover:bg-accent dark:hover:bg-accent',
         !isLast && 'border-b dark:border-border'
