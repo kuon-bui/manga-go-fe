@@ -12,11 +12,11 @@ interface NovelReaderState {
   textWidth: number      // ch, range 50–90
   settingsOpen: boolean
 
-  setTheme: (theme: NovelReaderTheme) => void
-  setFontFamily: (family: FontFamily) => void
-  setFontSize: (size: number) => void
-  setLineHeight: (lh: number) => void
-  setTextWidth: (width: number) => void
+  setTheme: (_theme: NovelReaderTheme) => void
+  setFontFamily: (_family: FontFamily) => void
+  setFontSize: (_size: number) => void
+  setLineHeight: (_lh: number) => void
+  setTextWidth: (_width: number) => void
   toggleSettings: () => void
 }
 
