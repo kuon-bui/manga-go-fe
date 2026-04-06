@@ -31,8 +31,8 @@ interface TitleHeroProps {
 
 export function TitleHero({ manga, onRateClick }: TitleHeroProps) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
-  const { data: followStatus } = useFollowStatus(manga.id)
-  const followMutation = useFollow(manga.id)
+  const { data: followStatus } = useFollowStatus(manga.slug ?? manga.id)
+  const followMutation = useFollow(manga.slug ?? manga.id)
 
   const isFollowing = followStatus?.isFollowing ?? false
 
@@ -41,7 +41,12 @@ export function TitleHero({ manga, onRateClick }: TitleHeroProps) {
     followMutation.mutate(isFollowing)
   }
 
-  const firstChapterId = null // populated once chapters are loaded — link placeholder
+  // Build first-chapter URL using manga slug + latest chapter slug as placeholder
+  const firstChapterSlug = manga.latestChapter?.slug ?? null
+  const readerPath = manga.type === 'novel' ? 'novel' : 'manga'
+  const firstChapterUrl = firstChapterSlug
+    ? `/read/${readerPath}/${manga.slug}/${firstChapterSlug}`
+    : '#'
 
   return (
     <div className="flex flex-col gap-6 md:flex-row">
@@ -118,7 +123,7 @@ export function TitleHero({ manga, onRateClick }: TitleHeroProps) {
         {/* Action buttons */}
         <div className="flex flex-wrap items-center gap-2 pt-1">
           <Button asChild>
-            <Link href={firstChapterId ? `/read/manga/${firstChapterId}` : '#'}>
+            <Link href={firstChapterUrl}>
               <BookOpen className="h-4 w-4" />
               Read First Chapter
             </Link>

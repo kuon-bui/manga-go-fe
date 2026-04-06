@@ -9,7 +9,12 @@
       "Bash(yarn build:*)",
       "Bash(yarn add:*)",
       "Bash(node -e \"const p = require\\('./package.json'\\); console.log\\(JSON.stringify\\(Object.keys\\(p.dependencies\\), null, 2\\)\\)\")",
-      "Bash(node -e \"const p=require\\('d:/Code/sung-nung-web/manga-go-fe/package.json'\\); console.log\\('@tanstack/react-virtual' in p.dependencies ? 'INSTALLED' : 'MISSING'\\)\")"
+      "Bash(node -e \"const p=require\\('d:/Code/sung-nung-web/manga-go-fe/package.json'\\); console.log\\('@tanstack/react-virtual' in p.dependencies ? 'INSTALLED' : 'MISSING'\\)\")",
+      "Bash(curl -s http://localhost:8080/swagger/doc.json)",
+      "Bash(python -c ':*)",
+      "Bash(rm -f \"d:/Code/sung-nung-web/manga-go-fe/src/app/\\(main\\)/read/manga/[chapterId]/page.tsx\" \"d:/Code/sung-nung-web/manga-go-fe/src/app/\\(main\\)/read/manga/[chapterId]/manga-reader-client.tsx\")",
+      "Bash(rm -f \"d:/Code/sung-nung-web/manga-go-fe/src/app/\\(main\\)/read/novel/[chapterId]/page.tsx\" \"d:/Code/sung-nung-web/manga-go-fe/src/app/\\(main\\)/read/novel/[chapterId]/novel-reader-client.tsx\")",
+      "Bash(grep -v \"//.*prevChapterId\")"
     ]
   }
 }

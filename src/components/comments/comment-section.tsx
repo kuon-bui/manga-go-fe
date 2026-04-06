@@ -9,22 +9,22 @@ import { useComments, useAddComment, useDeleteComment } from '@/hooks/use-commen
 import { useAuthStore } from '@/stores/auth-store'
 
 interface CommentSectionProps {
-  mangaId: string
+  chapterId: string
 }
 
-export function CommentSection({ mangaId }: CommentSectionProps) {
+export function CommentSection({ chapterId }: CommentSectionProps) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
 
-  const { data, isLoading } = useComments(mangaId)
-  const addMutation = useAddComment(mangaId)
-  const deleteMutation = useDeleteComment(mangaId)
+  const { data, isLoading } = useComments(chapterId)
+  const addMutation = useAddComment(chapterId)
+  const deleteMutation = useDeleteComment(chapterId)
 
-  function handleAddComment(body: string) {
-    addMutation.mutate({ body, parentId: null })
+  function handleAddComment(content: string) {
+    addMutation.mutate({ content, parentId: null })
   }
 
-  function handleReply(parentId: string, body: string) {
-    addMutation.mutate({ body, parentId })
+  function handleReply(parentId: string, content: string) {
+    addMutation.mutate({ content, parentId })
   }
 
   function handleDelete(commentId: string) {
@@ -72,7 +72,6 @@ export function CommentSection({ mangaId }: CommentSectionProps) {
             <div key={comment.id} className="pt-5 first:pt-0">
               <CommentItem
                 comment={comment}
-                mangaId={mangaId}
                 depth={0}
                 onDelete={handleDelete}
                 onReply={handleReply}

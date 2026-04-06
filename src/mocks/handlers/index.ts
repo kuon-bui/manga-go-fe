@@ -1,15 +1,10 @@
-import { authHandlers } from './auth'
-import { mangaHandlers } from './manga'
 import { libraryHandlers } from './library'
-import { commentHandlers } from './comments'
 import { notificationHandlers } from './notifications'
-import { dashboardHandlers } from './dashboard'
 
+// Only mock handlers for features without a real backend API yet.
+// Auth, comics, chapters, comments, genres, and translation-groups
+// all bypass to the real backend via onUnhandledRequest: 'bypass'.
 export const handlers = [
-  ...authHandlers,
-  ...mangaHandlers,
   ...libraryHandlers,
-  ...commentHandlers,
   ...notificationHandlers,
-  ...dashboardHandlers,
 ]

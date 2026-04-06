@@ -44,7 +44,7 @@ export default function RegisterPage() {
   const router = useRouter();
   const setAuth = useAuthStore((s) => s.setAuth);
 
-  const [username, setUsername] = useState('');
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -57,7 +57,7 @@ export default function RegisterPage() {
     e.preventDefault();
     setError('');
 
-    if (!username || !email || !password || !confirmPassword) {
+    if (!name || !email || !password || !confirmPassword) {
       setError('Please fill in all fields.');
       return;
     }
@@ -72,8 +72,8 @@ export default function RegisterPage() {
 
     setLoading(true);
     try {
-      const { user, accessToken } = await apiClient.register(username, email, password);
-      setAuth(user, accessToken);
+      const { user } = await apiClient.register(name, email, password);
+      setAuth(user);
       router.push('/');
     } catch (err) {
       if (err instanceof ApiClientError) {
@@ -105,14 +105,14 @@ export default function RegisterPage() {
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="username">Username</Label>
+            <Label htmlFor="name">Name</Label>
             <Input
-              id="username"
+              id="name"
               type="text"
-              placeholder="your_handle"
-              autoComplete="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Your name"
+              autoComplete="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               required
             />
           </div>

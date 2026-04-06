@@ -14,11 +14,11 @@ const ROW_HEIGHT = 56 // px — each chapter row
 interface ChapterListProps {
   chapters: ChapterSummary[]
   isLoading: boolean
-  mangaId: string
+  comicSlug: string
   contentType: ContentType
 }
 
-export function ChapterList({ chapters, isLoading, mangaId: _mangaId, contentType }: ChapterListProps) {
+export function ChapterList({ chapters, isLoading, comicSlug, contentType }: ChapterListProps) {
   const parentRef = useRef<HTMLDivElement>(null)
 
   const virtualizer = useVirtualizer({
@@ -72,7 +72,7 @@ export function ChapterList({ chapters, isLoading, mangaId: _mangaId, contentTyp
                 transform: `translateY(${virtualRow.start}px)`,
               }}
             >
-              <ChapterRow chapter={chapter} isLast={virtualRow.index === chapters.length - 1} contentType={contentType} />
+              <ChapterRow chapter={chapter} isLast={virtualRow.index === chapters.length - 1} contentType={contentType} comicSlug={comicSlug} />
             </div>
           )
         })}
@@ -87,10 +87,12 @@ function ChapterRow({
   chapter,
   isLast,
   contentType,
+  comicSlug,
 }: {
   chapter: ChapterSummary
   isLast: boolean
   contentType: ContentType
+  comicSlug: string
 }) {
   const uploadDate = new Date(chapter.uploadedAt)
   const isRecent = Date.now() - uploadDate.getTime() < 1000 * 60 * 60 * 24 * 3 // 3 days
@@ -98,7 +100,7 @@ function ChapterRow({
 
   return (
     <Link
-      href={`/read/${readerPath}/${chapter.id}`}
+      href={`/read/${readerPath}/${comicSlug}/${chapter.slug}`}
       className={cn(
         'flex items-center justify-between px-4 py-3 transition-colors hover:bg-accent dark:hover:bg-accent',
         !isLast && 'border-b dark:border-border'

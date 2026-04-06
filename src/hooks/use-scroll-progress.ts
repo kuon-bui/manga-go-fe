@@ -5,7 +5,8 @@ import { useCallback, useEffect, useRef } from 'react'
 import { apiClient } from '@/lib/api-client'
 
 interface UseScrollProgressOptions {
-  chapterId: string
+  comicSlug: string
+  chapterSlug: string
   /** Debounce delay before saving progress (ms) */
   debounceMs?: number
   enabled?: boolean
@@ -17,7 +18,8 @@ interface UseScrollProgressOptions {
  * Progress is saved to the API after a debounced delay.
  */
 export function useScrollProgress({
-  chapterId,
+  comicSlug,
+  chapterSlug,
   debounceMs = 1000,
   enabled = true,
 }: UseScrollProgressOptions) {
@@ -27,17 +29,19 @@ export function useScrollProgress({
 
   const saveProgress = useCallback(
     (progress: number) => {
-      if (!enabled || !chapterId) return
+      if (!enabled || !comicSlug || !chapterSlug) return
       latestProgressRef.current = progress
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
       saveTimerRef.current = setTimeout(() => {
         // Fire-and-forget — errors are silently swallowed
         apiClient
-          .post(`/chapters/${chapterId}/progress`, { progress })
+          .patch(`/comics/${comicSlug}/chapters/${chapterSlug}/reading-progress`, {
+            scrollPercent: progress,
+          })
           .catch(() => undefined)
       }, debounceMs)
     },
-    [chapterId, debounceMs, enabled]
+    [comicSlug, chapterSlug, debounceMs, enabled]
   )
 
   // Attach observer to a sentinel element

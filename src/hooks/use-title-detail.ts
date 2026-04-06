@@ -8,31 +8,32 @@ import type { Manga, ChapterSummary, FollowStatus, UserRating, PaginatedResponse
 
 // ─── Detail ───────────────────────────────────────────────────────────────────
 
-export function useMangaDetail(id: string) {
+export function useMangaDetail(slug: string) {
   return useQuery<Manga>({
-    queryKey: queryKeys.manga.detail(id),
-    queryFn: () => apiClient.get<Manga>(`/manga/${id}`),
-    enabled: Boolean(id),
+    queryKey: queryKeys.manga.detail(slug),
+    queryFn: () => apiClient.get<Manga>(`/comics/${slug}`),
+    enabled: Boolean(slug),
   })
 }
 
-export function useChapterList(mangaId: string) {
+export function useChapterList(comicSlug: string) {
   return useQuery<PaginatedResponse<ChapterSummary>>({
-    queryKey: queryKeys.manga.chapters(mangaId),
+    queryKey: queryKeys.manga.chapters(comicSlug),
     queryFn: () =>
-      apiClient.get<PaginatedResponse<ChapterSummary>>(`/manga/${mangaId}/chapters`, {
-        params: { pageSize: '500' },
+      apiClient.get<PaginatedResponse<ChapterSummary>>(`/comics/${comicSlug}/chapters`, {
+        params: { limit: '500' },
       }),
-    enabled: Boolean(mangaId),
+    enabled: Boolean(comicSlug),
   })
 }
 
 // ─── Follow ───────────────────────────────────────────────────────────────────
+// No real API for follow yet — these remain backed by mock handlers.
 
 export function useFollowStatus(mangaId: string) {
   return useQuery<FollowStatus>({
     queryKey: queryKeys.follow.status(mangaId),
-    queryFn: () => apiClient.get<FollowStatus>(`/library/${mangaId}/follow-status`),
+    queryFn: () => apiClient.get<FollowStatus>(`/follow/${mangaId}`),
     enabled: Boolean(mangaId),
   })
 }
@@ -43,8 +44,8 @@ export function useFollow(mangaId: string) {
   return useMutation({
     mutationFn: (isFollowing: boolean) =>
       isFollowing
-        ? apiClient.delete(`/library/${mangaId}/follow`)
-        : apiClient.post(`/library/${mangaId}/follow`),
+        ? apiClient.delete(`/follow/${mangaId}`)
+        : apiClient.post(`/follow/${mangaId}`),
 
     onMutate: async (isFollowing) => {
       await qc.cancelQueries({ queryKey: queryKeys.follow.status(mangaId) })
@@ -68,11 +69,12 @@ export function useFollow(mangaId: string) {
 }
 
 // ─── Rating ───────────────────────────────────────────────────────────────────
+// No real API for rating yet — these remain backed by mock handlers.
 
 export function useUserRating(mangaId: string) {
   return useQuery<UserRating | null>({
     queryKey: queryKeys.rating.user(mangaId),
-    queryFn: () => apiClient.get<UserRating | null>(`/manga/${mangaId}/my-rating`),
+    queryFn: () => apiClient.get<UserRating | null>(`/rating/${mangaId}`),
     enabled: Boolean(mangaId),
   })
 }
@@ -82,7 +84,7 @@ export function useSubmitRating(mangaId: string) {
 
   return useMutation({
     mutationFn: (score: number) =>
-      apiClient.post<UserRating>(`/manga/${mangaId}/rate`, { score }),
+      apiClient.post<UserRating>(`/rating/${mangaId}`, { score }),
 
     onMutate: async (score) => {
       await qc.cancelQueries({ queryKey: queryKeys.rating.user(mangaId) })

@@ -17,35 +17,36 @@ import type {
 export function useMyGroups() {
   return useQuery<Group[]>({
     queryKey: queryKeys.dashboard.groups(),
-    queryFn: () => apiClient.get<Group[]>('/dashboard/groups'),
+    queryFn: () => apiClient.get<Group[]>('/translation-groups'),
   })
 }
 
-export function useGroupMembers(groupId: string) {
+export function useGroupMembers(groupSlug: string) {
   return useQuery<GroupMember[]>({
-    queryKey: queryKeys.dashboard.groupMembers(groupId),
-    queryFn: () => apiClient.get<GroupMember[]>(`/groups/${groupId}/members`),
-    enabled: Boolean(groupId),
+    queryKey: queryKeys.dashboard.groupMembers(groupSlug),
+    queryFn: () =>
+      apiClient.get<GroupMember[]>(`/translation-groups/${groupSlug}`),
+    enabled: Boolean(groupSlug),
   })
 }
 
-export function useInviteMember(groupId: string) {
+export function useInviteMember(groupSlug: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (email: string) =>
-      apiClient.post(`/groups/${groupId}/invite`, { email }),
+      apiClient.post(`/translation-groups/${groupSlug}/invite`, { email }),
     onSettled: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.dashboard.groupMembers(groupId) }),
+      qc.invalidateQueries({ queryKey: queryKeys.dashboard.groupMembers(groupSlug) }),
   })
 }
 
-export function useRemoveMember(groupId: string) {
+export function useRemoveMember(groupSlug: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (userId: string) =>
-      apiClient.delete(`/groups/${groupId}/members/${userId}`),
+      apiClient.delete(`/translation-groups/${groupSlug}/members/${userId}`),
     onSettled: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.dashboard.groupMembers(groupId) }),
+      qc.invalidateQueries({ queryKey: queryKeys.dashboard.groupMembers(groupSlug) }),
   })
 }
 
@@ -54,7 +55,7 @@ export function useRemoveMember(groupId: string) {
 export function useMyTitles() {
   return useQuery<PaginatedResponse<DashboardTitle>>({
     queryKey: queryKeys.dashboard.titles(),
-    queryFn: () => apiClient.get<PaginatedResponse<DashboardTitle>>('/dashboard/titles'),
+    queryFn: () => apiClient.get<PaginatedResponse<DashboardTitle>>('/comics'),
   })
 }
 
@@ -62,18 +63,19 @@ export function useCreateTitle() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (payload: CreateTitlePayload) => {
-      const form = new FormData()
-      Object.entries(payload).forEach(([k, v]) => {
-        if (v === undefined || v === null) return
-        if (k === 'coverFile' && v instanceof File) {
-          form.append('cover', v)
-        } else if (Array.isArray(v)) {
-          form.append(k, v.join(','))
-        } else {
-          form.append(k, String(v))
-        }
-      })
-      return apiClient.post<{ id: string }>('/dashboard/titles', form)
+      const body = {
+        title: payload.title,
+        alternativeTitles: payload.alternativeTitles,
+        type: payload.type,
+        status: payload.status,
+        description: payload.description,
+        authorIds: [payload.author],
+        genreSlugs: payload.genres,
+        tagSlugs: payload.tags,
+        publishedYear: payload.year,
+        // slug derived from title on backend
+      }
+      return apiClient.post<{ id: string; slug: string }>('/comics', body)
     },
     onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.dashboard.titles() }),
   })
@@ -85,18 +87,23 @@ export function useUploadChapter() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (payload: UploadChapterPayload) =>
-      apiClient.post(`/dashboard/titles/${payload.mangaId}/chapters`, payload),
+      apiClient.post(`/comics/${payload.comicSlug}/chapters`, {
+        slug: payload.slug,
+        number: String(payload.number),
+        title: payload.title ?? '',
+        pages: payload.pages,
+      }),
     onSettled: (_data, _err, vars) =>
-      qc.invalidateQueries({ queryKey: queryKeys.manga.chapters(vars.mangaId) }),
+      qc.invalidateQueries({ queryKey: queryKeys.manga.chapters(vars.comicSlug) }),
   })
 }
 
-export function useDeleteChapter(mangaId: string) {
+export function useDeleteChapter(comicSlug: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (chapterId: string) =>
-      apiClient.delete(`/dashboard/chapters/${chapterId}`),
+    mutationFn: (chapterSlug: string) =>
+      apiClient.delete(`/comics/${comicSlug}/chapters/${chapterSlug}`),
     onSettled: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.manga.chapters(mangaId) }),
+      qc.invalidateQueries({ queryKey: queryKeys.manga.chapters(comicSlug) }),
   })
 }

@@ -98,14 +98,14 @@ export function MangaControls({ chapter }: MangaControlsProps) {
 
         {/* Chapter nav */}
         <div className="flex items-center gap-2">
-          {chapter.prevChapterId && (
+          {chapter.prevChapter && (
             <Button variant="ghost" size="sm" className="text-white/70 hover:text-white hover:bg-white/10" asChild>
-              <Link href={`/read/manga/${chapter.prevChapterId}`}>Prev</Link>
+              <Link href={`/read/manga/${chapter.comicSlug}/${chapter.prevChapter.slug}`}>Prev</Link>
             </Button>
           )}
-          {chapter.nextChapterId && (
+          {chapter.nextChapter && (
             <Button size="sm" asChild>
-              <Link href={`/read/manga/${chapter.nextChapterId}`}>Next</Link>
+              <Link href={`/read/manga/${chapter.comicSlug}/${chapter.nextChapter.slug}`}>Next</Link>
             </Button>
           )}
         </div>

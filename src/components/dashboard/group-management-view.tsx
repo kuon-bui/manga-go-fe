@@ -44,7 +44,7 @@ export function GroupManagementView({ groupId }: GroupManagementViewProps) {
 
   function handleRemove(member: GroupMember) {
     removeMutation.mutate(member.userId, {
-      onSuccess: () => toast.success(`${member.displayName} removed`),
+      onSuccess: () => toast.success(`${member.name} removed`),
       onError: () => toast.error('Failed to remove member'),
     })
   }
@@ -108,16 +108,16 @@ export function GroupManagementView({ groupId }: GroupManagementViewProps) {
                 <div className="flex items-center gap-3 p-4">
                   <Avatar className="h-10 w-10">
                     {member.avatarUrl && (
-                      <AvatarImage src={member.avatarUrl} alt={member.displayName} />
+                      <AvatarImage src={member.avatarUrl} alt={member.name} />
                     )}
                     <AvatarFallback>
-                      {member.displayName.slice(0, 2).toUpperCase()}
+                      {member.name.slice(0, 2).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
 
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-foreground">{member.displayName}</p>
-                    <p className="text-xs text-muted-foreground">@{member.username}</p>
+                    <p className="text-sm font-medium text-foreground">{member.name}</p>
+                    <p className="text-xs text-muted-foreground">{member.role}</p>
                   </div>
 
                   <Badge variant={member.role === 'admin' ? 'default' : 'secondary'}>
@@ -135,7 +135,7 @@ export function GroupManagementView({ groupId }: GroupManagementViewProps) {
                       className="h-8 w-8 text-muted-foreground hover:text-destructive"
                       onClick={() => handleRemove(member)}
                       disabled={removeMutation.isPending}
-                      aria-label={`Remove ${member.displayName}`}
+                      aria-label={`Remove ${member.name}`}
                     >
                       <UserMinus className="h-4 w-4" />
                     </Button>

@@ -41,8 +41,8 @@ function LoginPageContent() {
 
     setLoading(true);
     try {
-      const { user, accessToken } = await apiClient.login(email, password);
-      setAuth(user, accessToken);
+      const { user } = await apiClient.login(email, password);
+      setAuth(user);
       const from = searchParams.get('from') ?? '/';
       router.push(from);
     } catch (err) {

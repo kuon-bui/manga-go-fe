@@ -1,6 +1,6 @@
 /**
- * Shared mock data fixtures used across all MSW handlers.
- * Update shapes here when BE confirms the final API contract.
+ * Shared mock data fixtures used across MSW handlers (follow/rating + notifications).
+ * Shapes align with the updated types in src/types/index.ts.
  */
 
 import type {
@@ -23,9 +23,8 @@ import type {
 
 export const MOCK_USER: User = {
   id: 'user-1',
-  username: 'reader_one',
+  name: 'Reader One',
   email: 'reader@example.com',
-  displayName: 'Reader One',
   avatarUrl: 'https://api.dicebear.com/9.x/avataaars/svg?seed=reader_one',
   bio: 'Just here to read manga.',
   role: 'member',
@@ -34,19 +33,17 @@ export const MOCK_USER: User = {
 
 export const MOCK_ADMIN_USER: User = {
   id: 'user-admin',
-  username: 'group_leader',
+  name: 'Group Leader',
   email: 'admin@example.com',
-  displayName: 'Group Leader',
   avatarUrl: 'https://api.dicebear.com/9.x/avataaars/svg?seed=group_leader',
   bio: 'Translation group admin.',
   role: 'group_admin',
   createdAt: '2024-06-01T00:00:00Z',
 }
 
+// Server sets tokens as HTTP-only cookies — response only carries user
 export const MOCK_AUTH_RESPONSE: AuthResponse = {
   user: MOCK_USER,
-  accessToken: 'mock-access-token-abc123',
-  refreshToken: 'mock-refresh-token-xyz789',
 }
 
 // ─── Genres ───────────────────────────────────────────────────────────────────
@@ -74,9 +71,10 @@ const MOCK_TRANSLATOR_GROUP: TranslatorGroup = {
 
 // ─── Chapter Summaries ────────────────────────────────────────────────────────
 
-function makeChapterSummaries(mangaId: string, count: number): ChapterSummary[] {
+function makeChapterSummaries(comicSlug: string, count: number): ChapterSummary[] {
   return Array.from({ length: count }, (_, i) => ({
-    id: `${mangaId}-ch-${i + 1}`,
+    id: `${comicSlug}-ch-${i + 1}-id`,
+    slug: `chapter-${i + 1}`,
     number: i + 1,
     title: i === 0 ? 'Prologue' : null,
     uploadedAt: new Date(Date.now() - (count - i) * 86_400_000).toISOString(),
@@ -89,6 +87,7 @@ function makeChapterSummaries(mangaId: string, count: number): ChapterSummary[] 
 export const MOCK_MANGA_LIST: Manga[] = [
   {
     id: 'manga-1',
+    slug: 'steel-shadow',
     title: 'Steel & Shadow',
     alternativeTitles: ['Thép & Bóng Tối'],
     coverUrl: 'https://picsum.photos/seed/manga1/300/420',
@@ -106,7 +105,8 @@ export const MOCK_MANGA_LIST: Manga[] = [
     followCount: 15420,
     chapterCount: 58,
     latestChapter: {
-      id: 'manga-1-ch-58',
+      id: 'steel-shadow-ch-58-id',
+      slug: 'chapter-58',
       number: 58,
       title: 'The Final Stand',
       uploadedAt: new Date(Date.now() - 86_400_000).toISOString(),
@@ -117,6 +117,7 @@ export const MOCK_MANGA_LIST: Manga[] = [
   },
   {
     id: 'manga-2',
+    slug: 'starfall-academy',
     title: 'Starfall Academy',
     alternativeTitles: ['Học Viện Sao Băng'],
     coverUrl: 'https://picsum.photos/seed/manga2/300/420',
@@ -134,7 +135,8 @@ export const MOCK_MANGA_LIST: Manga[] = [
     followCount: 9870,
     chapterCount: 32,
     latestChapter: {
-      id: 'manga-2-ch-32',
+      id: 'starfall-academy-ch-32-id',
+      slug: 'chapter-32',
       number: 32,
       title: null,
       uploadedAt: new Date(Date.now() - 2 * 86_400_000).toISOString(),
@@ -145,6 +147,7 @@ export const MOCK_MANGA_LIST: Manga[] = [
   },
   {
     id: 'manga-3',
+    slug: 'laughing-lotus',
     title: 'Laughing Lotus',
     alternativeTitles: [],
     coverUrl: 'https://picsum.photos/seed/manga3/300/420',
@@ -161,7 +164,8 @@ export const MOCK_MANGA_LIST: Manga[] = [
     followCount: 22100,
     chapterCount: 120,
     latestChapter: {
-      id: 'manga-3-ch-120',
+      id: 'laughing-lotus-ch-120-id',
+      slug: 'chapter-120',
       number: 120,
       title: 'Epilogue',
       uploadedAt: '2024-12-01T00:00:00Z',
@@ -172,6 +176,7 @@ export const MOCK_MANGA_LIST: Manga[] = [
   },
   {
     id: 'novel-1',
+    slug: 'chronicles-of-the-void-walker',
     title: 'Chronicles of the Void Walker',
     alternativeTitles: ['Biên Niên Sử Kẻ Đi Qua Hư Không'],
     coverUrl: 'https://picsum.photos/seed/novel1/300/420',
@@ -189,7 +194,8 @@ export const MOCK_MANGA_LIST: Manga[] = [
     followCount: 4320,
     chapterCount: 210,
     latestChapter: {
-      id: 'novel-1-ch-210',
+      id: 'void-walker-ch-210-id',
+      slug: 'chapter-210',
       number: 210,
       title: null,
       uploadedAt: new Date(Date.now() - 3 * 86_400_000).toISOString(),
@@ -200,6 +206,7 @@ export const MOCK_MANGA_LIST: Manga[] = [
   },
   {
     id: 'manga-4',
+    slug: 'iron-cage',
     title: 'Iron Cage',
     alternativeTitles: [],
     coverUrl: 'https://picsum.photos/seed/manga4/300/420',
@@ -216,7 +223,8 @@ export const MOCK_MANGA_LIST: Manga[] = [
     followCount: 8900,
     chapterCount: 75,
     latestChapter: {
-      id: 'manga-4-ch-75',
+      id: 'iron-cage-ch-75-id',
+      slug: 'chapter-75',
       number: 75,
       title: null,
       uploadedAt: '2025-06-15T00:00:00Z',
@@ -227,6 +235,7 @@ export const MOCK_MANGA_LIST: Manga[] = [
   },
   {
     id: 'manga-5',
+    slug: 'phantom-blooms',
     title: 'Phantom Blooms',
     alternativeTitles: ['Hoa Ma'],
     coverUrl: 'https://picsum.photos/seed/manga5/300/420',
@@ -243,7 +252,8 @@ export const MOCK_MANGA_LIST: Manga[] = [
     followCount: 6700,
     chapterCount: 18,
     latestChapter: {
-      id: 'manga-5-ch-18',
+      id: 'phantom-blooms-ch-18-id',
+      slug: 'chapter-18',
       number: 18,
       title: null,
       uploadedAt: new Date(Date.now() - 86_400_000 * 0.5).toISOString(),
@@ -257,45 +267,51 @@ export const MOCK_MANGA_LIST: Manga[] = [
 // ─── Chapters ─────────────────────────────────────────────────────────────────
 
 export const MOCK_CHAPTER_SUMMARIES: Record<string, ChapterSummary[]> = {
-  'manga-1': makeChapterSummaries('manga-1', 58),
-  'manga-2': makeChapterSummaries('manga-2', 32),
-  'manga-3': makeChapterSummaries('manga-3', 120),
-  'novel-1': makeChapterSummaries('novel-1', 210),
-  'manga-4': makeChapterSummaries('manga-4', 75),
-  'manga-5': makeChapterSummaries('manga-5', 18),
+  'steel-shadow': makeChapterSummaries('steel-shadow', 58),
+  'starfall-academy': makeChapterSummaries('starfall-academy', 32),
+  'laughing-lotus': makeChapterSummaries('laughing-lotus', 120),
+  'chronicles-of-the-void-walker': makeChapterSummaries('chronicles-of-the-void-walker', 210),
+  'iron-cage': makeChapterSummaries('iron-cage', 75),
+  'phantom-blooms': makeChapterSummaries('phantom-blooms', 18),
 }
 
 export const MOCK_CHAPTERS: Record<string, Chapter> = {
-  'manga-1-ch-1': {
-    id: 'manga-1-ch-1',
+  'steel-shadow/chapter-1': {
+    id: 'steel-shadow-ch-1-id',
+    slug: 'chapter-1',
+    comicSlug: 'steel-shadow',
     mangaId: 'manga-1',
     number: 1,
     title: 'Prologue',
     uploadedAt: '2022-03-15T00:00:00Z',
     group: MOCK_TRANSLATOR_GROUP,
     pages: Array.from({ length: 22 }, (_, i) =>
-      `https://picsum.photos/seed/manga1ch1p${i + 1}/800/1200`
+      `https://picsum.photos/seed/steelshadowch1p${i + 1}/800/1200`
     ),
     content: null,
-    prevChapterId: null,
-    nextChapterId: 'manga-1-ch-2',
+    prevChapter: null,
+    nextChapter: { slug: 'chapter-2', number: 2 },
   },
-  'manga-1-ch-58': {
-    id: 'manga-1-ch-58',
+  'steel-shadow/chapter-58': {
+    id: 'steel-shadow-ch-58-id',
+    slug: 'chapter-58',
+    comicSlug: 'steel-shadow',
     mangaId: 'manga-1',
     number: 58,
     title: 'The Final Stand',
     uploadedAt: new Date(Date.now() - 86_400_000).toISOString(),
     group: MOCK_TRANSLATOR_GROUP,
     pages: Array.from({ length: 30 }, (_, i) =>
-      `https://picsum.photos/seed/manga1ch58p${i + 1}/800/1200`
+      `https://picsum.photos/seed/steelshadowch58p${i + 1}/800/1200`
     ),
     content: null,
-    prevChapterId: 'manga-1-ch-57',
-    nextChapterId: null,
+    prevChapter: { slug: 'chapter-57', number: 57 },
+    nextChapter: null,
   },
-  'novel-1-ch-1': {
-    id: 'novel-1-ch-1',
+  'chronicles-of-the-void-walker/chapter-1': {
+    id: 'void-walker-ch-1-id',
+    slug: 'chapter-1',
+    comicSlug: 'chronicles-of-the-void-walker',
     mangaId: 'novel-1',
     number: 1,
     title: 'Awakening',
@@ -311,8 +327,8 @@ export const MOCK_CHAPTERS: Record<string, Chapter> = {
 <p>"Then you are needed nowhere and everywhere. The Void Walker stirs once more."</p>
 <p>A crack split the fabric of the boundary, and through it poured light — not the warm light of a sun, but the cold, ancient light of something that had been burning since before matter existed.</p>
 <p>Kai stepped through.</p>`,
-    prevChapterId: null,
-    nextChapterId: 'novel-1-ch-2',
+    prevChapter: null,
+    nextChapter: { slug: 'chapter-2', number: 2 },
   },
 }
 
@@ -322,21 +338,21 @@ export const MOCK_LIBRARY: LibraryEntry[] = [
   {
     mangaId: 'manga-1',
     manga: MOCK_MANGA_LIST[0],
-    lastReadChapterId: 'manga-1-ch-30',
+    lastReadChapterId: 'steel-shadow-ch-30-id',
     lastReadAt: new Date(Date.now() - 2 * 86_400_000).toISOString(),
     addedAt: '2025-01-10T00:00:00Z',
   },
   {
     mangaId: 'manga-3',
     manga: MOCK_MANGA_LIST[2],
-    lastReadChapterId: 'manga-3-ch-120',
+    lastReadChapterId: 'laughing-lotus-ch-120-id',
     lastReadAt: '2024-12-05T00:00:00Z',
     addedAt: '2024-11-01T00:00:00Z',
   },
   {
     mangaId: 'novel-1',
     manga: MOCK_MANGA_LIST[3],
-    lastReadChapterId: 'novel-1-ch-50',
+    lastReadChapterId: 'void-walker-ch-50-id',
     lastReadAt: new Date(Date.now() - 86_400_000).toISOString(),
     addedAt: '2025-02-20T00:00:00Z',
   },
@@ -345,53 +361,53 @@ export const MOCK_LIBRARY: LibraryEntry[] = [
 // ─── Comments ─────────────────────────────────────────────────────────────────
 
 export const MOCK_COMMENTS: Record<string, Comment[]> = {
-  'manga-1': [
+  'steel-shadow-ch-58-id': [
     {
       id: 'cmt-1',
-      body: 'Chapter 58 was insane! The art during the final duel was stunning.',
+      content: 'Chapter 58 was insane! The art during the final duel was stunning.',
+      chapterId: 'steel-shadow-ch-58-id',
+      pageIndex: null,
       author: {
         id: 'user-2',
-        username: 'manga_fan_99',
-        displayName: 'Manga Fan',
+        name: 'Manga Fan',
         avatarUrl: 'https://api.dicebear.com/9.x/avataaars/svg?seed=manga_fan_99',
       },
       parentId: null,
       replies: [
         {
           id: 'cmt-2',
-          body: "Agreed! The double-page spread on page 22 was chef's kiss.",
+          content: "Agreed! The double-page spread on page 22 was chef's kiss.",
+          chapterId: 'steel-shadow-ch-58-id',
+          pageIndex: null,
           author: {
             id: 'user-1',
-            username: 'reader_one',
-            displayName: 'Reader One',
+            name: 'Reader One',
             avatarUrl: 'https://api.dicebear.com/9.x/avataaars/svg?seed=reader_one',
           },
           parentId: 'cmt-1',
           replies: [],
-          likeCount: 5,
-          isLiked: false,
+          reactions: [{ type: 'like', count: 5, userReacted: false }],
           createdAt: new Date(Date.now() - 3_600_000).toISOString(),
           updatedAt: new Date(Date.now() - 3_600_000).toISOString(),
         },
       ],
-      likeCount: 24,
-      isLiked: true,
+      reactions: [{ type: 'like', count: 24, userReacted: true }],
       createdAt: new Date(Date.now() - 7_200_000).toISOString(),
       updatedAt: new Date(Date.now() - 7_200_000).toISOString(),
     },
     {
       id: 'cmt-3',
-      body: 'Been following this since chapter 1. What a journey.',
+      content: 'Been following this since chapter 1. What a journey.',
+      chapterId: 'steel-shadow-ch-58-id',
+      pageIndex: null,
       author: {
         id: 'user-3',
-        username: 'long_time_reader',
-        displayName: 'Long Time Reader',
+        name: 'Long Time Reader',
         avatarUrl: 'https://api.dicebear.com/9.x/avataaars/svg?seed=long_time_reader',
       },
       parentId: null,
       replies: [],
-      likeCount: 17,
-      isLiked: false,
+      reactions: [{ type: 'like', count: 17, userReacted: false }],
       createdAt: new Date(Date.now() - 14_400_000).toISOString(),
       updatedAt: new Date(Date.now() - 14_400_000).toISOString(),
     },
@@ -407,7 +423,7 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
     title: 'New Chapter: Steel & Shadow',
     body: 'Chapter 58 "The Final Stand" is now available.',
     isRead: false,
-    link: '/titles/manga-1/read/manga-1-ch-58',
+    link: '/titles/steel-shadow/read/chapter-58',
     createdAt: new Date(Date.now() - 30 * 60_000).toISOString(),
   },
   {
@@ -416,7 +432,7 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
     title: 'Reader One replied to your comment',
     body: `"Agreed! The double-page spread on page 22 was chef's kiss."`,
     isRead: false,
-    link: '/titles/manga-1',
+    link: '/titles/steel-shadow',
     createdAt: new Date(Date.now() - 3_600_000).toISOString(),
   },
   {
@@ -425,7 +441,7 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
     title: 'New Chapter: Starfall Academy',
     body: 'Chapter 32 is now available.',
     isRead: true,
-    link: '/titles/manga-2/read/manga-2-ch-32',
+    link: '/titles/starfall-academy/read/chapter-32',
     createdAt: new Date(Date.now() - 2 * 86_400_000).toISOString(),
   },
 ]
@@ -449,8 +465,7 @@ export const MOCK_GROUP_MEMBERS: GroupMember[] = [
   {
     id: 'gm-1',
     userId: 'user-admin',
-    username: 'group_leader',
-    displayName: 'Group Leader',
+    name: 'Group Leader',
     avatarUrl: 'https://api.dicebear.com/9.x/avataaars/svg?seed=group_leader',
     role: 'admin',
     joinedAt: '2023-01-15T00:00:00Z',
@@ -458,8 +473,7 @@ export const MOCK_GROUP_MEMBERS: GroupMember[] = [
   {
     id: 'gm-2',
     userId: 'user-1',
-    username: 'reader_one',
-    displayName: 'Reader One',
+    name: 'Reader One',
     avatarUrl: 'https://api.dicebear.com/9.x/avataaars/svg?seed=reader_one',
     role: 'member',
     joinedAt: '2023-03-10T00:00:00Z',
@@ -469,6 +483,7 @@ export const MOCK_GROUP_MEMBERS: GroupMember[] = [
 export const MOCK_DASHBOARD_TITLES: DashboardTitle[] = [
   {
     id: 'manga-1',
+    slug: 'steel-shadow',
     title: 'Steel & Shadow',
     coverUrl: 'https://picsum.photos/seed/manga1/300/420',
     type: 'manga',
@@ -479,6 +494,7 @@ export const MOCK_DASHBOARD_TITLES: DashboardTitle[] = [
   },
   {
     id: 'manga-2',
+    slug: 'starfall-academy',
     title: 'Starfall Academy',
     coverUrl: 'https://picsum.photos/seed/manga2/300/420',
     type: 'manga',

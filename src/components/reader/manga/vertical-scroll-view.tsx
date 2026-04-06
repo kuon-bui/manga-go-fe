@@ -10,15 +10,17 @@ import { useMangaViewerStore } from '@/stores/manga-viewer-store'
 
 interface VerticalScrollViewProps {
   pages: string[]
-  chapterId: string
+  comicSlug: string
+  chapterSlug: string
 }
 
-export function VerticalScrollView({ pages, chapterId }: VerticalScrollViewProps) {
+export function VerticalScrollView({ pages, comicSlug, chapterSlug }: VerticalScrollViewProps) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const currentPage = useMangaViewerStore((s) => s.currentPage)
 
   const { observeElement } = useScrollProgress({
-    chapterId,
+    comicSlug,
+    chapterSlug,
     enabled: isAuthenticated,
   })
 
