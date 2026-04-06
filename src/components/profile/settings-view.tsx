@@ -25,7 +25,7 @@ export function SettingsView() {
   const viewerStore = useMangaViewerStore()
 
   const [avatarModalOpen, setAvatarModalOpen] = useState(false)
-  const [displayName, setDisplayName] = useState(user?.displayName ?? '')
+  const [displayName, setDisplayName] = useState(user?.name ?? '')
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [saving, setSaving] = useState(false)
@@ -35,10 +35,10 @@ export function SettingsView() {
   async function handleSaveProfile() {
     setSaving(true)
     try {
-      const updated = await apiClient.patch<{ displayName: string }>('/users/me/profile', {
-        displayName,
+      const updated = await apiClient.patch<{ name: string }>('/users/me', {
+        name: displayName,
       })
-      updateUser({ displayName: updated.displayName })
+      updateUser({ name: updated.name })
       toast.success('Profile updated')
     } catch {
       toast.error('Failed to save profile')
@@ -74,7 +74,7 @@ export function SettingsView() {
     }
   }
 
-  const initials = user.displayName.slice(0, 2).toUpperCase()
+  const initials = user.name.slice(0, 2).toUpperCase()
 
   return (
     <div className="container mx-auto max-w-2xl px-4 py-8">
@@ -95,7 +95,7 @@ export function SettingsView() {
             <h2 className="text-base font-semibold text-foreground">Avatar</h2>
             <div className="flex items-center gap-4">
               <Avatar className="h-20 w-20">
-                {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.displayName} />}
+                {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.name} />}
                 <AvatarFallback className="text-xl">{initials}</AvatarFallback>
               </Avatar>
               <Button variant="outline" onClick={() => setAvatarModalOpen(true)}>
@@ -116,9 +116,9 @@ export function SettingsView() {
               />
             </div>
             <div className="space-y-1">
-              <Label>Username</Label>
-              <Input value={user.username} disabled className="opacity-60" />
-              <p className="text-xs text-muted-foreground">Username cannot be changed.</p>
+              <Label>Email</Label>
+              <Input value={user.email} disabled className="opacity-60" />
+              <p className="text-xs text-muted-foreground">Email cannot be changed here.</p>
             </div>
             <Button onClick={handleSaveProfile} disabled={saving}>
               {saving ? 'Saving…' : 'Save Profile'}

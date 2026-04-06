@@ -4,9 +4,8 @@ export type UserRole = 'guest' | 'member' | 'translator' | 'group_admin' | 'mode
 
 export interface User {
   id: string;
-  username: string;
+  name: string;         // backend field (was: displayName / username)
   email: string;
-  displayName: string;
   avatarUrl: string | null;
   bio: string | null;
   role: UserRole;
@@ -19,10 +18,10 @@ export interface LoginPayload {
 }
 
 export interface RegisterPayload {
-  username: string;
+  name: string;         // backend field (was: username)
   email: string;
   password: string;
-  confirmPassword: string;
+  confirmPassword: string; // client-only validation, not sent to API
 }
 
 export interface ForgotPasswordPayload {
@@ -31,12 +30,11 @@ export interface ForgotPasswordPayload {
 
 export interface ResetPasswordPayload {
   token: string;
-  password: string;
-  confirmPassword: string;
+  new_password: string; // backend field (was: password)
+  confirmPassword: string; // client-only validation
 }
 
+// Server sets auth tokens as HTTP-only cookies — response only carries the user object
 export interface AuthResponse {
   user: User;
-  accessToken: string;
-  refreshToken: string;
 }

@@ -11,17 +11,18 @@ import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts'
 import { useMangaViewerStore } from '@/stores/manga-viewer-store'
 
 interface MangaReaderProps {
-  chapterId: string
+  comicSlug: string
+  chapterSlug: string
 }
 
-export function MangaReader({ chapterId }: MangaReaderProps) {
-  const { data: chapter, isLoading } = useChapter(chapterId)
+export function MangaReader({ comicSlug, chapterSlug }: MangaReaderProps) {
+  const { data: chapter, isLoading } = useChapter(comicSlug, chapterSlug)
   const { mode, currentPage, nextPage, prevPage, toggleSettings, reset } = useMangaViewerStore()
 
   // Reset page position when chapter changes
   useEffect(() => {
     reset()
-  }, [chapterId, reset])
+  }, [comicSlug, chapterSlug, reset])
 
   useKeyboardShortcuts({
     onNext: () => chapter && nextPage(chapter.pages.length),
@@ -46,7 +47,7 @@ export function MangaReader({ chapterId }: MangaReaderProps) {
 
       {/* Viewer */}
       {mode === 'vertical' && (
-        <VerticalScrollView pages={pages} chapterId={chapterId} />
+        <VerticalScrollView pages={pages} comicSlug={comicSlug} chapterSlug={chapterSlug} />
       )}
       {mode === 'single' && (
         <SinglePageView

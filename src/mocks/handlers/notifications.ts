@@ -3,7 +3,7 @@ import { http, HttpResponse, delay } from 'msw'
 import type { Notification, PaginatedResponse } from '@/types'
 import { MOCK_NOTIFICATIONS } from '@/mocks/data'
 
-const BASE = 'http://localhost:8080/api/v1'
+const BASE = 'http://localhost:8080'
 
 // Mutable in-memory state
 const notifications: Notification[] = [...MOCK_NOTIFICATIONS]

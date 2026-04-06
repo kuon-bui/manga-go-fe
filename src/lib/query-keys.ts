@@ -8,11 +8,12 @@ export const queryKeys = {
   manga: {
     all: () => ['manga'] as const,
     list: (filters: Record<string, unknown>) => ['manga', 'list', filters] as const,
-    detail: (id: string) => ['manga', 'detail', id] as const,
-    chapters: (mangaId: string) => ['manga', mangaId, 'chapters'] as const,
+    detail: (slug: string) => ['manga', 'detail', slug] as const,
+    chapters: (comicSlug: string) => ['manga', comicSlug, 'chapters'] as const,
   },
   chapter: {
-    detail: (id: string) => ['chapter', 'detail', id] as const,
+    detail: (comicSlug: string, chapterSlug: string) =>
+      ['chapter', 'detail', comicSlug, chapterSlug] as const,
   },
   library: {
     all: () => ['library'] as const,
@@ -33,7 +34,7 @@ export const queryKeys = {
     user: (mangaId: string) => ['rating', 'user', mangaId] as const,
   },
   comments: {
-    list: (mangaId: string) => ['comments', mangaId] as const,
+    list: (chapterId: string) => ['comments', chapterId] as const,
   },
   home: {
     trending: () => ['home', 'trending'] as const,
@@ -46,8 +47,8 @@ export const queryKeys = {
   dashboard: {
     titles: () => ['dashboard', 'titles'] as const,
     groups: () => ['dashboard', 'groups'] as const,
-    group: (groupId: string) => ['dashboard', 'group', groupId] as const,
-    groupMembers: (groupId: string) => ['dashboard', 'group', groupId, 'members'] as const,
+    group: (slug: string) => ['dashboard', 'group', slug] as const,
+    groupMembers: (slug: string) => ['dashboard', 'group', slug, 'members'] as const,
   },
   browse: {
     results: (filters: Record<string, unknown>) =>

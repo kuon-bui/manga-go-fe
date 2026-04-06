@@ -8,47 +8,54 @@ import type { Comment, PaginatedResponse } from '@/types'
 
 // ─── Fetch ────────────────────────────────────────────────────────────────────
 
-export function useComments(mangaId: string) {
+export function useComments(chapterId: string) {
   return useQuery<PaginatedResponse<Comment>>({
-    queryKey: queryKeys.comments.list(mangaId),
-    queryFn: () => apiClient.get<PaginatedResponse<Comment>>(`/manga/${mangaId}/comments`),
-    enabled: Boolean(mangaId),
+    queryKey: queryKeys.comments.list(chapterId),
+    queryFn: () =>
+      apiClient.get<PaginatedResponse<Comment>>('/comments', {
+        params: { chapterId },
+      }),
+    enabled: Boolean(chapterId),
   })
 }
 
 // ─── Add comment (optimistic) ─────────────────────────────────────────────────
 
 interface AddCommentPayload {
-  body: string
+  content: string
   parentId: string | null
 }
 
-export function useAddComment(mangaId: string) {
+export function useAddComment(chapterId: string) {
   const qc = useQueryClient()
 
   return useMutation({
     mutationFn: (payload: AddCommentPayload) =>
-      apiClient.post<Comment>(`/manga/${mangaId}/comments`, payload),
+      apiClient.post<Comment>('/comments', {
+        chapterId,
+        content: payload.content,
+        pageIndex: null,
+        parentId: payload.parentId,
+      }),
 
     onMutate: async (payload) => {
-      const key = queryKeys.comments.list(mangaId)
+      const key = queryKeys.comments.list(chapterId)
       await qc.cancelQueries({ queryKey: key })
       const prev = qc.getQueryData<PaginatedResponse<Comment>>(key)
 
-      // Build optimistic comment
       const optimistic: Comment = {
         id: `optimistic-${Date.now()}`,
-        body: payload.body,
+        content: payload.content,
+        chapterId,
+        pageIndex: null,
         parentId: payload.parentId,
         replies: [],
-        likeCount: 0,
-        isLiked: false,
+        reactions: [],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         author: {
           id: 'me',
-          username: '',
-          displayName: 'You',
+          name: 'You',
           avatarUrl: null,
         },
       }
@@ -56,7 +63,6 @@ export function useAddComment(mangaId: string) {
       qc.setQueryData<PaginatedResponse<Comment>>(key, (old) => {
         if (!old) return old
         if (payload.parentId) {
-          // Inject as reply into parent
           const updated = old.data.map((c) => {
             if (c.id === payload.parentId) {
               return { ...c, replies: [...c.replies, optimistic] }
@@ -72,26 +78,26 @@ export function useAddComment(mangaId: string) {
     },
     onError: (_err, _vars, ctx) => {
       if (ctx?.prev) {
-        qc.setQueryData(queryKeys.comments.list(mangaId), ctx.prev)
+        qc.setQueryData(queryKeys.comments.list(chapterId), ctx.prev)
       }
     },
     onSettled: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.comments.list(mangaId) })
+      qc.invalidateQueries({ queryKey: queryKeys.comments.list(chapterId) })
     },
   })
 }
 
 // ─── Delete comment (optimistic) ──────────────────────────────────────────────
 
-export function useDeleteComment(mangaId: string) {
+export function useDeleteComment(chapterId: string) {
   const qc = useQueryClient()
 
   return useMutation({
     mutationFn: (commentId: string) =>
-      apiClient.delete(`/manga/${mangaId}/comments/${commentId}`),
+      apiClient.delete(`/comments/${commentId}`),
 
     onMutate: async (commentId) => {
-      const key = queryKeys.comments.list(mangaId)
+      const key = queryKeys.comments.list(chapterId)
       await qc.cancelQueries({ queryKey: key })
       const prev = qc.getQueryData<PaginatedResponse<Comment>>(key)
 
@@ -110,11 +116,11 @@ export function useDeleteComment(mangaId: string) {
     },
     onError: (_err, _vars, ctx) => {
       if (ctx?.prev) {
-        qc.setQueryData(queryKeys.comments.list(mangaId), ctx.prev)
+        qc.setQueryData(queryKeys.comments.list(chapterId), ctx.prev)
       }
     },
     onSettled: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.comments.list(mangaId) })
+      qc.invalidateQueries({ queryKey: queryKeys.comments.list(chapterId) })
     },
   })
 }

@@ -1,57 +1,15 @@
 import { http, HttpResponse, delay } from 'msw'
 
-import type { LibraryEntry, FollowStatus, UserRating } from '@/types'
-import { MOCK_LIBRARY, MOCK_MANGA_LIST } from '@/mocks/data'
+import type { FollowStatus, UserRating } from '@/types'
+import { MOCK_LIBRARY } from '@/mocks/data'
 
-const BASE = 'http://localhost:8080/api/v1'
+const BASE = 'http://localhost:8080'
 
-// Mutable in-memory state (resets on page refresh — fine for dev)
-const library = new Map<string, LibraryEntry>(
-  MOCK_LIBRARY.map((e) => [e.mangaId, e])
-)
+// Follow and rating have no real API equivalent yet — kept as mocks.
 const follows = new Map<string, boolean>(MOCK_LIBRARY.map((e) => [e.mangaId, true]))
 const ratings = new Map<string, number>([['manga-1', 9], ['manga-3', 10]])
 
 export const libraryHandlers = [
-  // GET /library
-  http.get(`${BASE}/library`, async () => {
-    await delay(200)
-    return HttpResponse.json(Array.from(library.values()))
-  }),
-
-  // GET /library/:mangaId
-  http.get(`${BASE}/library/:mangaId`, async ({ params }) => {
-    await delay(100)
-    const entry = library.get(params.mangaId as string)
-    if (!entry) return HttpResponse.json({ message: 'Not in library' }, { status: 404 })
-    return HttpResponse.json<LibraryEntry>(entry)
-  }),
-
-  // POST /library/:mangaId  — add to library
-  http.post(`${BASE}/library/:mangaId`, async ({ params }) => {
-    await delay(200)
-    const mangaId = params.mangaId as string
-    const manga = MOCK_MANGA_LIST.find((m) => m.id === mangaId)
-    if (!manga) return HttpResponse.json({ message: 'Title not found' }, { status: 404 })
-
-    const entry: LibraryEntry = {
-      mangaId,
-      manga,
-      lastReadChapterId: null,
-      lastReadAt: null,
-      addedAt: new Date().toISOString(),
-    }
-    library.set(mangaId, entry)
-    return HttpResponse.json<LibraryEntry>(entry, { status: 201 })
-  }),
-
-  // DELETE /library/:mangaId
-  http.delete(`${BASE}/library/:mangaId`, async ({ params }) => {
-    await delay(150)
-    library.delete(params.mangaId as string)
-    return new HttpResponse(null, { status: 204 })
-  }),
-
   // GET /follow/:mangaId
   http.get(`${BASE}/follow/:mangaId`, async ({ params }) => {
     await delay(100)

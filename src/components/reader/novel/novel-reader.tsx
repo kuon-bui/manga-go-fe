@@ -30,12 +30,13 @@ const FONT_FAMILY_MAP = {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 interface NovelReaderProps {
-  chapterId: string
+  comicSlug: string
+  chapterSlug: string
 }
 
-export function NovelReader({ chapterId }: NovelReaderProps) {
+export function NovelReader({ comicSlug, chapterSlug }: NovelReaderProps) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
-  const { data: chapter, isLoading } = useChapter(chapterId)
+  const { data: chapter, isLoading } = useChapter(comicSlug, chapterSlug)
 
   const {
     theme,
@@ -48,7 +49,8 @@ export function NovelReader({ chapterId }: NovelReaderProps) {
   } = useNovelReaderStore()
 
   const { observeElement } = useScrollProgress({
-    chapterId,
+    comicSlug,
+    chapterSlug,
     enabled: isAuthenticated,
   })
 
@@ -118,9 +120,9 @@ export function NovelReader({ chapterId }: NovelReaderProps) {
         {/* Chapter navigation */}
         <nav className="mt-12 flex items-center justify-between border-t pt-6" style={{ borderColor: 'var(--reader-text)', opacity: 0.2 }}>
           <div style={{ opacity: 1 }}>
-            {chapter.prevChapterId ? (
+            {chapter.prevChapter ? (
               <Button variant="outline" asChild>
-                <Link href={`/read/novel/${chapter.prevChapterId}`}>
+                <Link href={`/read/novel/${chapter.comicSlug}/${chapter.prevChapter.slug}`}>
                   <ChevronLeft className="h-4 w-4" />
                   Previous Chapter
                 </Link>
@@ -130,9 +132,9 @@ export function NovelReader({ chapterId }: NovelReaderProps) {
             )}
           </div>
           <div>
-            {chapter.nextChapterId ? (
+            {chapter.nextChapter ? (
               <Button asChild>
-                <Link href={`/read/novel/${chapter.nextChapterId}`}>
+                <Link href={`/read/novel/${chapter.comicSlug}/${chapter.nextChapter.slug}`}>
                   Next Chapter
                   <ChevronRight className="h-4 w-4" />
                 </Link>

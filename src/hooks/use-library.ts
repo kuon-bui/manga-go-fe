@@ -9,6 +9,6 @@ import type { LibraryEntry, PaginatedResponse } from '@/types'
 export function useLibrary() {
   return useQuery<PaginatedResponse<LibraryEntry>>({
     queryKey: queryKeys.library.all(),
-    queryFn: () => apiClient.get<PaginatedResponse<LibraryEntry>>('/library'),
+    queryFn: () => apiClient.get<PaginatedResponse<LibraryEntry>>('/reading-histories'),
   })
 }

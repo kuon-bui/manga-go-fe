@@ -17,6 +17,11 @@ export interface ApiError {
   status: number;
 }
 
+export interface ValidationFieldError {
+  field: string;
+  message: string;
+}
+
 export interface PaginatedResponse<T> {
   data: T[];
   total: number;
@@ -29,11 +34,14 @@ export interface PaginatedResponse<T> {
 
 export type ContentType = 'manga' | 'novel';
 export type ContentStatus = 'ongoing' | 'completed' | 'hiatus' | 'cancelled';
+export type ComicAgeRating = 'everyone' | 'teen' | 'mature' | 'adult';
 
 export interface Genre {
   id: string;
   name: string;
   slug: string;
+  thumbnail?: string | null;
+  description?: string | null;
 }
 
 export interface TranslatorGroup {
@@ -44,6 +52,7 @@ export interface TranslatorGroup {
 
 export interface ChapterSummary {
   id: string;
+  slug: string;
   number: number;
   title: string | null;
   uploadedAt: string;
@@ -52,11 +61,15 @@ export interface ChapterSummary {
 
 export interface Manga {
   id: string;
+  slug: string;         // primary URL identifier (backend: comicSlug)
   title: string;
   alternativeTitles: string[];
-  coverUrl: string;
+  coverUrl: string;     // UI alias — populated from backend `thumbnail`
+  thumbnail?: string | null; // backend field
+  banner?: string | null;
   type: ContentType;
   status: ContentStatus;
+  ageRating?: ComicAgeRating;
   description: string;
   author: string;
   artist: string | null;
@@ -73,25 +86,26 @@ export interface Manga {
 }
 
 export interface Chapter extends ChapterSummary {
+  comicSlug: string;    // needed to build API URLs and reader links
   mangaId: string;
-  pages: string[]; // image URLs for manga; empty for novel
+  pages: string[];      // image URLs for manga; empty for novel
   content: string | null; // HTML content for novel; null for manga
-  prevChapterId: string | null;
-  nextChapterId: string | null;
+  prevChapter: { slug: string; number: number } | null;
+  nextChapter: { slug: string; number: number } | null;
 }
 
 // ─── Rating & Follow ──────────────────────────────────────────────────────────
 
 export interface UserRating {
-  mangaId: string
-  score: number // 1–10
-  createdAt: string
-  updatedAt: string
+  mangaId: string;
+  score: number; // 1–10
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface FollowStatus {
-  mangaId: string
-  isFollowing: boolean
+  mangaId: string;
+  isFollowing: boolean;
 }
 
 // ─── Library ─────────────────────────────────────────────────────────────────
@@ -108,19 +122,25 @@ export interface LibraryEntry {
 
 export interface CommentAuthor {
   id: string;
-  username: string;
-  displayName: string;
+  name: string;         // backend field (was: username / displayName)
   avatarUrl: string | null;
+}
+
+export interface CommentReaction {
+  type: string;
+  count: number;
+  userReacted: boolean;
 }
 
 export interface Comment {
   id: string;
-  body: string;
+  content: string;      // backend field (was: body)
+  chapterId: string;
+  pageIndex: number | null;
   author: CommentAuthor;
   parentId: string | null;
   replies: Comment[];
-  likeCount: number;
-  isLiked: boolean;
+  reactions: CommentReaction[];
   createdAt: string;
   updatedAt: string;
 }
@@ -134,90 +154,88 @@ export type SortOption =
   | 'title_desc'
   | 'rating'
   | 'most_followed'
-  | 'most_read'
+  | 'most_read';
 
 export interface SearchFilters {
-  query?: string
-  type?: ContentType
-  status?: ContentStatus
-  genres?: string[]
-  tags?: string[]
-  ratingMin?: number
-  ratingMax?: number
-  yearMin?: number
-  yearMax?: number
-  sort?: SortOption
-  page?: number
-  pageSize?: number
+  query?: string;
+  type?: ContentType;
+  status?: ContentStatus;
+  genres?: string[];
+  tags?: string[];
+  ratingMin?: number;
+  ratingMax?: number;
+  yearMin?: number;
+  yearMax?: number;
+  sort?: SortOption;
+  page?: number;
+  pageSize?: number;
 }
 
 export interface BrowseFilters {
-  genre?: string
-  tag?: string
-  status?: ContentStatus
-  sort?: SortOption
-  page?: number
+  genre?: string;
+  tag?: string;
+  status?: ContentStatus;
+  sort?: SortOption;
+  page?: number;
 }
 
 // ─── Translator Dashboard ─────────────────────────────────────────────────────
 
-export type GroupRole = 'admin' | 'member'
+export type GroupRole = 'admin' | 'member';
 
 export interface GroupMember {
-  id: string
-  userId: string
-  username: string
-  displayName: string
-  avatarUrl: string | null
-  role: GroupRole
-  joinedAt: string
+  id: string;
+  userId: string;
+  name: string;         // backend field (was: username / displayName)
+  avatarUrl: string | null;
+  role: GroupRole;
+  joinedAt: string;
 }
 
 export interface Group {
-  id: string
-  name: string
-  slug: string
-  logoUrl: string | null
-  description: string | null
-  memberCount: number
-  titleCount: number
-  createdAt: string
+  id: string;
+  name: string;
+  slug: string;
+  logoUrl: string | null;
+  description: string | null;
+  memberCount: number;
+  titleCount: number;
+  createdAt: string;
 }
 
 export interface DashboardTitle {
-  id: string
-  title: string
-  coverUrl: string
-  type: ContentType
-  status: ContentStatus
-  chapterCount: number
-  lastUploadedAt: string | null
-  groups: Pick<Group, 'id' | 'name'>[]
+  id: string;
+  slug: string;
+  title: string;
+  coverUrl: string;
+  type: ContentType;
+  status: ContentStatus;
+  chapterCount: number;
+  lastUploadedAt: string | null;
+  groups: Pick<Group, 'id' | 'name'>[];
 }
 
 export interface UploadChapterPayload {
-  mangaId: string
-  groupId: string
-  number: number
-  title: string | null
-  /** manga: ordered image URLs; novel: empty */
-  pages: string[]
-  /** novel: HTML content; manga: null */
-  content: string | null
+  comicSlug: string;    // was: mangaId
+  slug: string;
+  number: number;
+  title: string | null;
+  pages: string[];
+  content: string | null;
 }
 
 export interface CreateTitlePayload {
-  title: string
-  alternativeTitles: string[]
-  type: ContentType
-  status: ContentStatus
-  description: string
-  author: string
-  artist: string | null
-  genres: string[]
-  tags: string[]
-  year: number | null
-  coverFile?: File
+  title: string;
+  alternativeTitles: string[];
+  type: ContentType;
+  status: ContentStatus;
+  description: string;
+  author: string;
+  artist: string | null;
+  genres: string[];
+  tags: string[];
+  year: number | null;
+  coverFile?: File;
 }
 
 // ─── Notifications ────────────────────────────────────────────────────────────

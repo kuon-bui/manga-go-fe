@@ -14,6 +14,12 @@ const MangaReader = dynamic(
   }
 )
 
-export function MangaReaderClient({ chapterId }: { chapterId: string }) {
-  return <MangaReader chapterId={chapterId} />
+export function MangaReaderClient({
+  comicSlug,
+  chapterSlug,
+}: {
+  comicSlug: string
+  chapterSlug: string
+}) {
+  return <MangaReader comicSlug={comicSlug} chapterSlug={chapterSlug} />
 }

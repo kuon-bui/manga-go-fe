@@ -64,7 +64,7 @@ export function Header() {
                 href="/profile"
                 className="text-sm font-medium text-foreground hover:text-muted-foreground transition-colors"
               >
-                {user.username}
+                {user.name}
               </Link>
               <Button variant="ghost" size="sm" onClick={logout}>
                 Sign out

@@ -12,7 +12,7 @@ import { useMangaDetail, useChapterList } from '@/hooks/use-title-detail'
 import { Skeleton } from '@/components/ui/skeleton'
 
 interface TitleDetailViewProps {
-  id: string
+  id: string // comicSlug from URL param
 }
 
 export function TitleDetailView({ id }: TitleDetailViewProps) {
@@ -20,6 +20,9 @@ export function TitleDetailView({ id }: TitleDetailViewProps) {
 
   const { data: manga, isLoading } = useMangaDetail(id)
   const { data: chaptersData, isLoading: chaptersLoading } = useChapterList(id)
+
+  // Use latest chapter's id for comments (API requires a chapterId)
+  const latestChapterId = chaptersData?.data?.[0]?.id ?? manga?.latestChapter?.id ?? ''
 
   if (isLoading || !manga) {
     return (
@@ -56,13 +59,13 @@ export function TitleDetailView({ id }: TitleDetailViewProps) {
           <ChapterList
             chapters={chaptersData?.data ?? []}
             isLoading={chaptersLoading}
-            mangaId={id}
+            comicSlug={id}
             contentType={manga.type}
           />
         </TabsContent>
 
         <TabsContent value="comments" className="mt-4">
-          <CommentSection mangaId={id} />
+          <CommentSection chapterId={latestChapterId} />
         </TabsContent>
       </Tabs>
 
@@ -70,7 +73,7 @@ export function TitleDetailView({ id }: TitleDetailViewProps) {
       <RatingModal
         open={ratingOpen}
         onOpenChange={setRatingOpen}
-        mangaId={id}
+        mangaId={manga.slug ?? id}
         mangaTitle={manga.title}
       />
     </div>

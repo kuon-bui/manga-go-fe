@@ -11,15 +11,13 @@ import type { Comment } from '@/types'
 
 interface CommentItemProps {
   comment: Comment
-  mangaId: string
   depth?: number
   onDelete: (_commentId: string) => void
-  onReply: (_parentId: string, _body: string) => void
+  onReply: (_parentId: string, _content: string) => void
 }
 
 export function CommentItem({
   comment,
-  mangaId: _mangaId,
   depth = 0,
   onDelete,
   onReply,
@@ -32,14 +30,18 @@ export function CommentItem({
   const isOptimistic = comment.id.startsWith('optimistic-')
   const canReply = depth < 1 // max depth 2: root + 1 reply level
 
-  const initials = comment.author.displayName.slice(0, 2).toUpperCase()
+  const likeReaction = comment.reactions.find((r) => r.type === 'like')
+  const likeCount = likeReaction?.count ?? 0
+  const isLiked = likeReaction?.userReacted ?? false
+
+  const initials = comment.author.name.slice(0, 2).toUpperCase()
 
   return (
     <div className={cn('flex gap-3', depth > 0 && 'ml-8 mt-3')}>
       {/* Avatar */}
       <Avatar className="h-8 w-8 shrink-0">
         {comment.author.avatarUrl && (
-          <AvatarImage src={comment.author.avatarUrl} alt={comment.author.displayName} />
+          <AvatarImage src={comment.author.avatarUrl} alt={comment.author.name} />
         )}
         <AvatarFallback>{initials}</AvatarFallback>
       </Avatar>
@@ -48,7 +50,7 @@ export function CommentItem({
         {/* Header */}
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold text-foreground">
-            {comment.author.displayName}
+            {comment.author.name}
           </span>
           <span className="text-xs text-muted-foreground">
             {formatDate(comment.createdAt)}
@@ -59,19 +61,19 @@ export function CommentItem({
         </div>
 
         {/* Body */}
-        <p className="text-sm leading-relaxed text-foreground">{comment.body}</p>
+        <p className="text-sm leading-relaxed text-foreground">{comment.content}</p>
 
         {/* Actions */}
         <div className="flex items-center gap-3">
           <button
             className={cn(
               'flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground',
-              comment.isLiked && 'text-red-500 hover:text-red-600'
+              isLiked && 'text-red-500 hover:text-red-600'
             )}
-            aria-label={`Like comment (${comment.likeCount})`}
+            aria-label={`Like comment (${likeCount})`}
           >
-            <Heart className={cn('h-3.5 w-3.5', comment.isLiked && 'fill-current')} />
-            {comment.likeCount > 0 && comment.likeCount}
+            <Heart className={cn('h-3.5 w-3.5', isLiked && 'fill-current')} />
+            {likeCount > 0 && likeCount}
           </button>
 
           {canReply && currentUser && (
@@ -125,7 +127,6 @@ export function CommentItem({
                   <CommentItem
                     key={reply.id}
                     comment={reply}
-                    mangaId={_mangaId}
                     depth={depth + 1}
                     onDelete={onDelete}
                     onReply={onReply}

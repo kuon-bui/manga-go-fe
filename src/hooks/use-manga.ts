@@ -11,7 +11,7 @@ import type { Manga, Genre, PaginatedResponse, SearchFilters, BrowseFilters } fr
 export function useTrending() {
   return useQuery<Manga[]>({
     queryKey: queryKeys.home.trending(),
-    queryFn: () => apiClient.get<Manga[]>('/manga/trending'),
+    queryFn: () => apiClient.get<Manga[]>('/comics', { params: { limit: '10' } }),
     staleTime: 5 * 60 * 1000, // 5 min
   })
 }
@@ -19,7 +19,10 @@ export function useTrending() {
 export function useRecentlyUpdated() {
   return useQuery<PaginatedResponse<Manga>>({
     queryKey: queryKeys.home.recentlyUpdated(),
-    queryFn: () => apiClient.get<PaginatedResponse<Manga>>('/manga/recently-updated'),
+    queryFn: () =>
+      apiClient.get<PaginatedResponse<Manga>>('/comics', {
+        params: { page: '1', limit: '20' },
+      }),
     staleTime: 2 * 60 * 1000, // 2 min
   })
 }
@@ -27,7 +30,7 @@ export function useRecentlyUpdated() {
 export function useGenres() {
   return useQuery<Genre[]>({
     queryKey: queryKeys.genres.all(),
-    queryFn: () => apiClient.get<Genre[]>('/genres'),
+    queryFn: () => apiClient.get<Genre[]>('/genres/all'),
     staleTime: 60 * 60 * 1000, // 1 hour — genres rarely change
   })
 }
@@ -38,7 +41,7 @@ export function useSearch(filters: SearchFilters) {
   const params = buildParams(filters as unknown as Record<string, unknown>)
   return useQuery<PaginatedResponse<Manga>>({
     queryKey: queryKeys.search.results(filters.query ?? '', filters as unknown as Record<string, unknown>),
-    queryFn: () => apiClient.get<PaginatedResponse<Manga>>('/manga/search', { params }),
+    queryFn: () => apiClient.get<PaginatedResponse<Manga>>('/comics', { params }),
     enabled: Object.keys(filters).length > 0,
   })
 }
@@ -49,7 +52,17 @@ export function useBrowse(filters: BrowseFilters) {
   const params = buildParams(filters as unknown as Record<string, unknown>)
   return useQuery<PaginatedResponse<Manga>>({
     queryKey: queryKeys.browse.results(filters as unknown as Record<string, unknown>),
-    queryFn: () => apiClient.get<PaginatedResponse<Manga>>('/manga/browse', { params }),
+    queryFn: () => apiClient.get<PaginatedResponse<Manga>>('/comics', { params }),
+  })
+}
+
+// ─── Detail ───────────────────────────────────────────────────────────────────
+
+export function useManga(slug: string) {
+  return useQuery<Manga>({
+    queryKey: queryKeys.manga.detail(slug),
+    queryFn: () => apiClient.get<Manga>(`/comics/${slug}`),
+    enabled: Boolean(slug),
   })
 }
 
@@ -66,14 +79,4 @@ function buildParams(obj: Record<string, unknown>): Record<string, string> {
     }
   }
   return out
-}
-
-// ─── Detail ───────────────────────────────────────────────────────────────────
-
-export function useManga(id: string) {
-  return useQuery<Manga>({
-    queryKey: queryKeys.manga.detail(id),
-    queryFn: () => apiClient.get<Manga>(`/manga/${id}`),
-    enabled: Boolean(id),
-  })
 }
