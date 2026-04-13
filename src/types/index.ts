@@ -9,6 +9,15 @@ export type {
   AuthResponse,
 } from '@/types/auth';
 
+export type {
+  Role,
+  RoleDetail,
+  PermissionEntity,
+  AssignRolePermissionsPayload,
+  AssignUserRolesPayload,
+  UserRolesResponse,
+} from '@/types/rbac';
+
 // ─── API ────────────────────────────────────────────────────────────────────
 
 export interface ApiError {
@@ -44,6 +53,19 @@ export interface Genre {
   description?: string | null;
 }
 
+export interface Author {
+  id: string;
+  name: string;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+}
+
+export interface Tag {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 export interface TranslatorGroup {
   id: string;
   name: string;
@@ -53,7 +75,7 @@ export interface TranslatorGroup {
 export interface ChapterSummary {
   id: string;
   slug: string;
-  number: number;
+  number: string;       // backend stores as string (supports "1", "1.5", "EX1")
   title: string | null;
   uploadedAt: string;
   group: TranslatorGroup | null;
@@ -61,28 +83,33 @@ export interface ChapterSummary {
 
 export interface Manga {
   id: string;
-  slug: string;         // primary URL identifier (backend: comicSlug)
+  slug: string;             // primary URL identifier
   title: string;
   alternativeTitles: string[];
-  coverUrl: string;     // UI alias — populated from backend `thumbnail`
-  thumbnail?: string | null; // backend field
-  banner?: string | null;
+  description: string | null;
+  thumbnail: string | null; // cover image URL
+  banner: string | null;
   type: ContentType;
   status: ContentStatus;
-  ageRating?: ComicAgeRating;
-  description: string;
-  author: string;
-  artist: string | null;
+  ageRating: ComicAgeRating;
+  isPublished: boolean;
+  isHot: boolean;
+  isFeatured: boolean;
+  publishedYear: number | null;
+  lastChapterAt: string | null;
+  artistId: string | null;
+  authors: Author[];
+  artist: Author | null;
   genres: Genre[];
-  tags: string[];
-  year: number | null;
-  rating: number;
-  ratingCount: number;
-  followCount: number;
-  chapterCount: number;
-  latestChapter: ChapterSummary | null;
-  createdAt: string;
-  updatedAt: string;
+  tags: Tag[];
+  chapters?: ChapterSummary[]; // populated only in detail response
+  // Fields not returned by backend (optional, for mocks / future aggregation)
+  rating?: number;
+  ratingCount?: number;
+  followCount?: number;
+  chapterCount?: number;
+  createdAt: string | null;
+  updatedAt: string | null;
 }
 
 export interface Chapter extends ChapterSummary {
@@ -90,8 +117,8 @@ export interface Chapter extends ChapterSummary {
   mangaId: string;
   pages: string[];      // image URLs for manga; empty for novel
   content: string | null; // HTML content for novel; null for manga
-  prevChapter: { slug: string; number: number } | null;
-  nextChapter: { slug: string; number: number } | null;
+  prevChapter: { slug: string; number: string } | null;
+  nextChapter: { slug: string; number: string } | null;
 }
 
 // ─── Rating & Follow ──────────────────────────────────────────────────────────
@@ -216,27 +243,35 @@ export interface DashboardTitle {
 }
 
 export interface UploadChapterPayload {
-  comicSlug: string;    // was: mangaId
+  comicSlug: string;
   slug: string;
-  number: number;
+  number: string;       // backend stores as string
   title: string | null;
   pages: string[];
   content: string | null;
 }
 
-export interface CreateTitlePayload {
+/** Legacy form payload — converted to CreateComicPayload before sending to API */
+export interface CreateTitleFormData {
   title: string;
   alternativeTitles: string[];
   type: ContentType;
   status: ContentStatus;
   description: string;
-  author: string;
-  artist: string | null;
+  /** Author name or ID — resolved to authorId before submission */
+  authorName: string;
+  authorId: string | null;
+  artistId: string | null;
   genres: string[];
   tags: string[];
   year: number | null;
   coverFile?: File;
+  thumbnailUrl?: string | null;
+  ageRating: ComicAgeRating;
 }
+
+// Keep for backward-compat with any remaining references
+export type CreateTitlePayload = CreateTitleFormData;
 
 // ─── Notifications ────────────────────────────────────────────────────────────
 

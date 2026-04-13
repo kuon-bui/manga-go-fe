@@ -1,27 +1,36 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useThemeStore } from '@/stores/theme-store';
+import { useThemeStore, THEME_CLASS, type Theme } from '@/stores/theme-store';
+
+function applyThemeClasses(theme: Theme) {
+  const root = document.documentElement;
+  // Remove all known theme classes
+  root.classList.remove('dark', 'light', 'midnight', 'sepia-theme', 'slate-theme', 'forest-theme');
+
+  if (theme === 'system') {
+    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (isDark) root.classList.add('dark');
+    return;
+  }
+
+  const classes = THEME_CLASS[theme];
+  if (classes) {
+    classes.split(' ').filter(Boolean).forEach((c) => root.classList.add(c));
+  }
+}
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const { theme } = useThemeStore();
 
   useEffect(() => {
-    const root = document.documentElement;
-
-    const applyTheme = (resolved: 'light' | 'dark') => {
-      root.classList.remove('light', 'dark');
-      root.classList.add(resolved);
-    };
+    applyThemeClasses(theme);
 
     if (theme === 'system') {
       const mql = window.matchMedia('(prefers-color-scheme: dark)');
-      applyTheme(mql.matches ? 'dark' : 'light');
-      const handler = (e: MediaQueryListEvent) => applyTheme(e.matches ? 'dark' : 'light');
+      const handler = () => applyThemeClasses('system');
       mql.addEventListener('change', handler);
       return () => mql.removeEventListener('change', handler);
-    } else {
-      applyTheme(theme);
     }
   }, [theme]);
 

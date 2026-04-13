@@ -41,25 +41,34 @@ export function TitleHero({ manga, onRateClick }: TitleHeroProps) {
     followMutation.mutate(isFollowing)
   }
 
-  // Build first-chapter URL using manga slug + latest chapter slug as placeholder
-  const firstChapterSlug = manga.latestChapter?.slug ?? null
+  // Build first-chapter URL: detail response includes chapters array (oldest first)
+  const firstChapterSlug = manga.chapters?.[0]?.slug ?? null
   const readerPath = manga.type === 'novel' ? 'novel' : 'manga'
   const firstChapterUrl = firstChapterSlug
     ? `/read/${readerPath}/${manga.slug}/${firstChapterSlug}`
     : '#'
 
+  const authorNames = manga.authors.map((a) => a.name).join(', ') || 'Unknown'
+  const artistName = manga.artist?.name ?? null
+
   return (
     <div className="flex flex-col gap-6 md:flex-row">
       {/* Cover */}
       <div className="relative mx-auto h-64 w-44 shrink-0 overflow-hidden rounded-xl shadow-lg md:mx-0 md:h-80 md:w-56">
-        <Image
-          src={manga.coverUrl}
-          alt={`Cover of ${manga.title}`}
-          fill
-          sizes="(max-width: 768px) 176px, 224px"
-          className="object-cover"
-          priority
-        />
+        {manga.thumbnail ? (
+          <Image
+            src={manga.thumbnail}
+            alt={`Cover of ${manga.title}`}
+            fill
+            sizes="(max-width: 768px) 176px, 224px"
+            className="object-cover"
+            priority
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center bg-muted text-muted-foreground text-sm">
+            No cover
+          </div>
+        )}
       </div>
 
       {/* Info */}
@@ -80,29 +89,33 @@ export function TitleHero({ manga, onRateClick }: TitleHeroProps) {
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant={manga.type}>{TYPE_LABEL[manga.type]}</Badge>
           <Badge variant={manga.status}>{STATUS_LABEL[manga.status]}</Badge>
-          {manga.year && (
-            <Badge variant="outline">{manga.year}</Badge>
+          {manga.publishedYear && (
+            <Badge variant="outline">{manga.publishedYear}</Badge>
           )}
         </div>
 
         {/* Rating */}
         <StarRating
-          value={manga.rating}
+          value={manga.rating ?? 0}
           readOnly
           showValue
-          voteCount={manga.ratingCount}
+          voteCount={manga.ratingCount ?? 0}
         />
 
         <Separator />
 
         {/* Metadata */}
         <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm sm:grid-cols-3">
-          <MetaRow label="Author" value={manga.author} />
-          {manga.artist && manga.artist !== manga.author && (
-            <MetaRow label="Artist" value={manga.artist} />
+          <MetaRow label="Author" value={authorNames} />
+          {artistName && artistName !== authorNames && (
+            <MetaRow label="Artist" value={artistName} />
           )}
-          <MetaRow label="Chapters" value={String(manga.chapterCount)} />
-          <MetaRow label="Follows" value={manga.followCount.toLocaleString()} />
+          {manga.chapterCount !== undefined && (
+            <MetaRow label="Chapters" value={String(manga.chapterCount)} />
+          )}
+          {manga.followCount !== undefined && (
+            <MetaRow label="Follows" value={manga.followCount.toLocaleString()} />
+          )}
         </dl>
 
         {/* Genres */}
