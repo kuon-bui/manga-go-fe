@@ -10,7 +10,7 @@ export default async function GroupManagementPage({ params }: PageProps) {
   const { groupId } = await params
   return (
     <Suspense fallback={<Skeleton className="h-96 w-full" />}>
-      <GroupManagementView groupId={groupId} />
+      <GroupManagementView groupSlug={groupId} />
     </Suspense>
   )
 }

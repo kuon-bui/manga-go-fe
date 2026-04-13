@@ -9,9 +9,9 @@ import type { Manga, Genre, PaginatedResponse, SearchFilters, BrowseFilters } fr
 // ─── Home ─────────────────────────────────────────────────────────────────────
 
 export function useTrending() {
-  return useQuery<Manga[]>({
+  return useQuery<PaginatedResponse<Manga>>({
     queryKey: queryKeys.home.trending(),
-    queryFn: () => apiClient.get<Manga[]>('/comics', { params: { limit: '10' } }),
+    queryFn: () => apiClient.get<PaginatedResponse<Manga>>('/comics', { params: { limit: '10' } }),
     staleTime: 5 * 60 * 1000, // 5 min
   })
 }

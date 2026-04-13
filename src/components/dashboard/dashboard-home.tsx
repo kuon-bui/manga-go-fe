@@ -39,18 +39,18 @@ export function DashboardHome() {
           </div>
         )}
 
-        {!groupsLoading && (!groups || groups.length === 0) && (
+        {!groupsLoading && (!groups || groups.data.length === 0) && (
           <p className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground dark:border-border">
             You are not a member of any group yet.
           </p>
         )}
 
-        {groups && groups.length > 0 && (
+        {groups && groups.data.length > 0 && (
           <div className="flex flex-wrap gap-3">
-            {groups.map((g) => (
+            {groups.data.map((g) => (
               <Link
                 key={g.id}
-                href={`/dashboard/groups/${g.id}`}
+                href={`/dashboard/groups/${g.slug}`}
                 className="flex w-44 flex-col gap-2 rounded-xl border bg-card p-4 shadow-sm transition-shadow hover:shadow-md dark:border-border"
               >
                 <div className="flex items-center gap-2">
@@ -122,13 +122,19 @@ export function DashboardHome() {
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <div className="relative h-10 w-7 shrink-0 overflow-hidden rounded-md bg-muted">
-                        <Image
-                          src={title.coverUrl}
-                          alt={title.title}
-                          fill
-                          sizes="28px"
-                          className="object-cover"
-                        />
+                        {title.coverUrl?.trim() ? (
+                          <Image
+                            src={title.coverUrl}
+                            alt={title.title}
+                            fill
+                            sizes="28px"
+                            className="object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-[10px] font-semibold text-muted-foreground">
+                            N/A
+                          </div>
+                        )}
                       </div>
                       <span className="line-clamp-1 font-medium text-foreground">{title.title}</span>
                     </div>

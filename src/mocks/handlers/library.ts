@@ -1,4 +1,4 @@
-import { http, HttpResponse, delay } from 'msw'
+import { http, HttpResponse } from 'msw'
 
 import type { FollowStatus, UserRating } from '@/types'
 import { MOCK_LIBRARY } from '@/mocks/data'
@@ -12,7 +12,6 @@ const ratings = new Map<string, number>([['manga-1', 9], ['manga-3', 10]])
 export const libraryHandlers = [
   // GET /follow/:mangaId
   http.get(`${BASE}/follow/:mangaId`, async ({ params }) => {
-    await delay(100)
     return HttpResponse.json<FollowStatus>({
       mangaId: params.mangaId as string,
       isFollowing: follows.get(params.mangaId as string) ?? false,
@@ -21,7 +20,6 @@ export const libraryHandlers = [
 
   // POST /follow/:mangaId
   http.post(`${BASE}/follow/:mangaId`, async ({ params }) => {
-    await delay(150)
     follows.set(params.mangaId as string, true)
     return HttpResponse.json<FollowStatus>({
       mangaId: params.mangaId as string,
@@ -31,7 +29,6 @@ export const libraryHandlers = [
 
   // DELETE /follow/:mangaId
   http.delete(`${BASE}/follow/:mangaId`, async ({ params }) => {
-    await delay(150)
     follows.set(params.mangaId as string, false)
     return HttpResponse.json<FollowStatus>({
       mangaId: params.mangaId as string,
@@ -41,7 +38,6 @@ export const libraryHandlers = [
 
   // GET /rating/:mangaId
   http.get(`${BASE}/rating/:mangaId`, async ({ params }) => {
-    await delay(100)
     const score = ratings.get(params.mangaId as string)
     if (!score) return HttpResponse.json({ message: 'No rating found' }, { status: 404 })
     return HttpResponse.json<UserRating>({
@@ -54,7 +50,6 @@ export const libraryHandlers = [
 
   // POST /rating/:mangaId
   http.post(`${BASE}/rating/:mangaId`, async ({ request, params }) => {
-    await delay(200)
     const body = await request.json() as { score?: number }
     if (!body.score || body.score < 1 || body.score > 10) {
       return HttpResponse.json({ message: 'Score must be between 1 and 10.' }, { status: 400 })

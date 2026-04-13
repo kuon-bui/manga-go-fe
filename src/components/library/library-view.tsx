@@ -55,7 +55,7 @@ export function LibraryView() {
       case 'title':
         return a.manga.title.localeCompare(b.manga.title)
       case 'rating':
-        return b.manga.rating - a.manga.rating
+        return (b.manga.rating ?? 0) - (a.manga.rating ?? 0)
       default:
         return 0
     }

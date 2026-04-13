@@ -2,8 +2,10 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BookOpen, Search, Library, User } from 'lucide-react';
+import { BookOpen, Search, Library, User, Upload, LayoutDashboard } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuthStore } from '@/stores/auth-store';
+import { usePermission } from '@/hooks/use-permission';
 
 const NAV_ITEMS = [
   { href: '/', label: 'Home', icon: BookOpen },
@@ -14,11 +16,23 @@ const NAV_ITEMS = [
 
 export function BottomNav() {
   const pathname = usePathname();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const canCreateTitle = usePermission('create_title');
+
+  const items = [
+    ...NAV_ITEMS,
+    ...(isAuthenticated
+      ? [{ href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard }]
+      : []),
+    ...(isAuthenticated && canCreateTitle
+      ? [{ href: '/dashboard/upload/title', label: 'Upload', icon: Upload }]
+      : []),
+  ];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background md:hidden">
       <div className="flex h-16 items-center justify-around">
-        {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+        {items.map(({ href, label, icon: Icon }) => {
           const isActive = pathname === href || (href !== '/' && pathname.startsWith(href));
           return (
             <Link

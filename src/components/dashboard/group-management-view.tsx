@@ -1,151 +1,191 @@
 'use client'
 
 import { useState } from 'react'
-import { UserMinus, Crown, User } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Edit2, Trash2, Users, BookOpen, ArrowRightLeft, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useQuery } from '@tanstack/react-query'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useGroupMembers, useInviteMember, useRemoveMember } from '@/hooks/use-dashboard'
-import { useAuthStore } from '@/stores/auth-store'
-import type { GroupMember } from '@/types'
+import { apiClient } from '@/lib/api-client'
+import { queryKeys } from '@/lib/query-keys'
+import { useUpdateGroup, useDeleteGroup } from '@/hooks/use-groups'
+import type { Group } from '@/types'
 
 interface GroupManagementViewProps {
-  groupId: string
+  groupSlug: string
 }
 
-export function GroupManagementView({ groupId }: GroupManagementViewProps) {
-  const currentUser = useAuthStore((s) => s.user)
-  const { data: members, isLoading } = useGroupMembers(groupId)
-  const inviteMutation = useInviteMember(groupId)
-  const removeMutation = useRemoveMember(groupId)
+export function GroupManagementView({ groupSlug }: GroupManagementViewProps) {
+  const router = useRouter()
+  const { data: group, isLoading } = useQuery<Group>({
+    queryKey: queryKeys.dashboard.group(groupSlug),
+    queryFn: () => apiClient.getTranslationGroup(groupSlug),
+    enabled: Boolean(groupSlug),
+  })
 
-  const [inviteEmail, setInviteEmail] = useState('')
+  const updateMutation = useUpdateGroup(groupSlug)
+  const deleteMutation = useDeleteGroup()
 
-  const currentMember = members?.find((m) => m.userId === currentUser?.id)
-  const isAdmin = currentMember?.role === 'admin'
+  const [editing, setEditing] = useState(false)
+  const [name, setName] = useState('')
 
-  function handleInvite(e: React.FormEvent) {
+  function startEdit() {
+    setName(group?.name ?? '')
+    setEditing(true)
+  }
+
+  function handleUpdate(e: React.FormEvent) {
     e.preventDefault()
-    if (!inviteEmail.trim()) return
-    inviteMutation.mutate(inviteEmail.trim(), {
+    if (!name.trim()) return
+    updateMutation.mutate({ name: name.trim() }, {
       onSuccess: () => {
-        toast.success(`Invite sent to ${inviteEmail}`)
-        setInviteEmail('')
+        toast.success('Đã cập nhật nhóm')
+        setEditing(false)
       },
-      onError: () => toast.error('Failed to send invite'),
+      onError: () => toast.error('Không thể cập nhật'),
     })
   }
 
-  function handleRemove(member: GroupMember) {
-    removeMutation.mutate(member.userId, {
-      onSuccess: () => toast.success(`${member.name} removed`),
-      onError: () => toast.error('Failed to remove member'),
+  function handleDelete() {
+    if (!confirm('Xoá nhóm này? Hành động không thể hoàn tác.')) return
+    deleteMutation.mutate(groupSlug, {
+      onSuccess: () => {
+        toast.success('Đã xoá nhóm')
+        router.push('/dashboard')
+      },
+      onError: () => toast.error('Không thể xoá nhóm'),
     })
+  }
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-32 w-full rounded-xl" />
+      </div>
+    )
+  }
+
+  if (!group) {
+    return <p className="text-muted-foreground">Không tìm thấy nhóm.</p>
   }
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-foreground">Group Management</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-foreground">{group.name}</h1>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={startEdit}>
+            <Edit2 className="mr-1.5 h-3.5 w-3.5" /> Sửa
+          </Button>
+          <Button
+            size="sm"
+            variant="destructive"
+            onClick={handleDelete}
+            disabled={deleteMutation.isPending}
+          >
+            {deleteMutation.isPending
+              ? <Loader2 className="h-4 w-4 animate-spin" />
+              : <><Trash2 className="mr-1.5 h-3.5 w-3.5" />Xoá</>}
+          </Button>
+        </div>
+      </div>
 
-      {/* Invite form — admin only */}
-      {isAdmin && (
-        <section className="space-y-3 rounded-xl border bg-card p-5 dark:border-border">
-          <h2 className="text-base font-semibold text-foreground">Invite Member</h2>
-          <form onSubmit={handleInvite} className="flex gap-2">
-            <div className="flex-1 space-y-1">
-              <Label htmlFor="invite-email" className="sr-only">Email address</Label>
+      {/* Stats */}
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+        <StatCard icon={<Users className="h-5 w-5" />} label="Thành viên" value={group.memberCount} />
+        <StatCard icon={<BookOpen className="h-5 w-5" />} label="Truyện" value={group.titleCount} />
+      </div>
+
+      {/* Edit form */}
+      {editing && (
+        <section className="rounded-xl border bg-card p-5">
+          <h2 className="mb-4 text-base font-semibold">Cập nhật nhóm</h2>
+          <form onSubmit={handleUpdate} className="space-y-3">
+            <div className="space-y-1">
+              <Label htmlFor="group-name">Tên nhóm</Label>
               <Input
-                id="invite-email"
-                type="email"
-                placeholder="member@example.com"
-                value={inviteEmail}
-                onChange={(e) => setInviteEmail(e.target.value)}
+                id="group-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
               />
             </div>
-            <Button type="submit" disabled={inviteMutation.isPending}>
-              {inviteMutation.isPending ? 'Sending…' : 'Send Invite'}
-            </Button>
+            <div className="flex gap-2">
+              <Button type="submit" disabled={updateMutation.isPending}>
+                {updateMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Lưu'}
+              </Button>
+              <Button type="button" variant="outline" onClick={() => setEditing(false)}>
+                Huỷ
+              </Button>
+            </div>
           </form>
         </section>
       )}
 
-      {/* Member list */}
-      <section className="space-y-3">
-        <h2 className="text-base font-semibold text-foreground">
-          Members
-          {members && (
-            <span className="ml-2 text-sm font-normal text-muted-foreground">
-              ({members.length})
-            </span>
-          )}
-        </h2>
-
-        {isLoading && (
-          <div className="space-y-3">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-3">
-                <Skeleton className="h-10 w-10 rounded-full" />
-                <div className="space-y-1.5">
-                  <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-3 w-20" />
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {members && members.length > 0 && (
-          <ul className="divide-y divide-border dark:divide-border rounded-xl border dark:border-border overflow-hidden">
-            {members.map((member, i) => (
-              <li key={member.id}>
-                {i > 0 && <Separator />}
-                <div className="flex items-center gap-3 p-4">
-                  <Avatar className="h-10 w-10">
-                    {member.avatarUrl && (
-                      <AvatarImage src={member.avatarUrl} alt={member.name} />
-                    )}
-                    <AvatarFallback>
-                      {member.name.slice(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-foreground">{member.name}</p>
-                    <p className="text-xs text-muted-foreground">{member.role}</p>
-                  </div>
-
-                  <Badge variant={member.role === 'admin' ? 'default' : 'secondary'}>
-                    {member.role === 'admin' ? (
-                      <><Crown className="mr-1 h-3 w-3" /> Admin</>
-                    ) : (
-                      <><User className="mr-1 h-3 w-3" /> Member</>
-                    )}
-                  </Badge>
-
-                  {isAdmin && member.userId !== currentUser?.id && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                      onClick={() => handleRemove(member)}
-                      disabled={removeMutation.isPending}
-                      aria-label={`Remove ${member.name}`}
-                    >
-                      <UserMinus className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      {/* Transfer ownership */}
+      <TransferOwnershipSection groupSlug={groupSlug} />
     </div>
+  )
+}
+
+// ─── Stats card ───────────────────────────────────────────────────────────────
+
+function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) {
+  return (
+    <div className="flex items-center gap-3 rounded-xl border bg-card p-4">
+      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+        {icon}
+      </div>
+      <div>
+        <p className="text-xl font-bold text-foreground">{value}</p>
+        <p className="text-xs text-muted-foreground">{label}</p>
+      </div>
+    </div>
+  )
+}
+
+// ─── Transfer ownership ───────────────────────────────────────────────────────
+
+function TransferOwnershipSection({ groupSlug }: { groupSlug: string }) {
+  const [newOwnerId, setNewOwnerId] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  async function handleTransfer(e: React.FormEvent) {
+    e.preventDefault()
+    if (!newOwnerId.trim()) return
+    setLoading(true)
+    try {
+      await apiClient.transferGroupOwnership(groupSlug, newOwnerId.trim())
+      toast.success('Đã chuyển quyền sở hữu')
+    } catch {
+      toast.error('Không thể chuyển quyền')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <section className="rounded-xl border bg-card p-5">
+      <h2 className="mb-3 flex items-center gap-2 text-base font-semibold">
+        <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />
+        Chuyển quyền sở hữu
+      </h2>
+      <form onSubmit={handleTransfer} className="flex gap-2">
+        <Input
+          value={newOwnerId}
+          onChange={(e) => setNewOwnerId(e.target.value)}
+          placeholder="User ID của chủ sở hữu mới"
+          className="flex-1"
+        />
+        <Button type="submit" variant="outline" disabled={loading || !newOwnerId.trim()}>
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Chuyển'}
+        </Button>
+      </form>
+    </section>
   )
 }

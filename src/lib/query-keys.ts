@@ -44,6 +44,12 @@ export const queryKeys = {
   genres: {
     all: () => ['genres'] as const,
   },
+  authors: {
+    all: () => ['authors', 'all'] as const,
+  },
+  tags: {
+    all: () => ['tags', 'all'] as const,
+  },
   dashboard: {
     titles: () => ['dashboard', 'titles'] as const,
     groups: () => ['dashboard', 'groups'] as const,
@@ -53,5 +59,11 @@ export const queryKeys = {
   browse: {
     results: (filters: Record<string, unknown>) =>
       ['browse', filters] as const,
+  },
+  rbac: {
+    roles: () => ['rbac', 'roles'] as const,
+    roleDetail: (roleId: string) => ['rbac', 'roles', roleId] as const,
+    permissions: () => ['rbac', 'permissions'] as const,
+    userRoles: (userId: string) => ['rbac', 'user', userId, 'roles'] as const,
   },
 } as const;

@@ -2,51 +2,91 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api-client'
+import type { CreateComicPayload, CreateChapterPayload } from '@/lib/api-client'
 import { queryKeys } from '@/lib/query-keys'
 import type {
   Group,
-  GroupMember,
   DashboardTitle,
   PaginatedResponse,
-  CreateTitlePayload,
-  UploadChapterPayload,
+  Author,
+  Tag,
 } from '@/types'
 
-// ─── Groups ───────────────────────────────────────────────────────────────────
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+/** Convert a title string to a URL-friendly slug */
+export function titleToSlug(title: string): string {
+  return title
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // strip diacritics
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .slice(0, 80)
+}
+
+// ─── Authors ─────────────────────────────────────────────────────────────────
+
+export function useAllAuthors() {
+  return useQuery<Author[]>({
+    queryKey: queryKeys.authors.all(),
+    queryFn: () => apiClient.getAllAuthors(),
+    staleTime: 10 * 60 * 1000,
+  })
+}
+
+export function useCreateAuthor() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (name: string) => apiClient.createAuthor(name),
+    onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.authors.all() }),
+  })
+}
+
+// ─── Tags ─────────────────────────────────────────────────────────────────────
+
+export function useAllTags() {
+  return useQuery<Tag[]>({
+    queryKey: queryKeys.tags.all(),
+    queryFn: () => apiClient.getAllTags(),
+    staleTime: 10 * 60 * 1000,
+  })
+}
+
+export function useCreateTag() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ name, slug }: { name: string; slug: string }) =>
+      apiClient.createTag(name, slug),
+    onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.tags.all() }),
+  })
+}
+
+// ─── Translation Groups ───────────────────────────────────────────────────────
 
 export function useMyGroups() {
-  return useQuery<Group[]>({
+  return useQuery<PaginatedResponse<Group>>({
     queryKey: queryKeys.dashboard.groups(),
-    queryFn: () => apiClient.get<Group[]>('/translation-groups'),
+    queryFn: () => apiClient.getTranslationGroups(),
   })
 }
 
-export function useGroupMembers(groupSlug: string) {
-  return useQuery<GroupMember[]>({
-    queryKey: queryKeys.dashboard.groupMembers(groupSlug),
-    queryFn: () =>
-      apiClient.get<GroupMember[]>(`/translation-groups/${groupSlug}`),
-    enabled: Boolean(groupSlug),
-  })
-}
-
-export function useInviteMember(groupSlug: string) {
+export function useCreateGroup() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (email: string) =>
-      apiClient.post(`/translation-groups/${groupSlug}/invite`, { email }),
-    onSettled: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.dashboard.groupMembers(groupSlug) }),
+    mutationFn: ({ name, slug }: { name: string; slug: string }) =>
+      apiClient.createTranslationGroup(name, slug),
+    onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.dashboard.groups() }),
   })
 }
 
-export function useRemoveMember(groupSlug: string) {
+export function useDeleteGroup() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (userId: string) =>
-      apiClient.delete(`/translation-groups/${groupSlug}/members/${userId}`),
-    onSettled: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.dashboard.groupMembers(groupSlug) }),
+    mutationFn: (slug: string) => apiClient.deleteTranslationGroup(slug),
+    onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.dashboard.groups() }),
   })
 }
 
@@ -55,28 +95,35 @@ export function useRemoveMember(groupSlug: string) {
 export function useMyTitles() {
   return useQuery<PaginatedResponse<DashboardTitle>>({
     queryKey: queryKeys.dashboard.titles(),
-    queryFn: () => apiClient.get<PaginatedResponse<DashboardTitle>>('/comics'),
+    queryFn: () => apiClient.getComics(),
   })
 }
 
 export function useCreateTitle() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (payload: CreateTitlePayload) => {
-      const body = {
-        title: payload.title,
-        alternativeTitles: payload.alternativeTitles,
-        type: payload.type,
-        status: payload.status,
-        description: payload.description,
-        authorIds: [payload.author],
-        genreSlugs: payload.genres,
-        tagSlugs: payload.tags,
-        publishedYear: payload.year,
-        // slug derived from title on backend
-      }
-      return apiClient.post<{ id: string; slug: string }>('/comics', body)
+    mutationFn: (payload: CreateComicPayload) =>
+      apiClient.createComic(payload),
+    onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.dashboard.titles() }),
+  })
+}
+
+export function usePublishComic() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ slug, isPublished }: { slug: string; isPublished: boolean }) =>
+      apiClient.publishComic(slug, isPublished),
+    onSettled: (_d, _e, vars) => {
+      qc.invalidateQueries({ queryKey: queryKeys.manga.detail(vars.slug) })
+      qc.invalidateQueries({ queryKey: queryKeys.dashboard.titles() })
     },
+  })
+}
+
+export function useDeleteComic() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (slug: string) => apiClient.deleteComic(slug),
     onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.dashboard.titles() }),
   })
 }
@@ -86,14 +133,26 @@ export function useCreateTitle() {
 export function useUploadChapter() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (payload: UploadChapterPayload) =>
-      apiClient.post(`/comics/${payload.comicSlug}/chapters`, {
-        slug: payload.slug,
-        number: String(payload.number),
-        title: payload.title ?? '',
-        pages: payload.pages,
-      }),
-    onSettled: (_data, _err, vars) =>
+    mutationFn: ({ comicSlug, payload }: { comicSlug: string; payload: CreateChapterPayload }) =>
+      apiClient.createChapter(comicSlug, payload),
+    onSettled: (_d, _e, vars) =>
+      qc.invalidateQueries({ queryKey: queryKeys.manga.chapters(vars.comicSlug) }),
+  })
+}
+
+export function usePublishChapter() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      comicSlug,
+      chapterSlug,
+      isPublished,
+    }: {
+      comicSlug: string;
+      chapterSlug: string;
+      isPublished: boolean;
+    }) => apiClient.publishChapter(comicSlug, chapterSlug, isPublished),
+    onSettled: (_d, _e, vars) =>
       qc.invalidateQueries({ queryKey: queryKeys.manga.chapters(vars.comicSlug) }),
   })
 }
@@ -105,5 +164,13 @@ export function useDeleteChapter(comicSlug: string) {
       apiClient.delete(`/comics/${comicSlug}/chapters/${chapterSlug}`),
     onSettled: () =>
       qc.invalidateQueries({ queryKey: queryKeys.manga.chapters(comicSlug) }),
+  })
+}
+
+// ─── File Upload ─────────────────────────────────────────────────────────────
+
+export function useUploadFile() {
+  return useMutation({
+    mutationFn: (file: File) => apiClient.uploadFile(file),
   })
 }

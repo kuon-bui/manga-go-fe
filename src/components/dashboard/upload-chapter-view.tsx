@@ -7,29 +7,29 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { MangaPageUploader } from '@/components/dashboard/manga-page-uploader'
 import { NovelChapterEditor } from '@/components/dashboard/novel-chapter-editor'
 import { useMangaDetail } from '@/hooks/use-title-detail'
-import { useMyGroups, useUploadChapter } from '@/hooks/use-dashboard'
+import { useUploadChapter } from '@/hooks/use-dashboard'
 
 interface UploadChapterViewProps {
   titleId: string
 }
 
+function chapterSlug(number: string): string {
+  return `chapter-${number.replace('.', '-')}`
+}
+
 export function UploadChapterView({ titleId }: UploadChapterViewProps) {
   const router = useRouter()
+  // titleId is actually the comic slug from the URL
   const { data: manga, isLoading } = useMangaDetail(titleId)
-  const { data: groups } = useMyGroups()
   const uploadMutation = useUploadChapter()
 
   const [chapterNumber, setChapterNumber] = useState('')
   const [chapterTitle, setChapterTitle] = useState('')
-  const [groupId, setGroupId] = useState('')
   const [pages, setPages] = useState<string[]>([])
   const [novelContent, setNovelContent] = useState('')
 
@@ -38,88 +38,82 @@ export function UploadChapterView({ titleId }: UploadChapterViewProps) {
   }
 
   const isManga = manga.type === 'manga'
+  const comicSlug = manga.slug
 
   function handleSubmit() {
-    if (!chapterNumber || !groupId) {
-      toast.error('Chapter number and group are required')
+    if (!chapterNumber.trim()) {
+      toast.error('Số chương là bắt buộc')
       return
     }
     if (isManga && pages.length === 0) {
-      toast.error('Please upload at least one page')
+      toast.error('Vui lòng upload ít nhất 1 trang')
       return
     }
     if (!isManga && !novelContent.trim()) {
-      toast.error('Chapter content cannot be empty')
+      toast.error('Nội dung chương không được để trống')
       return
     }
 
     uploadMutation.mutate(
       {
-        mangaId: titleId,
-        groupId,
-        number: Number(chapterNumber),
-        title: chapterTitle.trim() || null,
-        pages: isManga ? pages : [],
-        content: isManga ? null : novelContent,
+        comicSlug,
+        payload: {
+          slug: chapterSlug(chapterNumber),
+          number: chapterNumber,
+          title: chapterTitle.trim() || '',
+          pages: isManga ? pages : [],
+        },
       },
       {
         onSuccess: () => {
-          toast.success('Chapter uploaded!')
-          router.push(`/titles/${titleId}`)
+          toast.success('Đã đăng chương thành công!')
+          router.push(`/titles/${comicSlug}`)
         },
-        onError: () => toast.error('Upload failed. Please try again.'),
+        onError: (err) => {
+          toast.error(`Lỗi: ${err instanceof Error ? err.message : 'Không thể đăng chương'}`)
+        },
       }
     )
   }
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-2xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Add Chapter</h1>
+        <h1 className="text-2xl font-bold text-foreground">Thêm Chương</h1>
         <p className="mt-1 text-sm text-muted-foreground">{manga.title}</p>
       </div>
 
       {/* Chapter meta */}
-      <div className="grid grid-cols-2 gap-4 rounded-xl border bg-card p-5 dark:border-border sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 rounded-xl border bg-card p-5 sm:grid-cols-3">
         <div className="space-y-1">
-          <Label htmlFor="ch-number">Chapter # <span className="text-destructive">*</span></Label>
+          <Label htmlFor="ch-number">Số chương <span className="text-destructive">*</span></Label>
           <Input
             id="ch-number"
-            type="number"
-            min={0}
-            step={0.1}
             value={chapterNumber}
             onChange={(e) => setChapterNumber(e.target.value)}
-            placeholder="e.g. 42"
+            placeholder="vd: 42 hoặc 42.5"
           />
         </div>
         <div className="space-y-1 sm:col-span-2">
-          <Label htmlFor="ch-title">Chapter Title</Label>
+          <Label htmlFor="ch-title">Tên chương</Label>
           <Input
             id="ch-title"
             value={chapterTitle}
             onChange={(e) => setChapterTitle(e.target.value)}
-            placeholder="Optional title"
+            placeholder="Không bắt buộc"
           />
-        </div>
-        <div className="space-y-1">
-          <Label>Group <span className="text-destructive">*</span></Label>
-          <Select value={groupId} onValueChange={setGroupId}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select group" />
-            </SelectTrigger>
-            <SelectContent>
-              {groups?.map((g) => (
-                <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
       </div>
 
+      {chapterNumber && (
+        <p className="text-xs text-muted-foreground">
+          Slug: <code>{chapterSlug(chapterNumber)}</code>
+        </p>
+      )}
+
       <Separator />
 
-      {/* Content upload */}
+      {/* Content */}
       {isManga ? (
         <MangaPageUploader pages={pages} onChange={setPages} />
       ) : (
@@ -127,9 +121,9 @@ export function UploadChapterView({ titleId }: UploadChapterViewProps) {
       )}
 
       <div className="flex justify-end gap-3">
-        <Button variant="outline" onClick={() => router.back()}>Cancel</Button>
+        <Button variant="outline" onClick={() => router.back()}>Huỷ</Button>
         <Button onClick={handleSubmit} disabled={uploadMutation.isPending}>
-          {uploadMutation.isPending ? 'Uploading…' : 'Publish Chapter'}
+          {uploadMutation.isPending ? 'Đang đăng…' : 'Đăng chương'}
         </Button>
       </div>
     </div>

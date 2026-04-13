@@ -1,4 +1,23 @@
 import type { User } from '@/types/auth';
+import type {
+  AssignRolePermissionsPayload,
+  AssignUserRolesPayload,
+  PermissionEntity,
+  Role,
+  RoleDetail,
+  UserRolesResponse,
+} from '@/types/rbac';
+import type {
+  Manga,
+  PaginatedResponse,
+  Genre,
+  Author,
+  Tag,
+  Group,
+  Chapter,
+  ChapterSummary,
+  Comment,
+} from '@/types';
 
 // ─── Envelope ────────────────────────────────────────────────────────────────
 
@@ -12,7 +31,6 @@ export interface ApiEnvelope<T> {
   message: string;
   error: string;
   validation_errors: ValidationFieldError[];
-  // some endpoints use these alternative keys
   success?: boolean;
   httpStatus?: number;
   validationErrors?: ValidationFieldError[];
@@ -36,6 +54,66 @@ export class ApiClientError extends Error {
     this.statusCode = statusCode;
     this.validationErrors = validationErrors;
   }
+}
+
+// ─── Payload types ────────────────────────────────────────────────────────────
+
+export interface CreateComicPayload {
+  title: string;
+  slug: string;
+  alternativeTitles: string[];
+  type: 'manga' | 'novel';
+  description: string;
+  authorIds: string[];
+  artistId?: string | null;
+  genreSlugs: string[];
+  tagSlugs: string[];
+  thumbnail?: string | null;
+  banner?: string | null;
+  ageRating?: string;
+  publishedYear?: number | null;
+}
+
+export interface UpdateComicPayload {
+  title?: string;
+  slug?: string;
+  alternativeTitles?: string[];
+  type?: 'manga' | 'novel';
+  status?: string;
+  description?: string;
+  authorIds?: string[];
+  artistId?: string | null;
+  genreSlugs?: string[];
+  tagSlugs?: string[];
+  thumbnail?: string | null;
+  banner?: string | null;
+  ageRating?: string;
+  publishedYear?: number | null;
+  isHot?: boolean;
+  isFeatured?: boolean;
+}
+
+export interface CreateChapterPayload {
+  slug: string;
+  number: string;
+  title: string;
+  pages: string[];
+}
+
+export interface UpdateChapterPayload {
+  slug?: string;
+  number?: string;
+  title?: string;
+}
+
+export interface CreateGroupPayload {
+  name: string;
+  slug: string;
+}
+
+export interface UpdateGroupPayload {
+  name?: string;
+  slug?: string;
 }
 
 // ─── Client ───────────────────────────────────────────────────────────────────
@@ -73,7 +151,7 @@ class ApiClient {
     const response = await fetch(url.toString(), {
       ...rest,
       headers: mergedHeaders,
-      credentials: 'include', // send/receive HTTP-only auth cookies
+      credentials: 'include',
     });
 
     if (!response.ok) {
@@ -98,7 +176,6 @@ class ApiClient {
 
     const json = (await response.json()) as ApiEnvelope<T>;
 
-    // If the response has a `data` key, unwrap it; otherwise treat the whole body as T
     if ('data' in json && json.data !== undefined) {
       return this.unwrap(json);
     }
@@ -137,7 +214,7 @@ class ApiClient {
     return this.request<T>(path, { ...config, method: 'DELETE' });
   }
 
-  // ─── Auth methods ────────────────────────────────────────────────────────────
+  // ─── Auth ────────────────────────────────────────────────────────────────────
 
   login(email: string, password: string): Promise<{ user: User }> {
     return this.post<{ user: User }>('/users/sign-in', { email, password });
@@ -168,6 +245,209 @@ class ApiClient {
 
   getMe(): Promise<User> {
     return this.get<User>('/users/me');
+  }
+
+  // ─── RBAC ───────────────────────────────────────────────────────────────────
+
+  getAllRoles(): Promise<Role[]> {
+    return this.get<Role[]>('/roles/all');
+  }
+
+  getRoleById(roleId: string): Promise<RoleDetail> {
+    return this.get<RoleDetail>(`/roles/${roleId}`);
+  }
+
+  getAllPermissions(): Promise<PermissionEntity[]> {
+    return this.get<PermissionEntity[]>('/permissions/all');
+  }
+
+  assignPermissionsToRole(roleId: string, payload: AssignRolePermissionsPayload): Promise<void> {
+    return this.post<void>(`/roles/${roleId}/permissions`, payload);
+  }
+
+  assignRolesToUser(userId: string, payload: AssignUserRolesPayload): Promise<void> {
+    return this.post<void>(`/users/${userId}/roles`, payload);
+  }
+
+  getUserRoles(userId: string): Promise<UserRolesResponse> {
+    return this.get<UserRolesResponse>(`/users/${userId}/roles`);
+  }
+
+  // ─── Comics ──────────────────────────────────────────────────────────────────
+
+  getComics(params?: Record<string, string>): Promise<PaginatedResponse<Manga>> {
+    return this.get<PaginatedResponse<Manga>>('/comics', { params });
+  }
+
+  getComic(slug: string): Promise<Manga> {
+    return this.get<Manga>(`/comics/${slug}`);
+  }
+
+  createComic(payload: CreateComicPayload): Promise<{ id: string; slug: string }> {
+    return this.post<{ id: string; slug: string }>('/comics', payload);
+  }
+
+  updateComic(slug: string, payload: UpdateComicPayload): Promise<Manga> {
+    return this.put<Manga>(`/comics/${slug}`, payload);
+  }
+
+  deleteComic(slug: string): Promise<void> {
+    return this.delete<void>(`/comics/${slug}`);
+  }
+
+  publishComic(slug: string, isPublished: boolean): Promise<void> {
+    return this.patch<void>(`/comics/${slug}/publish`, { isPublished });
+  }
+
+  // ─── Chapters ───────────────────────────────────────────────────────────────
+
+  getChapters(comicSlug: string, params?: Record<string, string>): Promise<PaginatedResponse<ChapterSummary>> {
+    return this.get<PaginatedResponse<ChapterSummary>>(`/comics/${comicSlug}/chapters`, { params });
+  }
+
+  getChapter(comicSlug: string, chapterSlug: string): Promise<Chapter> {
+    return this.get<Chapter>(`/comics/${comicSlug}/chapters/${chapterSlug}`);
+  }
+
+  createChapter(comicSlug: string, payload: CreateChapterPayload): Promise<{ id: string; slug: string }> {
+    return this.post<{ id: string; slug: string }>(`/comics/${comicSlug}/chapters`, payload);
+  }
+
+  updateChapter(comicSlug: string, chapterSlug: string, payload: UpdateChapterPayload): Promise<void> {
+    return this.put<void>(`/comics/${comicSlug}/chapters/${chapterSlug}`, payload);
+  }
+
+  updateChapterPages(comicSlug: string, chapterSlug: string, pages: string[]): Promise<void> {
+    return this.put<void>(`/comics/${comicSlug}/chapters/${chapterSlug}/pages`, { pages });
+  }
+
+  publishChapter(comicSlug: string, chapterSlug: string, isPublished: boolean): Promise<void> {
+    return this.patch<void>(`/comics/${comicSlug}/chapters/${chapterSlug}/publish`, { isPublished });
+  }
+
+  markChapterRead(comicSlug: string, chapterSlug: string): Promise<void> {
+    return this.patch<void>(`/comics/${comicSlug}/chapters/${chapterSlug}/mark-as-read`);
+  }
+
+  // ─── Authors ─────────────────────────────────────────────────────────────────
+
+  getAllAuthors(): Promise<Author[]> {
+    return this.get<Author[]>('/authors/all');
+  }
+
+  getAuthors(params?: Record<string, string>): Promise<PaginatedResponse<Author>> {
+    return this.get<PaginatedResponse<Author>>('/authors', { params });
+  }
+
+  createAuthor(name: string): Promise<Author> {
+    return this.post<Author>('/authors', { name });
+  }
+
+  // ─── Genres ──────────────────────────────────────────────────────────────────
+
+  getAllGenres(): Promise<Genre[]> {
+    return this.get<Genre[]>('/genres/all');
+  }
+
+  getGenres(params?: Record<string, string>): Promise<PaginatedResponse<Genre>> {
+    return this.get<PaginatedResponse<Genre>>('/genres', { params });
+  }
+
+  // ─── Tags ────────────────────────────────────────────────────────────────────
+
+  getAllTags(): Promise<Tag[]> {
+    return this.get<Tag[]>('/tags/all');
+  }
+
+  getTags(params?: Record<string, string>): Promise<PaginatedResponse<Tag>> {
+    return this.get<PaginatedResponse<Tag>>('/tags', { params });
+  }
+
+  createTag(name: string, slug: string): Promise<Tag> {
+    return this.post<Tag>('/tags', { name, slug });
+  }
+
+  // ─── Translation Groups ──────────────────────────────────────────────────────
+
+  getTranslationGroups(params?: Record<string, string>): Promise<PaginatedResponse<Group>> {
+    return this.get<PaginatedResponse<Group>>('/translation-groups', { params });
+  }
+
+  getTranslationGroup(slug: string): Promise<Group> {
+    return this.get<Group>(`/translation-groups/${slug}`);
+  }
+
+  createTranslationGroup(name: string, slug: string): Promise<Group> {
+    return this.post<Group>('/translation-groups', { name, slug });
+  }
+
+  updateTranslationGroup(slug: string, payload: UpdateGroupPayload): Promise<Group> {
+    return this.put<Group>(`/translation-groups/${slug}`, payload);
+  }
+
+  deleteTranslationGroup(slug: string): Promise<void> {
+    return this.delete<void>(`/translation-groups/${slug}`);
+  }
+
+  transferGroupOwnership(slug: string, newOwnerId: string): Promise<void> {
+    return this.put<void>(`/translation-groups/${slug}/transfer-ownership`, { newOwnerId });
+  }
+
+  // ─── Comments ────────────────────────────────────────────────────────────────
+
+  getComments(chapterId: string, params?: Record<string, string>): Promise<PaginatedResponse<Comment>> {
+    return this.get<PaginatedResponse<Comment>>('/comments', { params: { chapterId, ...params } });
+  }
+
+  createComment(payload: { chapterId: string; content: string; pageIndex?: number | null; parentId?: string | null }): Promise<Comment> {
+    return this.post<Comment>('/comments', payload);
+  }
+
+  updateComment(id: string, content: string): Promise<Comment> {
+    return this.put<Comment>(`/comments/${id}`, { content });
+  }
+
+  deleteComment(id: string): Promise<void> {
+    return this.delete<void>(`/comments/${id}`);
+  }
+
+  addCommentReaction(id: string, type: string): Promise<void> {
+    return this.post<void>(`/comments/${id}/reactions`, { type });
+  }
+
+  // ─── Files ───────────────────────────────────────────────────────────────────
+
+  async uploadFile(file: File): Promise<{ url: string; filename: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${this.baseUrl}/files/upload`, {
+      method: 'POST',
+      body: formData,
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      throw new ApiClientError({ message: 'File upload failed', statusCode: response.status });
+    }
+
+    const json = (await response.json()) as ApiEnvelope<{ url: string; filename: string }>;
+    if ('data' in json && json.data !== undefined) return json.data;
+    return json as unknown as { url: string; filename: string };
+  }
+
+  getPresignedUrl(filename: string): Promise<{ url: string }> {
+    return this.get<{ url: string }>(`/files/presign/${encodeURIComponent(filename)}`);
+  }
+
+  // ─── Reading History ─────────────────────────────────────────────────────────
+
+  createReadingHistory(comicId: string, chapterId: string): Promise<void> {
+    return this.post<void>('/reading-histories', { comicId, chapterId });
+  }
+
+  getReadingHistories(params?: Record<string, string>): Promise<PaginatedResponse<unknown>> {
+    return this.get<PaginatedResponse<unknown>>('/reading-histories', { params });
   }
 }
 

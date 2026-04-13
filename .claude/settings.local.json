@@ -14,7 +14,19 @@
       "Bash(python -c ':*)",
       "Bash(rm -f \"d:/Code/sung-nung-web/manga-go-fe/src/app/\\(main\\)/read/manga/[chapterId]/page.tsx\" \"d:/Code/sung-nung-web/manga-go-fe/src/app/\\(main\\)/read/manga/[chapterId]/manga-reader-client.tsx\")",
       "Bash(rm -f \"d:/Code/sung-nung-web/manga-go-fe/src/app/\\(main\\)/read/novel/[chapterId]/page.tsx\" \"d:/Code/sung-nung-web/manga-go-fe/src/app/\\(main\\)/read/novel/[chapterId]/novel-reader-client.tsx\")",
-      "Bash(grep -v \"//.*prevChapterId\")"
+      "Bash(grep -v \"//.*prevChapterId\")",
+      "Bash(curl -s \"http://localhost:8080/swagger/doc.json\")",
+      "Bash(node -e ':*)",
+      "Bash(curl -s \"http://localhost:8080/genres/all\")",
+      "Bash(xargs grep:*)",
+      "Bash(find \"d:/Code/sung-nung-web/manga-go/internal/pkg/common\" -name \"*.go\" -exec grep -l \"SqlModel\\\\|CreatedAt\\\\|UpdatedAt\" {} \\\\;)",
+      "WebFetch(domain:localhost)",
+      "Bash(python3 -c ':*)",
+      "Bash(node -e \" const chunks = []; process.stdin.on\\('data', c => chunks.push\\(c\\)\\); process.stdin.on\\('end', \\(\\) => { const data = JSON.parse\\(chunks.join\\(''\\)\\); const paths = data.paths || {}; Object.keys\\(paths\\).sort\\(\\).forEach\\(path => { const methods = paths[path]; Object.keys\\(methods\\).forEach\\(method => { const info = methods[method]; const params = \\(info.parameters || []\\).map\\(p => p.name\\); console.log\\(method.toUpperCase\\(\\) + ' ' + path + ' | ' + \\(info.summary||''\\) + ' | params:' + params.join\\(','\\)\\); }\\); }\\); console.log\\('---DEFINITIONS---'\\); const defs = data.definitions || {}; Object.keys\\(defs\\).sort\\(\\).forEach\\(name => { if \\(name.includes\\('Request'\\) || name.includes\\('request'\\)\\) { const props = Object.keys\\(defs[name].properties || {}\\); console.log\\(name + ': ' + props.join\\(', '\\)\\); } }\\); }\\); \")",
+      "Bash(node -e \" const chunks = []; process.stdin.on\\('data', c => chunks.push\\(c\\)\\); process.stdin.on\\('end', \\(\\) => { const data = JSON.parse\\(chunks.join\\(''\\)\\); const defs = data.definitions || {}; // Print translation group and comic response definitions ['translation-group', 'comic', 'chapter', 'member', 'user'].forEach\\(keyword => { Object.keys\\(defs\\).forEach\\(name => { if \\(name.toLowerCase\\(\\).includes\\(keyword\\) && !name.includes\\('Request'\\)\\) { const props = Object.keys\\(defs[name].properties || {}\\); if \\(props.length > 0\\) console.log\\(name + ': ' + props.join\\(', '\\)\\); } }\\); }\\); }\\); \")",
+      "Bash(curl -s http://localhost:8080/comics?limit=3)",
+      "Bash(curl -s -c /tmp/cookies.txt -X POST http://localhost:8080/users/sign-in -H 'Content-Type: application/json' -d '{\"email\":\"admin@example.com\",\"password\":\"password123\"}')",
+      "Bash(ls d:/Code/sung-nung-web/manga-go-fe/.env*)"
     ]
   }
 }
