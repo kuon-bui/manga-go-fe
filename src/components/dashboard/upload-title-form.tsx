@@ -35,7 +35,7 @@ function AuthorPicker({
   onChange,
 }: {
   value: Author | null
-  onChange: (a: Author | null) => void
+  onChange: (_a: Author | null) => void
 }) {
   const { data: authors, isLoading } = useAllAuthors()
   const createMutation = useCreateAuthor()
@@ -143,7 +143,7 @@ function TagPicker({
   onChange,
 }: {
   value: string[]     // slugs
-  onChange: (slugs: string[]) => void
+  onChange: (_slugs: string[]) => void
 }) {
   const { data: tags } = useAllTags()
   const createMutation = useCreateTag()

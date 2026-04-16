@@ -6,18 +6,25 @@ DO NOT delete historical context if it is still relevant. Compress older complet
 
 ## 🏗️ Active Phase & Goal
 
-**Current Phase:** Phase 2 — Content Discovery  
-**Goal:** Build the Home page (hero banner, trending, recently updated, genre chips), MangaCard component, Advanced Search, Browse page, and Library page.
+**Current Phase:** Phase 2 — Content Discovery (home page sections complete, remaining: Search/Browse/Library polish)  
+**Goal:** Build the Home page, MangaCard, Search, Browse, Library — with premium animations inspired by Komikku analysis.
 
 **Next Steps:**
-1. Install additional shadcn components: `badge avatar skeleton tabs scroll-area`
-2. Create `MangaCard` component (`src/components/features/content/manga-card.tsx`)
-3. Build Home page (`src/app/(main)/page.tsx`) with hero + trending + recent sections
-4. Build Advanced Search page (`src/app/(main)/search/page.tsx`)
-5. Build Browse page (`src/app/(main)/browse/page.tsx`)
-6. Build Library page (`src/app/(main)/library/page.tsx`)
+1. Continue Phase 2: Advanced Search, Browse, Library pages need audit/polish
+2. Phase 3: Title detail page, StarRating, chapter list, comments
+3. Phase 4: Novel reader, manga reader full audit
+4. Phases 5–6: Dashboard, notifications, settings
 
 ## 📂 Architectural Decisions
+
+- **2026-04-16** — Komikku (Android manga reader) analyzed for UI/UX standards. Key patterns adopted:
+  - Trending section = horizontal scroll row with rank number watermarks (#1–#10), not a grid
+  - HeroSection: gradient text, entrance animations via `animate-in` / `fade-in`, animated bg blobs
+  - RecentlyUpdated: compact list cards (thumbnail + title + chapter + time), "MỚI" badge < 24h
+  - GenreSection: color-per-genre chips (red=action, pink=romance, purple=fantasy, etc.)
+  - Reader controls: slide translateY in/out (not opacity), full-width `<input type="range">` progress bar
+  - Reader tap zones: 25% PREV / 50% TOGGLE / 25% NEXT (not full-screen toggle)
+  - Docs created: `docs/COMPONENT_GUIDELINES.md`, `docs/STATE_MANAGEMENT.md`
 
 - **2026-04-05** — Phase 1 complete. Auth pages (login/register/forgot-password/reset-password) were pre-built. `useSearchParams()` wrapped in `<Suspense>` in login and reset-password pages (Next.js 15 requirement). `src/lib/query-keys.ts` added. `src/types/index.ts` re-exports from `src/types/auth.ts` and adds content/comment/notification types. `src/types/auth.ts` extended with `displayName` and `bio` on User. Sonner toast installed; `<Toaster />` in root layout. shadcn Phase 1 components installed (button, input, label, card, separator, sonner).
 
