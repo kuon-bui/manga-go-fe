@@ -9,21 +9,29 @@ const BASE = 'http://localhost:8080'
 const notifications: Notification[] = [...MOCK_NOTIFICATIONS]
 
 export const notificationHandlers = [
-  // GET /notifications
-  http.get(`${BASE}/notifications`, async () => {
+  // GET /notifications?unreadOnly=true
+  http.get(`${BASE}/notifications`, async ({ request }) => {
+    const url = new URL(request.url)
+    if (url.searchParams.get('unreadOnly') !== 'true') {
+      return HttpResponse.json<PaginatedResponse<Notification>>({
+        data: notifications,
+        total: notifications.length,
+        page: 1,
+        pageSize: 20,
+        hasMore: false,
+      })
+    }
+
+    const unread = notifications.filter((n) => !n.isRead)
+    const limit = Number(url.searchParams.get('limit') ?? '20')
+    const count = notifications.filter((n) => !n.isRead).length
     return HttpResponse.json<PaginatedResponse<Notification>>({
-      data: notifications,
-      total: notifications.length,
+      data: unread.slice(0, Number.isNaN(limit) ? 20 : limit),
+      total: count,
       page: 1,
-      pageSize: 20,
+      pageSize: Number.isNaN(limit) ? 20 : limit,
       hasMore: false,
     })
-  }),
-
-  // GET /notifications/unread-count
-  http.get(`${BASE}/notifications/unread-count`, async () => {
-    const count = notifications.filter((n) => !n.isRead).length
-    return HttpResponse.json<{ count: number }>({ count })
   }),
 
   // PATCH /notifications/:id/read
@@ -34,8 +42,8 @@ export const notificationHandlers = [
     return HttpResponse.json(notif)
   }),
 
-  // POST /notifications/read-all
-  http.post(`${BASE}/notifications/read-all`, async () => {
+  // PATCH /notifications/read-all
+  http.patch(`${BASE}/notifications/read-all`, async () => {
     notifications.forEach((n) => { n.isRead = true })
     return new HttpResponse(null, { status: 204 })
   }),

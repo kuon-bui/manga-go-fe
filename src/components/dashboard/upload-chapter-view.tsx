@@ -12,25 +12,25 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { MangaPageUploader } from '@/components/dashboard/manga-page-uploader'
 import { NovelChapterEditor } from '@/components/dashboard/novel-chapter-editor'
 import { useMangaDetail } from '@/hooks/use-title-detail'
-import { useUploadChapter } from '@/hooks/use-dashboard'
+import { useUploadChapter, useUploadFile } from '@/hooks/use-dashboard'
 
 interface UploadChapterViewProps {
-  titleId: string
+  titleSlug: string
 }
 
 function chapterSlug(number: string): string {
   return `chapter-${number.replace('.', '-')}`
 }
 
-export function UploadChapterView({ titleId }: UploadChapterViewProps) {
+export function UploadChapterView({ titleSlug }: UploadChapterViewProps) {
   const router = useRouter()
-  // titleId is actually the comic slug from the URL
-  const { data: manga, isLoading } = useMangaDetail(titleId)
+  const { data: manga, isLoading } = useMangaDetail(titleSlug)
   const uploadMutation = useUploadChapter()
+  const uploadFileMutation = useUploadFile()
 
   const [chapterNumber, setChapterNumber] = useState('')
   const [chapterTitle, setChapterTitle] = useState('')
-  const [pages, setPages] = useState<string[]>([])
+  const [pages, setPages] = useState<File[]>([])
   const [novelContent, setNovelContent] = useState('')
 
   if (isLoading || !manga) {
@@ -40,7 +40,7 @@ export function UploadChapterView({ titleId }: UploadChapterViewProps) {
   const isManga = manga.type === 'manga'
   const comicSlug = manga.slug
 
-  function handleSubmit() {
+  async function handleSubmit() {
     if (!chapterNumber.trim()) {
       toast.error('Số chương là bắt buộc')
       return
@@ -54,26 +54,47 @@ export function UploadChapterView({ titleId }: UploadChapterViewProps) {
       return
     }
 
-    uploadMutation.mutate(
-      {
-        comicSlug,
-        payload: {
-          slug: chapterSlug(chapterNumber),
-          number: chapterNumber,
-          title: chapterTitle.trim() || '',
-          pages: isManga ? pages : [],
+    try {
+      const chapterPages = isManga
+        ? await Promise.all(
+          pages.map(async (file) => {
+            const uploaded = await uploadFileMutation.mutateAsync(file)
+            return {
+              pageType: 'image' as const,
+              imageUrl: uploaded.url,
+            }
+          })
+        )
+        : [
+          {
+            pageType: 'text' as const,
+            content: novelContent.trim(),
+          },
+        ]
+
+      uploadMutation.mutate(
+        {
+          comicSlug,
+          payload: {
+            slug: chapterSlug(chapterNumber),
+            number: chapterNumber,
+            title: chapterTitle.trim() || `Chapter ${chapterNumber}`,
+            pages: chapterPages,
+          },
         },
-      },
-      {
-        onSuccess: () => {
-          toast.success('Đã đăng chương thành công!')
-          router.push(`/titles/${comicSlug}`)
-        },
-        onError: (err) => {
-          toast.error(`Lỗi: ${err instanceof Error ? err.message : 'Không thể đăng chương'}`)
-        },
-      }
-    )
+        {
+          onSuccess: () => {
+            toast.success('Đã đăng chương thành công!')
+            router.push(`/titles/${comicSlug}`)
+          },
+          onError: (err) => {
+            toast.error(`Lỗi: ${err instanceof Error ? err.message : 'Không thể đăng chương'}`)
+          },
+        }
+      )
+    } catch {
+      toast.error('Không thể upload dữ liệu chương')
+    }
   }
 
   return (
@@ -122,8 +143,8 @@ export function UploadChapterView({ titleId }: UploadChapterViewProps) {
 
       <div className="flex justify-end gap-3">
         <Button variant="outline" onClick={() => router.back()}>Huỷ</Button>
-        <Button onClick={handleSubmit} disabled={uploadMutation.isPending}>
-          {uploadMutation.isPending ? 'Đang đăng…' : 'Đăng chương'}
+        <Button onClick={handleSubmit} disabled={uploadMutation.isPending || uploadFileMutation.isPending}>
+          {uploadMutation.isPending || uploadFileMutation.isPending ? 'Đang đăng…' : 'Đăng chương'}
         </Button>
       </div>
     </div>

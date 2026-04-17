@@ -17,7 +17,6 @@ import { AvatarCropModal } from '@/components/profile/avatar-crop-modal'
 import { useAuthStore } from '@/stores/auth-store'
 import { useNovelReaderStore } from '@/stores/novel-reader-store'
 import { useMangaViewerStore, type ViewerMode } from '@/stores/manga-viewer-store'
-import { apiClient } from '@/lib/api-client'
 
 export function SettingsView() {
   const { user, updateUser } = useAuthStore()
@@ -33,45 +32,31 @@ export function SettingsView() {
   if (!user) return null
 
   async function handleSaveProfile() {
-    setSaving(true)
-    try {
-      const updated = await apiClient.patch<{ name: string }>('/users/me', {
-        name: displayName,
-      })
-      updateUser({ name: updated.name })
-      toast.success('Profile updated')
-    } catch {
-      toast.error('Failed to save profile')
-    } finally {
-      setSaving(false)
-    }
+    if (!displayName.trim()) return
+    updateUser({ name: displayName.trim() })
+    toast.info('Đã lưu tạm trên client. Backend chưa hỗ trợ endpoint cập nhật profile.')
+    setSaving(false)
   }
 
   async function handleChangePassword() {
     if (!newPassword) return
-    setSaving(true)
-    try {
-      await apiClient.post('/auth/change-password', { currentPassword, newPassword })
-      toast.success('Password changed')
-      setCurrentPassword('')
-      setNewPassword('')
-    } catch {
-      toast.error('Failed to change password')
-    } finally {
-      setSaving(false)
-    }
+    toast.info('Backend chưa có endpoint đổi mật khẩu trực tiếp. Vui lòng dùng quên mật khẩu.')
+    setCurrentPassword('')
+    setNewPassword('')
   }
 
-  async function handleAvatarCrop(blob: Blob) {
-    const form = new FormData()
-    form.append('avatar', blob, 'avatar.png')
-    try {
-      const res = await apiClient.post<{ avatarUrl: string }>('/users/me/avatar', form)
-      updateUser({ avatarUrl: res.avatarUrl })
-      toast.success('Avatar updated')
-    } catch {
-      toast.error('Failed to upload avatar')
+  async function handleAvatarCrop(_blob: Blob) {
+    toast.info('Backend chưa hỗ trợ endpoint cập nhật avatar tài khoản.')
+  }
+
+  function handleOpenAvatarModal() {
+    if (avatarModalOpen) {
+      setAvatarModalOpen(false)
+      return
     }
+
+    toast.info('Backend chưa hỗ trợ endpoint avatar, bạn vẫn có thể preview crop.')
+    setAvatarModalOpen(true)
   }
 
   const initials = user.name.slice(0, 2).toUpperCase()
@@ -98,7 +83,7 @@ export function SettingsView() {
                 {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.name} />}
                 <AvatarFallback className="text-xl">{initials}</AvatarFallback>
               </Avatar>
-              <Button variant="outline" onClick={() => setAvatarModalOpen(true)}>
+              <Button variant="outline" onClick={handleOpenAvatarModal}>
                 Change Avatar
               </Button>
             </div>

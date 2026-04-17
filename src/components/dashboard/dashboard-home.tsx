@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
+import { SafeImage as Image } from '@/components/ui/safe-image'
 import { Plus, Users, BookOpen } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -150,7 +150,7 @@ export function DashboardHome() {
                   </TableCell>
                   <TableCell className="text-right">
                     <Button size="sm" variant="outline" asChild>
-                      <Link href={`/dashboard/upload/chapter/${title.id}`}>
+                      <Link href={`/dashboard/upload/chapter/${title.slug}`}>
                         Add Chapter
                       </Link>
                     </Button>
