@@ -11,10 +11,7 @@ import type { Comment, PaginatedResponse } from '@/types'
 export function useComments(chapterId: string) {
   return useQuery<PaginatedResponse<Comment>>({
     queryKey: queryKeys.comments.list(chapterId),
-    queryFn: () =>
-      apiClient.get<PaginatedResponse<Comment>>('/comments', {
-        params: { chapterId },
-      }),
+    queryFn: () => apiClient.getComments(chapterId),
     enabled: Boolean(chapterId),
   })
 }
@@ -31,11 +28,10 @@ export function useAddComment(chapterId: string) {
 
   return useMutation({
     mutationFn: (payload: AddCommentPayload) =>
-      apiClient.post<Comment>('/comments', {
+      apiClient.createComment({
         chapterId,
         content: payload.content,
         pageIndex: null,
-        parentId: payload.parentId,
       }),
 
     onMutate: async (payload) => {
@@ -93,8 +89,7 @@ export function useDeleteComment(chapterId: string) {
   const qc = useQueryClient()
 
   return useMutation({
-    mutationFn: (commentId: string) =>
-      apiClient.delete(`/comments/${commentId}`),
+    mutationFn: (commentId: string) => apiClient.deleteComment(commentId),
 
     onMutate: async (commentId) => {
       const key = queryKeys.comments.list(chapterId)

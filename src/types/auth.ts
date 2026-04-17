@@ -9,6 +9,13 @@ export interface User {
   avatarUrl: string | null;
   bio: string | null;
   role: UserRole;
+  translationGroupId?: string | null;
+  translationGroup?: {
+    id: string;
+    name: string;
+    slug: string;
+    logoUrl: string | null;
+  } | null;
   createdAt: string;
 }
 

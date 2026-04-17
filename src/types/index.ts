@@ -43,7 +43,7 @@ export interface PaginatedResponse<T> {
 
 export type ContentType = 'manga' | 'novel';
 export type ContentStatus = 'ongoing' | 'completed' | 'hiatus' | 'cancelled';
-export type ComicAgeRating = 'everyone' | 'teen' | 'mature' | 'adult';
+export type ComicAgeRating = 'ALL' | 'T' | '16+' | '18+' | 'all' | 'adult';
 
 export interface Genre {
   id: string;
@@ -102,6 +102,11 @@ export interface Manga {
   artist: Author | null;
   genres: Genre[];
   tags: Tag[];
+  translationGroup?: {
+    id: string;
+    name: string;
+    slug: string;
+  } | null;
   chapters?: ChapterSummary[]; // populated only in detail response
   // Fields not returned by backend (optional, for mocks / future aggregation)
   rating?: number;
@@ -131,8 +136,9 @@ export interface UserRating {
 }
 
 export interface FollowStatus {
-  mangaId: string;
-  isFollowing: boolean;
+  mangaId?: string;
+  isFollowed?: boolean;
+  isFollowing?: boolean;
 }
 
 // ─── Library ─────────────────────────────────────────────────────────────────

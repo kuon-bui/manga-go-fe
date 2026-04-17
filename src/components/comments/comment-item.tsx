@@ -26,22 +26,23 @@ export function CommentItem({
   const [repliesVisible, setRepliesVisible] = useState(false)
 
   const currentUser = useAuthStore((s) => s.user)
-  const isOwn = currentUser?.id === comment.author.id
+  const isOwn = currentUser?.id === comment.userId
   const isOptimistic = comment.id.startsWith('optimistic-')
   const canReply = depth < 1 // max depth 2: root + 1 reply level
 
-  const likeReaction = comment.reactions.find((r) => r.type === 'like')
+  const likeReaction = comment?.reactions?.find((r) => r.type === 'like')
   const likeCount = likeReaction?.count ?? 0
   const isLiked = likeReaction?.userReacted ?? false
 
-  const initials = comment.author.name.slice(0, 2).toUpperCase()
+  const author = comment.author ?? { id: '', name: 'Unknown', avatarUrl: null }
+  const initials = author.name.slice(0, 2).toUpperCase()
 
   return (
     <div className={cn('flex gap-3', depth > 0 && 'ml-8 mt-3')}>
       {/* Avatar */}
       <Avatar className="h-8 w-8 shrink-0">
-        {comment.author.avatarUrl && (
-          <AvatarImage src={comment.author.avatarUrl} alt={comment.author.name} />
+        {author.avatarUrl && (
+          <AvatarImage src={author.avatarUrl} alt={author.name} />
         )}
         <AvatarFallback>{initials}</AvatarFallback>
       </Avatar>
@@ -50,7 +51,7 @@ export function CommentItem({
         {/* Header */}
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold text-foreground">
-            {comment.author.name}
+            {author.name}
           </span>
           <span className="text-xs text-muted-foreground">
             {formatDate(comment.createdAt)}

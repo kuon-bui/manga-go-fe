@@ -1,6 +1,6 @@
 'use client'
 
-import Image from 'next/image'
+import { SafeImage as Image } from '@/components/ui/safe-image'
 
 import { useImagePreloader } from '@/hooks/use-image-preloader'
 
@@ -28,6 +28,7 @@ export function DoublePageView({ pages, currentPage, onNext, onPrev }: DoublePag
             width={600}
             height={900}
             className="max-h-screen w-auto select-none object-contain"
+            unoptimized
             priority
           />
         </div>
@@ -42,6 +43,7 @@ export function DoublePageView({ pages, currentPage, onNext, onPrev }: DoublePag
             width={600}
             height={900}
             className="max-h-screen w-auto select-none object-contain"
+            unoptimized
             priority
           />
         </div>

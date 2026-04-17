@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import Image from 'next/image'
+import { SafeImage as Image } from '@/components/ui/safe-image'
 import { Check, Upload, Search, X, Plus, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/select'
 import {
   useCreateTitle, useAllAuthors, useCreateAuthor,
-  useAllTags, useCreateTag, useUploadFile, titleToSlug,
+  useAllTags, useCreateTag, useUploadFile, titleToSlug, useCurrentUserProfile, useMyGroups,
 } from '@/hooks/use-dashboard'
 import { useGenres } from '@/hooks/use-manga'
 import { cn } from '@/lib/utils'
@@ -259,7 +259,7 @@ const INITIAL: FormState = {
   alternativeTitles: [],
   type: 'manga',
   status: 'ongoing',
-  ageRating: 'everyone',
+  ageRating: 'ALL',
   description: '',
   author: null,
   artistId: null,
@@ -277,11 +277,17 @@ export function UploadTitleForm() {
   const createMutation = useCreateTitle()
   const uploadFileMutation = useUploadFile()
   const { data: genres } = useGenres()
+  const { data: me } = useCurrentUserProfile()
+  const { data: myGroups } = useMyGroups()
 
   const [step, setStep] = useState<Step>(0)
   const [form, setForm] = useState<FormState>(INITIAL)
   const [coverPreview, setCoverPreview] = useState<string | null>(null)
   const coverInputRef = useRef<HTMLInputElement>(null)
+  const selectedGroupSlug =
+    me && typeof me === 'object' && 'translationGroup' in me
+      ? (me.translationGroup as { slug?: string } | null | undefined)?.slug
+      : undefined
 
   const set = useCallback(<K extends keyof FormState>(key: K, val: FormState[K]) => {
     setForm((prev) => ({ ...prev, [key]: val }))
@@ -332,8 +338,8 @@ export function UploadTitleForm() {
         alternativeTitles: form.alternativeTitles,
         type: form.type,
         description: form.description.trim(),
-        authorIds: [form.author.id],
-        artistId: form.artistId,
+        authorNames: [form.author.name],
+        artistNames: [],
         genreSlugs: form.genres,
         tagSlugs: form.tags,
         thumbnail: thumbnailUrl ?? null,
@@ -343,7 +349,7 @@ export function UploadTitleForm() {
       {
         onSuccess: (data) => {
           toast.success('Đã tạo truyện thành công!')
-          router.push(`/titles/${data.slug}`)
+          router.push(`/dashboard/upload/chapter/${data.slug}`)
         },
         onError: (err) => {
           toast.error(`Lỗi: ${err instanceof Error ? err.message : 'Không thể tạo truyện'}`)
@@ -477,6 +483,23 @@ export function UploadTitleForm() {
         <div className="space-y-5 rounded-xl border bg-card p-6">
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2 space-y-1">
+              <Label>Nhóm dịch</Label>
+              <Select value={selectedGroupSlug} disabled>
+                <SelectTrigger>
+                  <SelectValue placeholder="Chưa có nhóm dịch" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(myGroups?.data ?? []).map((group) => (
+                    <SelectItem key={group.id} value={group.slug}>{group.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                API hiện đăng truyện theo nhóm dịch đang gắn với tài khoản của bạn.
+              </p>
+            </div>
+
+            <div className="col-span-2 space-y-1">
               <Label>Tác giả <span className="text-destructive">*</span></Label>
               <AuthorPicker value={form.author} onChange={(a) => set('author', a)} />
             </div>
@@ -497,10 +520,10 @@ export function UploadTitleForm() {
               <Select value={form.ageRating} onValueChange={(v) => set('ageRating', v as ComicAgeRating)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="everyone">Mọi lứa tuổi</SelectItem>
-                  <SelectItem value="teen">13+</SelectItem>
-                  <SelectItem value="mature">18+</SelectItem>
-                  <SelectItem value="adult">Adult</SelectItem>
+                  <SelectItem value="ALL">Mọi lứa tuổi</SelectItem>
+                    <SelectItem value="T">13+</SelectItem>
+                  <SelectItem value="16+">16+</SelectItem>
+                  <SelectItem value="18+">18+</SelectItem>
                 </SelectContent>
               </Select>
             </div>

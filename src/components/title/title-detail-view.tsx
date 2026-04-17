@@ -22,7 +22,7 @@ export function TitleDetailView({ id }: TitleDetailViewProps) {
   const { data: chaptersData, isLoading: chaptersLoading } = useChapterList(id)
 
   // Use latest chapter's id for comments (API requires a chapterId)
-  const latestChapterId = chaptersData?.data?.[0]?.id ?? manga?.latestChapter?.id ?? ''
+  const latestChapterId = chaptersData?.data?.[0]?.id ?? manga?.chapters?.[0]?.id ?? ''
 
   if (isLoading || !manga) {
     return (
@@ -39,7 +39,7 @@ export function TitleDetailView({ id }: TitleDetailViewProps) {
       <TitleHero manga={manga} onRateClick={() => setRatingOpen(true)} />
 
       {/* Synopsis */}
-      <TitleSynopsis text={manga.description} />
+      <TitleSynopsis text={manga.description ?? ''} />
 
       {/* Tabs: Chapters / Comments */}
       <Tabs defaultValue="chapters">

@@ -1,6 +1,6 @@
 'use client'
 
-import Image from 'next/image'
+import { SafeImage as Image } from '@/components/ui/safe-image'
 
 import { useImagePreloader } from '@/hooks/use-image-preloader'
 import { cn } from '@/lib/utils'
@@ -28,6 +28,7 @@ export function SinglePageView({ pages, currentPage, onNext, onPrev }: SinglePag
           width={800}
           height={1200}
           className="max-h-screen w-auto select-none object-contain"
+          unoptimized
           priority
         />
       </div>

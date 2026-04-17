@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef } from 'react'
-import Image from 'next/image'
+import { SafeImage as Image } from '@/components/ui/safe-image'
 
 import { useScrollProgress } from '@/hooks/use-scroll-progress'
 import { useImagePreloader } from '@/hooks/use-image-preloader'
@@ -69,6 +69,7 @@ function PageImage({ src, index, total, observeElement }: PageImageProps) {
         width={800}
         height={1200}
         className="h-auto w-full select-none"
+        unoptimized
         loading={index < 3 ? 'eager' : 'lazy'}
         priority={index < 2}
       />

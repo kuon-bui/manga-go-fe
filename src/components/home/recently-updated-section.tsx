@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
+import { SafeImage as Image } from '@/components/ui/safe-image'
 import { Clock, ChevronRight, BookOpen } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useRecentlyUpdated } from '@/hooks/use-manga'

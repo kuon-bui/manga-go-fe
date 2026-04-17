@@ -4,13 +4,35 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api-client'
 import type { CreateComicPayload, CreateChapterPayload } from '@/lib/api-client'
 import { queryKeys } from '@/lib/query-keys'
+import type { User } from '@/types/auth'
 import type {
   Group,
   DashboardTitle,
   PaginatedResponse,
   Author,
   Tag,
+  Manga,
 } from '@/types'
+
+type CurrentUserProfile = User
+
+type GroupWithOwner = Group & {
+  ownerId?: string
+}
+
+function resolveCurrentGroup(groups: GroupWithOwner[], me: CurrentUserProfile | null | undefined): GroupWithOwner | null {
+  if (!me) return null
+
+  if (me.translationGroup?.slug) {
+    return groups.find((g) => g.slug === me.translationGroup?.slug) ?? null
+  }
+
+  if (me.translationGroupId) {
+    return groups.find((g) => g.id === me.translationGroupId) ?? null
+  }
+
+  return groups.find((g) => g.ownerId === me.id) ?? null
+}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -66,10 +88,45 @@ export function useCreateTag() {
 
 // ─── Translation Groups ───────────────────────────────────────────────────────
 
+export function useCurrentUserProfile() {
+  return useQuery<CurrentUserProfile | null>({
+    queryKey: queryKeys.auth.me(),
+    queryFn: async () => {
+      const res = await apiClient.getCurrentUserProfile()
+      return res.user
+    },
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
 export function useMyGroups() {
+  const { data: me, isLoading: meLoading } = useCurrentUserProfile()
+
   return useQuery<PaginatedResponse<Group>>({
-    queryKey: queryKeys.dashboard.groups(),
-    queryFn: () => apiClient.getTranslationGroups(),
+    queryKey: [...queryKeys.dashboard.groups(), me?.translationGroupId ?? me?.translationGroup?.slug ?? 'none'],
+    queryFn: async () => {
+      const groups = await apiClient.getTranslationGroups({ page: '1', limit: '200' })
+      const currentGroup = resolveCurrentGroup(groups.data as GroupWithOwner[], me)
+
+      if (!currentGroup) {
+        return {
+          data: [],
+          total: 0,
+          page: 1,
+          pageSize: 0,
+          hasMore: false,
+        }
+      }
+
+      return {
+        data: [currentGroup],
+        total: 1,
+        page: 1,
+        pageSize: 1,
+        hasMore: false,
+      }
+    },
+    enabled: !meLoading,
   })
 }
 
@@ -78,7 +135,11 @@ export function useCreateGroup() {
   return useMutation({
     mutationFn: ({ name, slug }: { name: string; slug: string }) =>
       apiClient.createTranslationGroup(name, slug),
-    onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.dashboard.groups() }),
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.auth.me() })
+      qc.invalidateQueries({ queryKey: queryKeys.dashboard.groups() })
+      qc.invalidateQueries({ queryKey: queryKeys.dashboard.titles() })
+    },
   })
 }
 
@@ -93,9 +154,48 @@ export function useDeleteGroup() {
 // ─── Titles ───────────────────────────────────────────────────────────────────
 
 export function useMyTitles() {
+  const { data: me, isLoading: meLoading } = useCurrentUserProfile()
+
   return useQuery<PaginatedResponse<DashboardTitle>>({
-    queryKey: queryKeys.dashboard.titles(),
-    queryFn: () => apiClient.getComics(),
+    queryKey: [...queryKeys.dashboard.titles(), me?.translationGroupId ?? me?.translationGroup?.slug ?? 'none'],
+    queryFn: async () => {
+      const groups = await apiClient.getTranslationGroups({ page: '1', limit: '200' })
+      const currentGroup = resolveCurrentGroup(groups.data as GroupWithOwner[], me)
+
+      if (!currentGroup?.slug) {
+        return {
+          data: [],
+          total: 0,
+          page: 1,
+          pageSize: 0,
+          hasMore: false,
+        }
+      }
+
+      const comics = await apiClient.getComics({
+        page: '1',
+        limit: '100',
+        translationGroupSlug: currentGroup.slug,
+      })
+
+      return {
+        ...comics,
+        data: comics.data.map((comic: Manga) => ({
+          id: comic.id,
+          slug: comic.slug,
+          title: comic.title,
+          coverUrl: comic.thumbnail ?? '',
+          type: comic.type,
+          status: comic.status,
+          chapterCount: comic.chapters?.length ?? comic.chapterCount ?? 0,
+          lastUploadedAt: comic.lastChapterAt,
+          groups: comic.translationGroup
+            ? [{ id: comic.translationGroup.id, name: comic.translationGroup.name }]
+            : [],
+        })),
+      }
+    },
+    enabled: !meLoading,
   })
 }
 
@@ -160,8 +260,9 @@ export function usePublishChapter() {
 export function useDeleteChapter(comicSlug: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (chapterSlug: string) =>
-      apiClient.delete(`/comics/${comicSlug}/chapters/${chapterSlug}`),
+    mutationFn: async (_chapterSlug: string) => {
+      throw new Error('API currently does not support deleting chapters')
+    },
     onSettled: () =>
       qc.invalidateQueries({ queryKey: queryKeys.manga.chapters(comicSlug) }),
   })

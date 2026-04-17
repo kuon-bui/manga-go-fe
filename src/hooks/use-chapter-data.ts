@@ -11,7 +11,9 @@ interface BackendPage {
   id: string;
   chapterId: string;
   pageNumber: number;
-  imageUrl: string;
+  pageType?: 'image' | 'text';
+  imageUrl?: string;
+  content?: string;
 }
 
 interface BackendChapter {
@@ -37,7 +39,13 @@ export function useChapter(comicSlug: string, chapterSlug: string) {
       const sortedPages = (raw.pages ?? [])
         .slice()
         .sort((a, b) => a.pageNumber - b.pageNumber)
-        .map((p) => p.imageUrl)
+      const imagePages = sortedPages
+        .filter((p) => (p.pageType ?? 'image') === 'image' && Boolean(p.imageUrl))
+        .map((p) => p.imageUrl as string)
+      const textContent = sortedPages
+        .filter((p) => p.pageType === 'text' && Boolean(p.content))
+        .map((p) => p.content as string)
+        .join('\n\n')
 
       return {
         id: raw.id,
@@ -48,8 +56,8 @@ export function useChapter(comicSlug: string, chapterSlug: string) {
         group: null,
         comicSlug,
         mangaId: comicSlug, // used for back-link in reader controls
-        pages: sortedPages,
-        content: null,
+        pages: imagePages,
+        content: textContent || null,
         prevChapter: null, // not provided by backend; navigate via chapter list
         nextChapter: null,
       } satisfies Chapter

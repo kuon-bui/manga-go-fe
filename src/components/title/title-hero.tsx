@@ -1,6 +1,6 @@
 'use client'
 
-import Image from 'next/image'
+import { SafeImage as Image } from '@/components/ui/safe-image'
 import Link from 'next/link'
 import { BookOpen, Heart, HeartOff, Star } from 'lucide-react'
 
@@ -34,7 +34,7 @@ export function TitleHero({ manga, onRateClick }: TitleHeroProps) {
   const { data: followStatus } = useFollowStatus(manga.slug ?? manga.id)
   const followMutation = useFollow(manga.slug ?? manga.id)
 
-  const isFollowing = followStatus?.isFollowing ?? false
+  const isFollowing = followStatus?.isFollowed ?? followStatus?.isFollowing ?? false
 
   function handleFollow() {
     if (!isAuthenticated) return

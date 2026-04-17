@@ -23,7 +23,16 @@ export function useNotifications() {
 export function useUnreadCount() {
   return useQuery<{ count: number }>({
     queryKey: queryKeys.notifications.unreadCount(),
-    queryFn: () => apiClient.get<{ count: number }>('/notifications/unread-count'),
+    queryFn: async () => {
+      const result = await apiClient.get<PaginatedResponse<Notification>>('/notifications', {
+        params: {
+          page: '1',
+          limit: '1',
+          unreadOnly: 'true',
+        },
+      })
+      return { count: result.total }
+    },
     enabled: false,
   })
 }
@@ -92,7 +101,7 @@ export function useMarkNotificationRead() {
 export function useMarkAllRead() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: () => apiClient.post('/notifications/mark-all-read'),
+    mutationFn: () => apiClient.patch('/notifications/read-all'),
     onSettled: () => {
       qc.invalidateQueries({ queryKey: queryKeys.notifications.all() })
       qc.invalidateQueries({ queryKey: queryKeys.notifications.unreadCount() })

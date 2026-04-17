@@ -64,8 +64,8 @@ export interface CreateComicPayload {
   alternativeTitles: string[];
   type: 'manga' | 'novel';
   description: string;
-  authorIds: string[];
-  artistId?: string | null;
+  authorNames: string[];
+  artistNames?: string[];
   genreSlugs: string[];
   tagSlugs: string[];
   thumbnail?: string | null;
@@ -81,8 +81,8 @@ export interface UpdateComicPayload {
   type?: 'manga' | 'novel';
   status?: string;
   description?: string;
-  authorIds?: string[];
-  artistId?: string | null;
+  authorNames?: string[];
+  artistNames?: string[];
   genreSlugs?: string[];
   tagSlugs?: string[];
   thumbnail?: string | null;
@@ -93,11 +93,17 @@ export interface UpdateComicPayload {
   isFeatured?: boolean;
 }
 
+export interface ChapterPagePayload {
+  pageType: 'image' | 'text';
+  imageUrl?: string;
+  content?: string;
+}
+
 export interface CreateChapterPayload {
   slug: string;
   number: string;
   title: string;
-  pages: string[];
+  pages: ChapterPagePayload[];
 }
 
 export interface UpdateChapterPayload {
@@ -116,10 +122,41 @@ export interface UpdateGroupPayload {
   slug?: string;
 }
 
+// ─── Comment normalizer ──────────────────────────────────────────────────────
+// Backend returns `user` (Go model field), frontend type expects `author`.
+
+type RawComment = Record<string, unknown>;
+
+function normalizeComment(raw: RawComment): Comment {
+  const user = (raw.user ?? {}) as { id?: string; name?: string };
+  const author = (raw.author ?? {
+    id: user.id ?? '',
+    name: user.name ?? 'Unknown',
+    avatarUrl: null,
+  }) as Comment['author'];
+
+  return {
+    id: raw.id as string,
+    content: raw.content as string,
+    chapterId: raw.chapterId as string,
+    pageIndex: (raw.pageIndex ?? null) as number | null,
+    parentId: (raw.parentId ?? null) as string | null,
+    author,
+    replies: ((raw.replies ?? []) as RawComment[]).map(normalizeComment),
+    reactions: (raw.reactions ?? []) as Comment['reactions'],
+    createdAt: raw.createdAt as string,
+    updatedAt: raw.updatedAt as string,
+  };
+}
+
 // ─── Client ───────────────────────────────────────────────────────────────────
 
 interface RequestConfig extends RequestInit {
   params?: Record<string, string>;
+}
+
+interface FollowStatusResponse {
+  isFollowed: boolean;
 }
 
 class ApiClient {
@@ -244,7 +281,11 @@ class ApiClient {
   }
 
   getMe(): Promise<User> {
-    return this.get<User>('/users/me');
+    return this.getCurrentUserProfile().then((res) => res.user);
+  }
+
+  getCurrentUserProfile(): Promise<{ user: User }> {
+    return this.get<{ user: User }>('/users/me');
   }
 
   // ─── RBAC ───────────────────────────────────────────────────────────────────
@@ -297,6 +338,32 @@ class ApiClient {
 
   publishComic(slug: string, isPublished: boolean): Promise<void> {
     return this.patch<void>(`/comics/${slug}/publish`, { isPublished });
+  }
+
+  getComicFollowStatus(comicSlug: string): Promise<FollowStatusResponse> {
+    return this.get<FollowStatusResponse>(`/comics/${comicSlug}/follow-status`);
+  }
+
+  followComic(comicSlug: string): Promise<void> {
+    return this.post<void>(`/comics/${comicSlug}/follow`);
+  }
+
+  unfollowComic(comicSlug: string): Promise<void> {
+    return this.delete<void>(`/comics/${comicSlug}/follow`);
+  }
+
+  getFollowedComics(params?: Record<string, string>): Promise<PaginatedResponse<{
+    id: string;
+    comicId: string;
+    comic: Manga;
+    createdAt: string | null;
+  }>> {
+    return this.get<PaginatedResponse<{
+      id: string;
+      comicId: string;
+      comic: Manga;
+      createdAt: string | null;
+    }>>('/users/me/followed-comics', { params });
   }
 
   // ─── Chapters ───────────────────────────────────────────────────────────────
@@ -396,15 +463,16 @@ class ApiClient {
   // ─── Comments ────────────────────────────────────────────────────────────────
 
   getComments(chapterId: string, params?: Record<string, string>): Promise<PaginatedResponse<Comment>> {
-    return this.get<PaginatedResponse<Comment>>('/comments', { params: { chapterId, ...params } });
+    return this.get<PaginatedResponse<RawComment>>('/comments', { params: { chapterId, ...params } })
+      .then((res) => ({ ...res, data: res.data.map(normalizeComment) }));
   }
 
   createComment(payload: { chapterId: string; content: string; pageIndex?: number | null; parentId?: string | null }): Promise<Comment> {
-    return this.post<Comment>('/comments', payload);
+    return this.post<RawComment>('/comments', payload).then(normalizeComment);
   }
 
   updateComment(id: string, content: string): Promise<Comment> {
-    return this.put<Comment>(`/comments/${id}`, { content });
+    return this.put<RawComment>(`/comments/${id}`, { content }).then(normalizeComment);
   }
 
   deleteComment(id: string): Promise<void> {
@@ -432,8 +500,15 @@ class ApiClient {
     }
 
     const json = (await response.json()) as ApiEnvelope<{ url: string; filename: string }>;
-    if ('data' in json && json.data !== undefined) return json.data;
-    return json as unknown as { url: string; filename: string };
+    const data: { url: string; filename: string } =
+      'data' in json && json.data !== undefined
+        ? json.data
+        : (json as unknown as { url: string; filename: string });
+    // url is a relative path (/files/content/…) — make it absolute
+    if (data.url.startsWith('/')) {
+      data.url = `${this.baseUrl}${data.url}`;
+    }
+    return data;
   }
 
   getPresignedUrl(filename: string): Promise<{ url: string }> {

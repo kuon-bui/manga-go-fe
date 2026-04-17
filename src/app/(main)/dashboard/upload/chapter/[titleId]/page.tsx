@@ -7,10 +7,10 @@ interface PageProps {
 }
 
 export default async function UploadChapterPage({ params }: PageProps) {
-  const { titleId } = await params
+  const { titleId: titleSlug } = await params
   return (
     <Suspense fallback={<Skeleton className="h-96 w-full" />}>
-      <UploadChapterView titleId={titleId} />
+      <UploadChapterView titleSlug={titleSlug} />
     </Suspense>
   )
 }

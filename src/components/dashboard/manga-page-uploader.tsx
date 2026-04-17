@@ -1,13 +1,13 @@
 'use client'
 
 import { useRef, useState, useCallback } from 'react'
-import Image from 'next/image'
+import { SafeImage as Image } from '@/components/ui/safe-image'
 import { Upload, X, GripVertical } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface MangaPageUploaderProps {
-  pages: string[]
-  onChange: (_pages: string[]) => void
+  pages: File[]
+  onChange: (_pages: File[]) => void
 }
 
 interface PageItem {
@@ -23,9 +23,7 @@ export function MangaPageUploader({ onChange }: MangaPageUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null)
 
   function emitChange(next: PageItem[]) {
-    // In production, pages would be uploaded to storage first;
-    // here we pass object URLs as placeholder
-    onChange(next.map((p) => p.url))
+    onChange(next.map((p) => p.file))
   }
 
   function handleFiles(files: FileList | null) {
