@@ -55,7 +55,7 @@ export function useChapter(comicSlug: string, chapterSlug: string) {
         uploadedAt: raw.createdAt ?? '',
         group: null,
         comicSlug,
-        mangaId: comicSlug, // used for back-link in reader controls
+        mangaId: raw.comicId, // backend UUID used for foreign keys e.g. reading-history
         pages: imagePages,
         content: textContent || null,
         prevChapter: null, // not provided by backend; navigate via chapter list

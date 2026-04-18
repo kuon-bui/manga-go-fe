@@ -70,3 +70,14 @@ DO NOT delete historical context if it is still relevant. Compress older complet
 - `markChapterRead()` wired into VerticalScrollView (last page visible) + SinglePageView (last page nav)
 - Library page: tabs "Đang theo dõi" + "Lịch sử đọc" with delete
 - `ReadingHistoryEntry` type + `deleteReadingHistory`, `updateReadingHistory` in apiClient
+
+### UI Overhaul & UX Polish (April 2026 Phase 7 Initiative):
+- Fixed `reading-histories` UUID length error in `useChapter`.
+- Polished guest UX by adding auth paths gracefully to `BottomNav` and integrating a back button in `/login`.
+- Transformed `UploadTitleForm` to use generic Combobox for Genres & Select for Translation Group to eliminate massive nested lists.
+- Overhauled Reader positioning: migrated out of `(main)` layout and shifted layout logic to `fixed` overlays to completely eliminate double scrollbars.
+- Redesigned `MangaCard` sizing into strict `3:4` aspect with refined fonts and hover overlays.
+- Reconstructed the frontend `Home` component `TrendingSection` into a rich full-width custom Carousel replacing static Hero blocks.
+- Injected `manga.translationGroup` display metadata directly into `TitleHero`.
+- Developed `/groups/[slug]/page.tsx` for tracking translation group metrics + library integrations via `useBrowse`.
+- Resolved `/profile/page.tsx` structural placeholder, mapping it correctly to `SettingsView`.

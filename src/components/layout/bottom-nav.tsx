@@ -7,25 +7,26 @@ import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
 import { usePermission } from '@/hooks/use-permission';
 
-const NAV_ITEMS = [
-  { href: '/', label: 'Home', icon: BookOpen },
-  { href: '/search', label: 'Search', icon: Search },
-  { href: '/library', label: 'Library', icon: Library },
-  { href: '/profile', label: 'Profile', icon: User },
-] as const;
-
 export function BottomNav() {
   const pathname = usePathname();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const canCreateTitle = usePermission('create_title');
 
   const items = [
-    ...NAV_ITEMS,
+    { href: '/', label: 'Home', icon: BookOpen },
+    { href: '/search', label: 'Search', icon: Search },
+    { href: '/library', label: 'Library', icon: Library },
+    ...(isAuthenticated
+      ? [{ href: '/profile', label: 'Profile', icon: User }]
+      : []),
     ...(isAuthenticated
       ? [{ href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard }]
       : []),
     ...(isAuthenticated && canCreateTitle
       ? [{ href: '/dashboard/upload/title', label: 'Upload', icon: Upload }]
+      : []),
+    ...(!isAuthenticated
+      ? [{ href: '/login', label: 'Sign in', icon: User }]
       : []),
   ];
 

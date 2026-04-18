@@ -1,9 +1,16 @@
 'use client'
 
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api-client'
 import { queryKeys } from '@/lib/query-keys'
 import type { UpdateGroupPayload } from '@/lib/api-client'
+
+export function useGroup(slug: string) {
+  return useQuery({
+    queryKey: ['groups', slug],
+    queryFn: () => apiClient.getTranslationGroup(slug),
+  })
+}
 
 export function useUpdateGroup(groupSlug: string) {
   const qc = useQueryClient()

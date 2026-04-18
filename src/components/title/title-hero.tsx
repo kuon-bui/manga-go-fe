@@ -49,7 +49,6 @@ export function TitleHero({ manga, onRateClick }: TitleHeroProps) {
     : '#'
 
   const authorNames = manga.authors.map((a) => a.name).join(', ') || 'Unknown'
-  const artistName = manga.artist?.name ?? null
 
   return (
     <div className="flex flex-col gap-6 md:flex-row">
@@ -106,15 +105,19 @@ export function TitleHero({ manga, onRateClick }: TitleHeroProps) {
 
         {/* Metadata */}
         <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm sm:grid-cols-3">
-          <MetaRow label="Author" value={authorNames} />
-          {artistName && artistName !== authorNames && (
-            <MetaRow label="Artist" value={artistName} />
+          <MetaRow label="Tác giả" value={authorNames} />
+          {manga.translationGroup && (
+            <MetaRow 
+              label="Nhóm dịch" 
+              value={manga.translationGroup.name} 
+              href={`/groups/${manga.translationGroup.slug}`}
+            />
           )}
           {manga.chapterCount !== undefined && (
-            <MetaRow label="Chapters" value={String(manga.chapterCount)} />
+            <MetaRow label="Số chương" value={String(manga.chapterCount)} />
           )}
           {manga.followCount !== undefined && (
-            <MetaRow label="Follows" value={manga.followCount.toLocaleString()} />
+            <MetaRow label="Theo dõi" value={manga.followCount.toLocaleString()} />
           )}
         </dl>
 
@@ -170,11 +173,19 @@ export function TitleHero({ manga, onRateClick }: TitleHeroProps) {
   )
 }
 
-function MetaRow({ label, value }: { label: string; value: string }) {
+function MetaRow({ label, value, href }: { label: string; value: string; href?: string }) {
   return (
     <div className="flex flex-col">
       <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className="font-medium text-foreground">{value}</dd>
+      <dd className="font-medium text-foreground">
+        {href ? (
+          <Link href={href} className="hover:text-primary transition-colors hover:underline">
+            {value}
+          </Link>
+        ) : (
+          value
+        )}
+      </dd>
     </div>
   )
 }

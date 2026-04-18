@@ -36,7 +36,7 @@ export function MangaControls({ chapter }: MangaControlsProps) {
       {/* ── Tap zones: 25% PREV / 50% TOGGLE / 25% NEXT ─────────────────────── */}
       {/* Only active in single/double page modes — vertical scroll uses natural scroll */}
       {mode !== 'vertical' && (
-        <div className="absolute inset-0 z-10 flex select-none">
+        <div className="fixed inset-0 z-10 flex select-none">
           {/* Left 25% → prev page */}
           <div
             className="w-1/4 cursor-pointer"
@@ -61,7 +61,7 @@ export function MangaControls({ chapter }: MangaControlsProps) {
       {/* Vertical mode: tapping anywhere toggles UI */}
       {mode === 'vertical' && (
         <div
-          className="absolute inset-0 z-10 cursor-pointer"
+          className="fixed inset-0 z-10 cursor-pointer"
           onClick={toggle}
           aria-label="Bật/tắt giao diện"
         />
@@ -70,7 +70,7 @@ export function MangaControls({ chapter }: MangaControlsProps) {
       {/* ── Top bar ─────────────────────────────────────────────────────────── */}
       <header
         className={cn(
-          'absolute left-0 right-0 top-0 z-20 flex h-14 items-center gap-2 bg-black/80 px-3 backdrop-blur-md transition-transform duration-200',
+          'fixed left-0 right-0 top-0 z-20 flex h-14 items-center gap-2 bg-black/80 px-3 backdrop-blur-md transition-transform duration-200',
           visible ? 'translate-y-0' : '-translate-y-full'
         )}
         onClick={(e) => e.stopPropagation()}
@@ -82,7 +82,7 @@ export function MangaControls({ chapter }: MangaControlsProps) {
           className="shrink-0 text-white/80 hover:bg-white/10 hover:text-white"
           asChild
         >
-          <Link href={`/titles/${chapter.mangaId}`} aria-label="Quay lại">
+          <Link href={`/titles/${chapter.comicSlug}`} aria-label="Quay lại">
             <ArrowLeft className="h-4 w-4" />
           </Link>
         </Button>
@@ -124,7 +124,7 @@ export function MangaControls({ chapter }: MangaControlsProps) {
       {/* ── Bottom bar ──────────────────────────────────────────────────────── */}
       <footer
         className={cn(
-          'absolute bottom-0 left-0 right-0 z-20 bg-black/80 px-4 pb-4 pt-2 backdrop-blur-md transition-transform duration-200',
+          'fixed bottom-0 left-0 right-0 z-20 bg-black/80 px-4 pb-4 pt-2 backdrop-blur-md transition-transform duration-200',
           visible ? 'translate-y-0' : 'translate-y-full'
         )}
         onClick={(e) => e.stopPropagation()}
