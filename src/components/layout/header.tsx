@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Search, BookOpen, LayoutDashboard, Upload, LogOut, User, ChevronDown } from 'lucide-react';
+import { Search, BookOpen, LayoutDashboard, Upload, LogOut, User, ChevronDown, Shield } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 
 import { cn } from '@/lib/utils';
@@ -103,6 +103,13 @@ function UserMenu() {
           <DropdownMenuItem asChild>
             <Link href="/dashboard" className="flex items-center gap-2">
               <LayoutDashboard className="h-4 w-4" /> Dashboard
+            </Link>
+          </DropdownMenuItem>
+        </PermissionGate>
+        <PermissionGate allowedRoles={['admin', 'superadmin']}>
+          <DropdownMenuItem asChild>
+            <Link href="/admin" className="flex items-center gap-2">
+              <Shield className="h-4 w-4" /> Admin Dashboard
             </Link>
           </DropdownMenuItem>
         </PermissionGate>

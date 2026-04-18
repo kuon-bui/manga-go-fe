@@ -5,11 +5,20 @@ import { roleHasPermission, type Permission } from '@/lib/permissions'
 
 /**
  * Returns true if the current user has the given permission.
- * Uses the user.role from the auth store — no additional API calls.
+ * Reads from the auth store (roles fetched at login time) — no extra API calls.
  * Unauthenticated users are treated as 'guest'.
  */
 export function usePermission(permission: Permission): boolean {
   const user = useAuthStore((s) => s.user)
+  const roles = useAuthStore((s) => s.roles)
+
   if (!user) return roleHasPermission('guest', permission)
+
+  // Check against all backend roles stored at login time
+  if (roles.length > 0) {
+    return roles.some((roleName) => roleHasPermission(roleName, permission))
+  }
+
+  // Fallback to the static role field on the user object
   return roleHasPermission(user.role ?? 'guest', permission)
 }

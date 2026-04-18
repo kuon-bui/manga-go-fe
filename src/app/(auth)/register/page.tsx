@@ -73,7 +73,15 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       const { user } = await apiClient.register(name, email, password);
-      setAuth(user);
+      // Fetch dynamic roles from backend right after register
+      let roles: string[] = [];
+      try {
+        const userRoles = await apiClient.getUserRoles(user.id);
+        roles = userRoles.map((r) => r.name);
+      } catch {
+        if (user.role) roles = [user.role];
+      }
+      setAuth(user, roles);
       router.push('/');
     } catch (err) {
       if (err instanceof ApiClientError) {
