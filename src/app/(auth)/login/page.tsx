@@ -3,7 +3,7 @@
 import { Suspense, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,7 +15,14 @@ import { apiClient, ApiClientError } from '@/lib/api-client';
 export default function LoginPage() {
   return (
     <Suspense>
-      <LoginPageContent />
+      <div className="relative">
+        <Button variant="ghost" asChild className="absolute -top-12 left-0 text-muted-foreground hover:text-foreground">
+          <Link href="/">
+            <ArrowLeft className="mr-2 h-4 w-4" /> TRANG CHỦ
+          </Link>
+        </Button>
+        <LoginPageContent />
+      </div>
     </Suspense>
   );
 }

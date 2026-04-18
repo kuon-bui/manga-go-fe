@@ -1,6 +1,6 @@
 import { SafeImage as Image } from '@/components/ui/safe-image'
 import Link from 'next/link'
-import { Star, BookOpen, Clock } from 'lucide-react'
+import { Star, BookOpen } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -58,7 +58,7 @@ export function MangaCard({ manga, variant = 'card', className }: MangaCardProps
       className={cn('group relative flex flex-col', className)}
     >
       {/* Cover */}
-      <div className="relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-muted">
+      <div className="relative aspect-[3/4] w-full overflow-hidden rounded-md bg-muted shadow-sm">
         {manga.thumbnail ? (
           <Image
             src={manga.thumbnail}
@@ -77,13 +77,13 @@ export function MangaCard({ manga, variant = 'card', className }: MangaCardProps
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
 
         {/* Type badge */}
-        <div className="absolute left-1.5 top-1.5">
+        <div className="absolute left-1 top-1">
           <span
             className={cn(
-              'inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide shadow',
+              'inline-flex items-center rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white shadow-sm',
               manga.type === 'manga'
-                ? 'bg-blue-600 text-white'
-                : 'bg-purple-600 text-white'
+                ? 'bg-blue-600/90'
+                : 'bg-purple-600/90'
             )}
           >
             {TYPE_LABEL[manga.type]}
@@ -92,7 +92,7 @@ export function MangaCard({ manga, variant = 'card', className }: MangaCardProps
 
         {/* Rating badge */}
         {manga.rating !== undefined && (
-          <div className="absolute right-1.5 top-1.5 flex items-center gap-0.5 rounded bg-black/70 px-1.5 py-0.5">
+          <div className="absolute right-1 top-1 flex items-center gap-0.5 rounded bg-black/60 px-1 py-0.5 backdrop-blur-sm">
             <Star className="h-2.5 w-2.5 fill-yellow-400 text-yellow-400" />
             <span className="text-[10px] font-semibold text-white">{manga.rating.toFixed(1)}</span>
           </div>
@@ -100,8 +100,8 @@ export function MangaCard({ manga, variant = 'card', className }: MangaCardProps
 
         {/* Latest chapter — shows on hover */}
         {manga.chapters && manga.chapters.length > 0 && (
-          <div className="absolute bottom-0 left-0 right-0 translate-y-1 px-2 pb-2 opacity-0 transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100">
-            <span className="inline-flex items-center gap-1 rounded bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">
+          <div className="absolute bottom-0 left-0 right-0 translate-y-2 px-1.5 pb-1.5 opacity-0 transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100">
+            <span className="inline-flex items-center gap-1 rounded bg-primary/90 px-1.5 py-0.5 text-[10px] font-medium text-primary-foreground backdrop-blur-md">
               Ch.{manga.chapters[manga.chapters.length - 1].number}
             </span>
           </div>
@@ -111,21 +111,20 @@ export function MangaCard({ manga, variant = 'card', className }: MangaCardProps
       {/* Info */}
       <div className="mt-1.5 flex flex-col gap-0.5">
         <h3
-          className="line-clamp-2 text-[13px] font-semibold leading-snug text-foreground group-hover:text-primary transition-colors"
+          className="line-clamp-2 text-xs font-semibold leading-tight text-foreground transition-colors group-hover:text-primary"
           title={manga.title}
         >
           {manga.title}
         </h3>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
           <span className={cn('h-1.5 w-1.5 shrink-0 rounded-full', STATUS_DOT[manga.status])} />
-          <span className="text-[11px] text-muted-foreground">{STATUS_LABEL[manga.status]}</span>
+          <span className="text-[10px] text-muted-foreground">{STATUS_LABEL[manga.status]}</span>
           {manga.lastChapterAt && (
-            <>
-              <span className="text-[11px] text-muted-foreground/50">·</span>
-              <Clock className="h-2.5 w-2.5 text-muted-foreground/60" />
-              <span className="text-[11px] text-muted-foreground/60">{timeAgo(manga.lastChapterAt)}</span>
-            </>
+            <div className="flex items-center gap-1">
+              <span className="text-[10px] text-muted-foreground/30">·</span>
+              <span className="text-[10px] text-muted-foreground/60">{timeAgo(manga.lastChapterAt)}</span>
+            </div>
           )}
         </div>
       </div>

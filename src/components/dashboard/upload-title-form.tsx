@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/select'
 import {
   useCreateTitle, useAllAuthors, useCreateAuthor,
-  useAllTags, useCreateTag, useUploadFile, titleToSlug, useCurrentUserProfile, useMyGroups,
+  useAllTags, useCreateTag, useUploadFile, titleToSlug, useMyGroups,
 } from '@/hooks/use-dashboard'
 import { useGenres } from '@/hooks/use-manga'
 import { cn } from '@/lib/utils'
@@ -270,24 +270,100 @@ const INITIAL: FormState = {
   thumbnailUrl: null,
 }
 
+function GenrePicker({
+  value,
+  onChange,
+}: {
+  value: string[]
+  onChange: (_slugs: string[]) => void
+}) {
+  const { data: genres } = useGenres()
+  const [query, setQuery] = useState('')
+
+  const filtered = (genres ?? []).filter((g) =>
+    g.name.toLowerCase().includes(query.toLowerCase())
+  )
+  const selectedGenres = (genres ?? []).filter((g) => value.includes(g.slug))
+
+  function toggle(slug: string) {
+    if (value.includes(slug)) {
+      onChange(value.filter((s) => s !== slug))
+    } else {
+      onChange([...value, slug])
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      {selectedGenres.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {selectedGenres.map((g) => (
+            <Badge key={g.slug} variant="secondary" className="gap-1 pr-1">
+              {g.name}
+              <button 
+                type="button"
+                onClick={() => toggle(g.slug)} 
+                aria-label={`Xóa thể loại ${g.name}`}
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          ))}
+        </div>
+      )}
+
+      <div className="relative">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Tìm thể loại..."
+          className="pl-8"
+        />
+      </div>
+
+      {filtered.length > 0 && query && (
+        <div className="flex flex-wrap gap-1.5 mt-2">
+          {filtered.slice(0, 15).map((g) => (
+            <button
+              key={g.slug}
+              type="button"
+              onClick={() => toggle(g.slug)}
+              className={cn(
+                'rounded-full border px-2.5 py-0.5 text-xs transition-colors',
+                value.includes(g.slug)
+                  ? 'border-primary bg-primary text-primary-foreground'
+                  : 'border-border bg-background text-foreground hover:bg-accent'
+              )}
+            >
+              {g.name}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function UploadTitleForm() {
   const router = useRouter()
   const createMutation = useCreateTitle()
   const uploadFileMutation = useUploadFile()
-  const { data: genres } = useGenres()
-  const { data: me } = useCurrentUserProfile()
   const { data: myGroups } = useMyGroups()
 
   const [step, setStep] = useState<Step>(0)
-  const [form, setForm] = useState<FormState>(INITIAL)
+  const [form, setForm] = useState<FormState & { groupSlug?: string }>(INITIAL)
   const [coverPreview, setCoverPreview] = useState<string | null>(null)
   const coverInputRef = useRef<HTMLInputElement>(null)
-  const selectedGroupSlug =
-    me && typeof me === 'object' && 'translationGroup' in me
-      ? (me.translationGroup as { slug?: string } | null | undefined)?.slug
-      : undefined
+
+  // Auto-select first group once loaded if none set
+  useEffect(() => {
+    if (myGroups?.data && myGroups.data.length > 0 && !form.groupSlug) {
+      setForm(prev => ({ ...prev, groupSlug: myGroups.data[0].slug }))
+    }
+  }, [myGroups, form.groupSlug])
 
   const set = useCallback(<K extends keyof FormState>(key: K, val: FormState[K]) => {
     setForm((prev) => ({ ...prev, [key]: val }))
@@ -300,15 +376,8 @@ export function UploadTitleForm() {
     setCoverPreview(URL.createObjectURL(file))
   }
 
-  function toggleGenre(slug: string) {
-    set('genres', form.genres.includes(slug)
-      ? form.genres.filter((g) => g !== slug)
-      : [...form.genres, slug]
-    )
-  }
-
   const step0Valid = Boolean(form.title.trim() && form.description.trim())
-  const step1Valid = Boolean(form.author)
+  const step1Valid = Boolean(form.author && form.groupSlug)
 
   async function handleSubmit() {
     if (!form.author) {
@@ -318,7 +387,6 @@ export function UploadTitleForm() {
 
     let thumbnailUrl = form.thumbnailUrl
 
-    // Upload cover image first if selected
     if (form.coverFile) {
       try {
         const result = await uploadFileMutation.mutateAsync(form.coverFile)
@@ -394,7 +462,6 @@ export function UploadTitleForm() {
       {/* ── Step 0: Basic Info ───────────────────────────────────────────────── */}
       {step === 0 && (
         <div className="space-y-5 rounded-xl border bg-card p-6">
-          {/* Cover + title */}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
             <div
               className="relative h-44 w-32 shrink-0 cursor-pointer overflow-hidden rounded-xl border-2 border-dashed border-border transition-colors hover:border-primary"
@@ -483,20 +550,23 @@ export function UploadTitleForm() {
         <div className="space-y-5 rounded-xl border bg-card p-6">
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2 space-y-1">
-              <Label>Nhóm dịch</Label>
-              <Select value={selectedGroupSlug} disabled>
+              <Label>Nhóm dịch sở hữu <span className="text-destructive">*</span></Label>
+              <Select 
+                value={form.groupSlug} 
+                onValueChange={(v) => setForm(prev => ({ ...prev, groupSlug: v }))}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder="Chưa có nhóm dịch" />
+                  <SelectValue placeholder="Chọn nhóm dịch..." />
                 </SelectTrigger>
                 <SelectContent>
+                  {(myGroups?.data ?? []).length === 0 && (
+                    <div className="p-2 text-sm text-muted-foreground text-center">Bạn chưa tham gia nhóm dịch nào.</div>
+                  )}
                   {(myGroups?.data ?? []).map((group) => (
                     <SelectItem key={group.id} value={group.slug}>{group.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground">
-                API hiện đăng truyện theo nhóm dịch đang gắn với tài khoản của bạn.
-              </p>
             </div>
 
             <div className="col-span-2 space-y-1">
@@ -521,7 +591,7 @@ export function UploadTitleForm() {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="ALL">Mọi lứa tuổi</SelectItem>
-                    <SelectItem value="T">13+</SelectItem>
+                  <SelectItem value="T">13+</SelectItem>
                   <SelectItem value="16+">16+</SelectItem>
                   <SelectItem value="18+">18+</SelectItem>
                 </SelectContent>
@@ -529,31 +599,13 @@ export function UploadTitleForm() {
             </div>
           </div>
 
-          {genres && genres.length > 0 && (
-            <div className="space-y-2">
-              <Label>Thể loại</Label>
-              <div className="flex flex-wrap gap-1.5">
-                {genres.map((g) => (
-                  <button
-                    key={g.id}
-                    type="button"
-                    onClick={() => toggleGenre(g.slug)}
-                    className={cn(
-                      'rounded-full border px-3 py-1 text-xs transition-colors',
-                      form.genres.includes(g.slug)
-                        ? 'border-primary bg-primary text-primary-foreground'
-                        : 'border-border bg-background text-foreground hover:bg-accent'
-                    )}
-                  >
-                    {g.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+          <div className="space-y-2">
+            <Label>Thể loại</Label>
+            <GenrePicker value={form.genres} onChange={(slugs) => set('genres', slugs)} />
+          </div>
 
           <div className="space-y-2">
-            <Label>Tags</Label>
+            <Label>Tags phụ</Label>
             <TagPicker value={form.tags} onChange={(slugs) => set('tags', slugs)} />
           </div>
 
