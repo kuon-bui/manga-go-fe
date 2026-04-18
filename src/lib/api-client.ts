@@ -5,7 +5,6 @@ import type {
   PermissionEntity,
   Role,
   RoleDetail,
-  UserRolesResponse,
 } from '@/types/rbac';
 import type {
   Manga,
@@ -291,10 +290,12 @@ class ApiClient {
     return this.get<{ user: User }>('/users/me');
   }
 
-  // ─── RBAC ───────────────────────────────────────────────────────────────────
-
   getAllRoles(): Promise<Role[]> {
     return this.get<Role[]>('/roles/all');
+  }
+
+  createRole(name: string, description?: string): Promise<Role> {
+    return this.post<Role>('/roles', { name, description });
   }
 
   getRoleById(roleId: string): Promise<RoleDetail> {
@@ -313,8 +314,8 @@ class ApiClient {
     return this.post<void>(`/users/${userId}/roles`, payload);
   }
 
-  getUserRoles(userId: string): Promise<UserRolesResponse> {
-    return this.get<UserRolesResponse>(`/users/${userId}/roles`);
+  getUserRoles(userId: string): Promise<Role[]> {
+    return this.get<Role[]>(`/users/${userId}/roles`);
   }
 
   // ─── Comics ──────────────────────────────────────────────────────────────────
@@ -421,6 +422,10 @@ class ApiClient {
 
   getGenres(params?: Record<string, string>): Promise<PaginatedResponse<Genre>> {
     return this.get<PaginatedResponse<Genre>>('/genres', { params });
+  }
+
+  createGenre(name: string, slug: string, description?: string): Promise<Genre> {
+    return this.post<Genre>('/genres', { name, slug, description });
   }
 
   // ─── Tags ────────────────────────────────────────────────────────────────────

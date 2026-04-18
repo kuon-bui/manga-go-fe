@@ -49,7 +49,16 @@ function LoginPageContent() {
     setLoading(true);
     try {
       const { user } = await apiClient.login(email, password);
-      setAuth(user);
+      // Fetch dynamic roles from backend right after login
+      let roles: string[] = [];
+      try {
+        const userRoles = await apiClient.getUserRoles(user.id);
+        roles = userRoles.map((r) => r.name);
+      } catch {
+        // roles fetch failed — fallback to user.role from profile
+        if (user.role) roles = [user.role];
+      }
+      setAuth(user, roles);
       const from = searchParams.get('from') ?? '/';
       router.push(from);
     } catch (err) {

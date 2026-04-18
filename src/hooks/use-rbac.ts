@@ -10,7 +10,6 @@ import type {
   PermissionEntity,
   Role,
   RoleDetail,
-  UserRolesResponse,
 } from '@/types'
 
 export function useAllRoles() {
@@ -59,7 +58,7 @@ export function useAssignRolesToUser() {
 }
 
 export function useUserRoles(userId: string) {
-  return useQuery<UserRolesResponse>({
+  return useQuery<Role[]>({
     queryKey: queryKeys.rbac.userRoles(userId),
     queryFn: () => apiClient.getUserRoles(userId),
     enabled: Boolean(userId),
@@ -68,7 +67,7 @@ export function useUserRoles(userId: string) {
 
 export function useUserPermissions(userId: string) {
   const rolesQuery = useUserRoles(userId)
-  const roleIds = rolesQuery.data?.roles?.map((role) => role.id).filter(Boolean) ?? []
+  const roleIds = rolesQuery.data?.map((role) => role.id).filter(Boolean) ?? []
 
   const roleDetailQueries = useQueries({
     queries: roleIds.map((roleId) => ({
@@ -95,7 +94,7 @@ export function useUserPermissions(userId: string) {
   const isError = rolesQuery.isError || roleDetailQueries.some((query) => query.isError)
 
   return {
-    roles: rolesQuery.data?.roles ?? [],
+    roles: rolesQuery.data ?? [],
     permissions,
     isLoading,
     isError,
