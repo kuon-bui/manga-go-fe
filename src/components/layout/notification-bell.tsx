@@ -18,16 +18,24 @@ export function NotificationBell() {
       <Button
         variant="ghost"
         size="icon"
+        id="notification-bell-btn"
         onClick={() => setOpen((v) => !v)}
-        aria-label={`Notifications${unread > 0 ? ` (${unread} unread)` : ''}`}
+        aria-label={`Thông báo${unread > 0 ? ` (${unread} chưa đọc)` : ''}`}
         aria-expanded={open}
+        aria-haspopup="true"
       >
-        <Bell className="h-4 w-4" />
+        <Bell className={cn('h-4 w-4 transition-transform', open && 'rotate-12')} />
+
+        {/* Unread badge */}
         {unread > 0 && (
           <span
             className={cn(
-              'absolute right-1.5 top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-white'
+              'absolute right-1.5 top-1.5',
+              'flex h-4 w-4 items-center justify-center',
+              'rounded-full bg-destructive text-[10px] font-bold text-white',
+              'animate-in zoom-in-75 duration-200'
             )}
+            aria-hidden
           >
             {unread > 9 ? '9+' : unread}
           </span>
@@ -36,7 +44,7 @@ export function NotificationBell() {
 
       {open && (
         <>
-          {/* Backdrop */}
+          {/* Invisible backdrop to close on outside click */}
           <div
             className="fixed inset-0 z-40"
             onClick={() => setOpen(false)}

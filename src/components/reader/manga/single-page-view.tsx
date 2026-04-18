@@ -1,19 +1,38 @@
 'use client'
 
+import { useEffect, useRef } from 'react'
 import { SafeImage as Image } from '@/components/ui/safe-image'
 
 import { useImagePreloader } from '@/hooks/use-image-preloader'
-import { cn } from '@/lib/utils'
+import { useAuthStore } from '@/stores/auth-store'
+import { apiClient } from '@/lib/api-client'
 
 interface SinglePageViewProps {
   pages: string[]
   currentPage: number
-  onNext: () => void
-  onPrev: () => void
+  comicSlug: string
+  chapterSlug: string
 }
 
-export function SinglePageView({ pages, currentPage, onNext, onPrev }: SinglePageViewProps) {
+export function SinglePageView({
+  pages,
+  currentPage,
+  comicSlug,
+  chapterSlug,
+}: SinglePageViewProps) {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const markedReadRef = useRef(false)
+
   useImagePreloader(pages, currentPage)
+
+  // Mark chapter as read when user reaches the last page
+  useEffect(() => {
+    if (!isAuthenticated || markedReadRef.current) return
+    if (currentPage === pages.length - 1 && pages.length > 0) {
+      markedReadRef.current = true
+      apiClient.markChapterRead(comicSlug, chapterSlug).catch(() => undefined)
+    }
+  }, [currentPage, pages.length, isAuthenticated, comicSlug, chapterSlug])
 
   const src = pages[currentPage]
   if (!src) return null
@@ -33,31 +52,6 @@ export function SinglePageView({ pages, currentPage, onNext, onPrev }: SinglePag
         />
       </div>
 
-      {/* Click zones */}
-      <button
-        className={cn(
-          'absolute left-0 top-0 h-full w-1/3 cursor-pointer opacity-0',
-          'focus-visible:opacity-20 focus-visible:bg-white'
-        )}
-        onClick={onPrev}
-        aria-label="Previous page"
-      />
-      <button
-        className={cn(
-          'absolute right-0 top-0 h-full w-2/3 cursor-pointer opacity-0',
-          'focus-visible:opacity-20 focus-visible:bg-white'
-        )}
-        onClick={onNext}
-        aria-label="Next page"
-      />
-
-      {/* Progress bar */}
-      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white/10">
-        <div
-          className="h-full bg-primary transition-all duration-300"
-          style={{ width: `${((currentPage + 1) / pages.length) * 100}%` }}
-        />
-      </div>
     </div>
   )
 }

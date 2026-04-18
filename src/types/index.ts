@@ -151,6 +151,19 @@ export interface LibraryEntry {
   addedAt: string;
 }
 
+// ─── Reading History ──────────────────────────────────────────────────────────
+
+export interface ReadingHistoryEntry {
+  id: string;
+  comicId: string;
+  chapterId: string;
+  comic: Manga;
+  chapter: ChapterSummary | null;
+  lastReadAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // ─── Comments ────────────────────────────────────────────────────────────────
 
 export interface CommentAuthor {

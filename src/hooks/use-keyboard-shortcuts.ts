@@ -38,13 +38,31 @@ export function useKeyboardShortcuts({
           e.preventDefault()
           onPrev?.()
           break
+        case 'Escape':
+          e.preventDefault()
+          if (document.fullscreenElement) {
+            document.exitFullscreen().catch(() => undefined)
+          } else {
+            // Native history back if ESC is pressed and we aren't in fullscreen
+            window.history.back()
+          }
+          break
         case 't':
         case 'T':
           onToggleSettings?.()
           break
         case 'f':
         case 'F':
-          onToggleFullscreen?.()
+          e.preventDefault()
+          if (onToggleFullscreen) {
+            onToggleFullscreen()
+          } else {
+            if (!document.fullscreenElement) {
+              document.documentElement.requestFullscreen().catch(() => undefined)
+            } else {
+              document.exitFullscreen().catch(() => undefined)
+            }
+          }
           break
       }
     }

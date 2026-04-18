@@ -16,9 +16,10 @@ interface ChapterListProps {
   isLoading: boolean
   comicSlug: string
   contentType: ContentType
+  lastReadChapterId?: string | null
 }
 
-export function ChapterList({ chapters, isLoading, comicSlug, contentType }: ChapterListProps) {
+export function ChapterList({ chapters, isLoading, comicSlug, contentType, lastReadChapterId }: ChapterListProps) {
   const parentRef = useRef<HTMLDivElement>(null)
 
   const virtualizer = useVirtualizer({
@@ -72,7 +73,13 @@ export function ChapterList({ chapters, isLoading, comicSlug, contentType }: Cha
                 transform: `translateY(${virtualRow.start}px)`,
               }}
             >
-              <ChapterRow chapter={chapter} isLast={virtualRow.index === chapters.length - 1} contentType={contentType} comicSlug={comicSlug} />
+              <ChapterRow
+                chapter={chapter}
+                isLast={virtualRow.index === chapters.length - 1}
+                contentType={contentType}
+                comicSlug={comicSlug}
+                isRead={chapter.id === lastReadChapterId}
+              />
             </div>
           )
         })}
@@ -88,11 +95,13 @@ function ChapterRow({
   isLast,
   contentType,
   comicSlug,
+  isRead,
 }: {
   chapter: ChapterSummary
   isLast: boolean
   contentType: ContentType
   comicSlug: string
+  isRead?: boolean
 }) {
   const uploadDate = new Date(chapter.uploadedAt)
   const isRecent = Date.now() - uploadDate.getTime() < 1000 * 60 * 60 * 24 * 3 // 3 days
@@ -108,10 +117,15 @@ function ChapterRow({
       style={{ height: ROW_HEIGHT }}
     >
       {/* Left: chapter number + title */}
-      <div className="flex min-w-0 flex-col">
+      <div className={cn("flex min-w-0 flex-col", isRead && "opacity-60")}>
         <span className="flex items-center gap-2 text-sm font-medium text-foreground">
           Chapter {chapter.number}
-          {isRecent && (
+          {isRead && (
+            <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground uppercase">
+              Current
+            </span>
+          )}
+          {!isRead && isRecent && (
             <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-primary-foreground">
               NEW
             </span>

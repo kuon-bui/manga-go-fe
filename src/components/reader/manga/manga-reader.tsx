@@ -2,13 +2,23 @@
 
 import { useEffect } from 'react'
 
-import { VerticalScrollView } from '@/components/reader/manga/vertical-scroll-view'
-import { SinglePageView } from '@/components/reader/manga/single-page-view'
-import { DoublePageView } from '@/components/reader/manga/double-page-view'
+import dynamic from 'next/dynamic'
+
+const VerticalScrollView = dynamic(() => import('@/components/reader/manga/vertical-scroll-view').then(mod => mod.VerticalScrollView), {
+  loading: () => <div className="h-screen w-full flex items-center justify-center animate-pulse bg-zinc-900" />,
+})
+const SinglePageView = dynamic(() => import('@/components/reader/manga/single-page-view').then(mod => mod.SinglePageView), {
+  loading: () => <div className="h-screen w-full flex items-center justify-center animate-pulse bg-zinc-900" />,
+})
+const DoublePageView = dynamic(() => import('@/components/reader/manga/double-page-view').then(mod => mod.DoublePageView), {
+  loading: () => <div className="h-screen w-full flex items-center justify-center animate-pulse bg-zinc-900" />,
+})
 import { MangaControls } from '@/components/reader/manga/manga-controls'
 import { useChapter } from '@/hooks/use-chapter-data'
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts'
+import { useCreateReadingHistory } from '@/hooks/use-reading-history'
 import { useMangaViewerStore } from '@/stores/manga-viewer-store'
+import { useAuthStore } from '@/stores/auth-store'
 
 interface MangaReaderProps {
   comicSlug: string
@@ -18,11 +28,20 @@ interface MangaReaderProps {
 export function MangaReader({ comicSlug, chapterSlug }: MangaReaderProps) {
   const { data: chapter, isLoading } = useChapter(comicSlug, chapterSlug)
   const { mode, currentPage, nextPage, prevPage, toggleSettings, reset } = useMangaViewerStore()
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const createHistoryMutation = useCreateReadingHistory()
 
   // Reset page position when chapter changes
   useEffect(() => {
     reset()
   }, [comicSlug, chapterSlug, reset])
+
+  // Record reading history when chapter data loads (fire-and-forget)
+  useEffect(() => {
+    if (!isAuthenticated || !chapter?.mangaId || !chapter?.id) return
+    createHistoryMutation.mutate({ comicId: chapter.mangaId, chapterId: chapter.id })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chapter?.id, isAuthenticated])
 
   useKeyboardShortcuts({
     onNext: () => chapter && nextPage(chapter.pages.length),
@@ -53,16 +72,16 @@ export function MangaReader({ comicSlug, chapterSlug }: MangaReaderProps) {
         <SinglePageView
           pages={pages}
           currentPage={currentPage}
-          onNext={() => nextPage(pages.length)}
-          onPrev={prevPage}
+          comicSlug={comicSlug}
+          chapterSlug={chapterSlug}
         />
       )}
       {mode === 'double' && (
         <DoublePageView
           pages={pages}
           currentPage={currentPage}
-          onNext={() => nextPage(pages.length)}
-          onPrev={prevPage}
+          comicSlug={comicSlug}
+          chapterSlug={chapterSlug}
         />
       )}
     </div>

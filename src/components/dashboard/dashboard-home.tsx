@@ -120,7 +120,7 @@ export function DashboardHome() {
               {titlesData.data.map((title) => (
                 <TableRow key={title.id}>
                   <TableCell>
-                    <div className="flex items-center gap-3">
+                    <Link href={`/dashboard/title/${title.slug}`} className="flex items-center gap-3 transition-colors hover:text-primary">
                       <div className="relative h-10 w-7 shrink-0 overflow-hidden rounded-md bg-muted">
                         {title.coverUrl?.trim() ? (
                           <Image
@@ -136,22 +136,22 @@ export function DashboardHome() {
                           </div>
                         )}
                       </div>
-                      <span className="line-clamp-1 font-medium text-foreground">{title.title}</span>
-                    </div>
+                      <span className="line-clamp-1 font-medium">{title.title}</span>
+                    </Link>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={title.type}>{title.type}</Badge>
+                    <Badge variant={title.type as any}>{title.type}</Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={title.status}>{title.status}</Badge>
+                    <Badge variant={title.status as any}>{title.status}</Badge>
                   </TableCell>
                   <TableCell className="text-right text-muted-foreground">
                     {title.chapterCount}
                   </TableCell>
                   <TableCell className="text-right">
                     <Button size="sm" variant="outline" asChild>
-                      <Link href={`/dashboard/upload/chapter/${title.slug}`}>
-                        Add Chapter
+                      <Link href={`/dashboard/title/${title.slug}`}>
+                        Manage
                       </Link>
                     </Button>
                   </TableCell>

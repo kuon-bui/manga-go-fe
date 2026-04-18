@@ -70,8 +70,14 @@ export function useManga(slug: string) {
 
 function buildParams(obj: Record<string, unknown>): Record<string, string> {
   const out: Record<string, string> = {}
+  
+  // Specific mappings for SearchFilters / API parameters
+  if (obj.query) out.search = String(obj.query)
+  if (Array.isArray(obj.genres) && obj.genres.length > 0) out.genreSlugs = obj.genres.join(',')
+  if (Array.isArray(obj.tags) && obj.tags.length > 0) out.tagSlugs = obj.tags.join(',')
+  
   for (const [k, v] of Object.entries(obj)) {
-    if (v === undefined || v === null) continue
+    if (v === undefined || v === null || k === 'query' || k === 'genres' || k === 'tags') continue
     if (Array.isArray(v)) {
       if (v.length > 0) out[k] = v.join(',')
     } else {

@@ -18,7 +18,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuthStore } from '@/stores/auth-store';
-import { usePermission } from '@/hooks/use-permission';
+import { PermissionGate } from '@/components/auth/permission-gate';
 
 const NAV_LINKS = [
   { href: '/browse',          label: 'Browse' },
@@ -76,7 +76,6 @@ function SearchBar() {
 
 function UserMenu() {
   const { user, logout } = useAuthStore();
-  const canCreateTitle = usePermission('create_title');
 
   if (!user) return null;
 
@@ -100,18 +99,20 @@ function UserMenu() {
             <User className="h-4 w-4" /> Profile
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <LayoutDashboard className="h-4 w-4" /> Dashboard
-          </Link>
-        </DropdownMenuItem>
-        {canCreateTitle && (
+        <PermissionGate permission="upload_chapter">
+          <DropdownMenuItem asChild>
+            <Link href="/dashboard" className="flex items-center gap-2">
+              <LayoutDashboard className="h-4 w-4" /> Dashboard
+            </Link>
+          </DropdownMenuItem>
+        </PermissionGate>
+        <PermissionGate permission="create_title">
           <DropdownMenuItem asChild>
             <Link href="/dashboard/upload/title" className="flex items-center gap-2">
               <Upload className="h-4 w-4" /> Upload Title
             </Link>
           </DropdownMenuItem>
-        )}
+        </PermissionGate>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={logout}

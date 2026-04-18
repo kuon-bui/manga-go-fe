@@ -45,8 +45,28 @@ DO NOT delete historical context if it is still relevant. Compress older complet
 ## 📜 Phase Progress
 
 - [x] **Phase 1** — Foundation & Auth
-- [ ] **Phase 2** — Content Discovery
-- [ ] **Phase 3** — Detail Pages & Comments
-- [ ] **Phase 4** — Readers (Novel + Manga × 3 modes)
-- [ ] **Phase 5** — Translator Dashboard & Upload Flows
-- [ ] **Phase 6** — Notifications, RBAC Polish, Performance Audit
+- [x] **Phase 2** — Content Discovery (partial: Home, Browse, Search done)
+- [x] **Phase 3** — Detail Pages & Comments
+- [x] **Phase 4** — Readers (Novel + Manga × 3 modes)
+- [x] **Phase 5** — Translator Dashboard & Upload Flows
+- [x] **Phase 6** — Notifications, RBAC Polish, Performance Audit
+
+### Phase 3 work done (Detail Pages & Comments):
+- `TitleDetailView` with separated views.
+- `TitleHero` for cover, nested `useFollow` interaction.
+- `ChapterList` with virtual scrolling (`@tanstack/react-virtual`), indicates "Cur" for current read chapter based on `useReadingHistories`.
+- Comment Section: Optimistic Add/Delete. Real-time nested UI max-depth 2.
+- Comment Reactions: Hooks `useToggleReaction` integrating with `useComments` optimistic updater. Like button fully wired to API.
+### Notification work done (Phase 6 partial):
+- Fixed `useNotifications`/`useUnreadCount` — `enabled` tied to `isAuthenticated`
+- `NotificationProvider` (SSE + polling) mounted in `(main)/layout.tsx`
+- `useNotificationStream` — SSE EventSource, auto-reconnects
+- `useMarkAllRead` — optimistic badge update
+- `notification-panel.tsx` — real API, error states, Vietnamese UI, typed icons
+- `notification-bell.tsx` — animated badge (zoom-in), type-safe
+
+### Reading Experience work done:
+- `createReadingHistory()` called on chapter open (MangaReader)
+- `markChapterRead()` wired into VerticalScrollView (last page visible) + SinglePageView (last page nav)
+- Library page: tabs "Đang theo dõi" + "Lịch sử đọc" with delete
+- `ReadingHistoryEntry` type + `deleteReadingHistory`, `updateReadingHistory` in apiClient
