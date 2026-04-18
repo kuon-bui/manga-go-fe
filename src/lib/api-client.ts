@@ -17,6 +17,7 @@ import type {
   Chapter,
   ChapterSummary,
   Comment,
+  ReadingHistoryEntry,
 } from '@/types';
 
 // ─── Envelope ────────────────────────────────────────────────────────────────
@@ -173,11 +174,13 @@ class ApiClient {
   private async request<T>(path: string, config: RequestConfig = {}): Promise<T> {
     const { params, headers, ...rest } = config;
 
-    const url = new URL(`${this.baseUrl}${path}`);
+    let urlStr = `${this.baseUrl}${path}`;
     if (params) {
-      Object.entries(params).forEach(([k, v]) => {
-        if (v !== undefined && v !== '') url.searchParams.set(k, v);
-      });
+      const qs = Object.entries(params)
+        .filter(([, v]) => v !== undefined && v !== '')
+        .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+        .join('&');
+      if (qs) urlStr += `?${qs}`;
     }
 
     const mergedHeaders: HeadersInit = {
@@ -185,7 +188,7 @@ class ApiClient {
       ...headers,
     };
 
-    const response = await fetch(url.toString(), {
+    const response = await fetch(urlStr, {
       ...rest,
       headers: mergedHeaders,
       credentials: 'include',
@@ -483,6 +486,10 @@ class ApiClient {
     return this.post<void>(`/comments/${id}/reactions`, { type });
   }
 
+  removeCommentReaction(id: string, type: string): Promise<void> {
+    return this.delete<void>(`/comments/${id}/reactions/${type}`);
+  }
+
   // ─── Files ───────────────────────────────────────────────────────────────────
 
   async uploadFile(file: File): Promise<{ url: string; filename: string }> {
@@ -521,8 +528,30 @@ class ApiClient {
     return this.post<void>('/reading-histories', { comicId, chapterId });
   }
 
-  getReadingHistories(params?: Record<string, string>): Promise<PaginatedResponse<unknown>> {
-    return this.get<PaginatedResponse<unknown>>('/reading-histories', { params });
+  getReadingHistories(params?: Record<string, string>): Promise<PaginatedResponse<ReadingHistoryEntry>> {
+    return this.get<PaginatedResponse<ReadingHistoryEntry>>('/reading-histories', { params });
+  }
+
+  deleteReadingHistory(id: string): Promise<void> {
+    return this.delete<void>(`/reading-histories/${id}`);
+  }
+
+  updateReadingHistory(id: string, lastReadAt: string): Promise<void> {
+    return this.put<void>(`/reading-histories/${id}`, { lastReadAt });
+  }
+
+  // ─── Notifications ───────────────────────────────────────────────────────────
+
+  markNotificationRead(id: string): Promise<void> {
+    return this.patch<void>(`/notifications/${id}/read`);
+  }
+
+  markNotificationSeen(id: string): Promise<void> {
+    return this.patch<void>(`/notifications/${id}/seen`);
+  }
+
+  markAllNotificationsRead(): Promise<void> {
+    return this.patch<void>('/notifications/read-all');
   }
 }
 

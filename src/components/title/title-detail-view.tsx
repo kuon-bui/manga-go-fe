@@ -9,6 +9,8 @@ import { ChapterList } from '@/components/title/chapter-list'
 import { RatingModal } from '@/components/title/rating-modal'
 import { CommentSection } from '@/components/comments/comment-section'
 import { useMangaDetail, useChapterList } from '@/hooks/use-title-detail'
+import { useReadingHistories } from '@/hooks/use-reading-history'
+import { useAuthStore } from '@/stores/auth-store'
 import { Skeleton } from '@/components/ui/skeleton'
 
 interface TitleDetailViewProps {
@@ -20,6 +22,15 @@ export function TitleDetailView({ id }: TitleDetailViewProps) {
 
   const { data: manga, isLoading } = useMangaDetail(id)
   const { data: chaptersData, isLoading: chaptersLoading } = useChapterList(id)
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+
+  // Fetch only history for this specific comic
+  const { data: historyData } = useReadingHistories(
+    isAuthenticated && manga?.id ? { comicId: manga.id } : undefined
+  )
+
+  // Extract last read chapter ID if present
+  const lastReadChapterId = historyData?.data?.[0]?.chapterId ?? null
 
   // Use latest chapter's id for comments (API requires a chapterId)
   const latestChapterId = chaptersData?.data?.[0]?.id ?? manga?.chapters?.[0]?.id ?? ''
@@ -61,6 +72,7 @@ export function TitleDetailView({ id }: TitleDetailViewProps) {
             isLoading={chaptersLoading}
             comicSlug={id}
             contentType={manga.type}
+            lastReadChapterId={lastReadChapterId}
           />
         </TabsContent>
 

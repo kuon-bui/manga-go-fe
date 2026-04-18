@@ -14,6 +14,7 @@ interface CommentItemProps {
   depth?: number
   onDelete: (_commentId: string) => void
   onReply: (_parentId: string, _content: string) => void
+  onToggleReaction: (_commentId: string, _type: string, _isLiked: boolean) => void
 }
 
 export function CommentItem({
@@ -21,6 +22,7 @@ export function CommentItem({
   depth = 0,
   onDelete,
   onReply,
+  onToggleReaction,
 }: CommentItemProps) {
   const [replyOpen, setReplyOpen] = useState(false)
   const [repliesVisible, setRepliesVisible] = useState(false)
@@ -71,6 +73,7 @@ export function CommentItem({
               'flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground',
               isLiked && 'text-red-500 hover:text-red-600'
             )}
+            onClick={() => onToggleReaction(comment.id, 'like', isLiked)}
             aria-label={`Like comment (${likeCount})`}
           >
             <Heart className={cn('h-3.5 w-3.5', isLiked && 'fill-current')} />
@@ -131,6 +134,7 @@ export function CommentItem({
                     depth={depth + 1}
                     onDelete={onDelete}
                     onReply={onReply}
+                    onToggleReaction={onToggleReaction}
                   />
                 ))}
                 <button

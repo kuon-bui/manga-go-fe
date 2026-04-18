@@ -1,18 +1,33 @@
 'use client'
 
+import { useEffect, useRef } from 'react'
 import { SafeImage as Image } from '@/components/ui/safe-image'
 
 import { useImagePreloader } from '@/hooks/use-image-preloader'
+import { useAuthStore } from '@/stores/auth-store'
+import { apiClient } from '@/lib/api-client'
 
 interface DoublePageViewProps {
   pages: string[]
   currentPage: number
-  onNext: () => void
-  onPrev: () => void
+  comicSlug: string
+  chapterSlug: string
 }
 
-export function DoublePageView({ pages, currentPage, onNext, onPrev }: DoublePageViewProps) {
+export function DoublePageView({ pages, currentPage, comicSlug, chapterSlug }: DoublePageViewProps) {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const markedReadRef = useRef(false)
+
   useImagePreloader(pages, currentPage, 3)
+
+  // Mark chapter as read when user reaches the last page or the second to last page
+  useEffect(() => {
+    if (!isAuthenticated || markedReadRef.current) return
+    if (currentPage >= pages.length - 2 && pages.length > 0) {
+      markedReadRef.current = true
+      apiClient.markChapterRead(comicSlug, chapterSlug).catch(() => undefined)
+    }
+  }, [currentPage, pages.length, isAuthenticated, comicSlug, chapterSlug])
 
   const leftSrc = pages[currentPage]
   const rightSrc = pages[currentPage + 1]
@@ -52,25 +67,6 @@ export function DoublePageView({ pages, currentPage, onNext, onPrev }: DoublePag
         <div className="flex-1" />
       )}
 
-      {/* Click zones */}
-      <button
-        className="absolute left-0 top-0 h-full w-1/4 cursor-pointer opacity-0 focus-visible:bg-white/20"
-        onClick={onPrev}
-        aria-label="Previous spread"
-      />
-      <button
-        className="absolute right-0 top-0 h-full w-1/4 cursor-pointer opacity-0 focus-visible:bg-white/20"
-        onClick={onNext}
-        aria-label="Next spread"
-      />
-
-      {/* Progress bar */}
-      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white/10">
-        <div
-          className="h-full bg-primary transition-all duration-300"
-          style={{ width: `${((currentPage + 2) / pages.length) * 100}%` }}
-        />
-      </div>
     </div>
   )
 }

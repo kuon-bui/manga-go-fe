@@ -19,6 +19,10 @@ export const queryKeys = {
     all: () => ['library'] as const,
     entry: (mangaId: string) => ['library', mangaId] as const,
   },
+  readingHistory: {
+    all: () => ['reading-history'] as const,
+    list: (params?: Record<string, string>) => ['reading-history', 'list', params] as const,
+  },
   notifications: {
     all: () => ['notifications'] as const,
     unreadCount: () => ['notifications', 'unreadCount'] as const,

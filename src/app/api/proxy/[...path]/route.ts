@@ -5,7 +5,7 @@ const BACKEND = process.env.BACKEND_INTERNAL_URL ?? 'http://localhost:8080'
 // Headers that must not be forwarded to the upstream backend
 const DROP_REQ = new Set(['host', 'origin', 'connection', 'transfer-encoding'])
 // Headers that must not be forwarded back to the browser
-const DROP_RES = new Set(['connection', 'keep-alive', 'transfer-encoding'])
+const DROP_RES = new Set(['connection', 'keep-alive', 'transfer-encoding', 'content-encoding'])
 
 async function proxy(req: NextRequest, segments: string[]): Promise<NextResponse> {
   const url = new URL(`${BACKEND}/${segments.join('/')}`)
@@ -19,6 +19,8 @@ async function proxy(req: NextRequest, segments: string[]): Promise<NextResponse
   //   → SameSite=Lax cookies (no Secure flag required, works over plain HTTP)
   //   → CORS: localhost is always in the backend's allowed-origins list
   reqHeaders.set('origin', 'http://localhost:3000')
+  // Tell backend not to compress — proxy streams raw bytes; double-decompression breaks browser
+  reqHeaders.set('accept-encoding', 'identity')
 
   const hasBody = req.method !== 'GET' && req.method !== 'HEAD'
 

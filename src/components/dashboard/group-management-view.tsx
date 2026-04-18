@@ -129,6 +129,9 @@ export function GroupManagementView({ groupSlug }: GroupManagementViewProps) {
 
       {/* Transfer ownership */}
       <TransferOwnershipSection groupSlug={groupSlug} />
+
+      {/* Group Members & Invites */}
+      <GroupMembersSection groupSlug={groupSlug} />
     </div>
   )
 }
@@ -189,3 +192,119 @@ function TransferOwnershipSection({ groupSlug }: { groupSlug: string }) {
     </section>
   )
 }
+
+// ─── Group Members ────────────────────────────────────────────────────────────
+
+function GroupMembersSection({ groupSlug: _groupSlug }: { groupSlug: string }) {
+  const [inviteLink, setInviteLink] = useState('')
+  const [generating, setGenerating] = useState(false)
+
+  // Mock members since the API doesn't exist yet
+  const [members, setMembers] = useState([
+    { id: '1', name: 'Admin User', role: 'admin' },
+    { id: '2', name: 'Translator 1', role: 'translator' }
+  ])
+
+  function handleGenerateInvite() {
+    setGenerating(true)
+    setTimeout(() => {
+      setInviteLink(`https://manga-go.me/invite/${Math.random().toString(36).substring(7)}`)
+      setGenerating(false)
+      toast.success('Đã tạo link mời mới')
+    }, 800)
+  }
+
+  function handleCopy() {
+    navigator.clipboard.writeText(inviteLink)
+    toast.success('Đã copy link mời!')
+  }
+
+  function handleRoleChange(id: string, newRole: string) {
+    setMembers((prev) => prev.map(m => m.id === id ? { ...m, role: newRole } : m))
+    toast.success('Đã cập nhật chức vụ thành viên!')
+  }
+
+  function handleKick(id: string) {
+    if (!confirm('Xoá thành viên này khỏi nhóm?')) return
+    setMembers((prev) => prev.filter(m => m.id !== id))
+    toast.success('Đã xoá thành viên')
+  }
+
+  return (
+    <section className="rounded-xl border bg-card p-5 dark:border-border mt-6">
+      <h2 className="mb-4 flex items-center gap-2 text-base font-semibold">
+        <Users className="h-4 w-4 text-muted-foreground" />
+        Thành viên nhóm
+      </h2>
+
+      <div className="mb-6 space-y-2">
+        <Label>Link mời tham gia</Label>
+        <div className="flex gap-2">
+          <Input 
+            readOnly 
+            value={inviteLink} 
+            placeholder="Chưa có link mời nào được tạo..." 
+            className="flex-1 font-mono text-sm"
+          />
+          {inviteLink ? (
+            <Button variant="outline" onClick={handleCopy}>Copy</Button>
+          ) : (
+            <Button variant="outline" onClick={handleGenerateInvite} disabled={generating}>
+              {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Tạo Link'}
+            </Button>
+          )}
+        </div>
+      </div>
+
+      <div className="rounded-md border">
+        <table className="w-full text-sm">
+          <thead className="bg-muted/50 text-muted-foreground border-b border-border">
+            <tr>
+              <th className="font-semibold px-4 py-3 text-left">Tên thành viên</th>
+              <th className="font-semibold px-4 py-3 text-left">Vai trò</th>
+              <th className="font-semibold px-4 py-3 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {members.length === 0 ? (
+              <tr>
+                <td colSpan={3} className="text-center py-4 text-muted-foreground">Không có thành viên nào.</td>
+              </tr>
+            ) : (
+              members.map(member => (
+                <tr key={member.id} className="border-b last:border-0 border-border">
+                  <td className="px-4 py-3 font-medium">{member.name}</td>
+                  <td className="px-4 py-3">
+                    <select 
+                      className="bg-transparent text-sm cursor-pointer outline-none ring-0 p-1"
+                      value={member.role}
+                      onChange={(e) => handleRoleChange(member.id, e.target.value)}
+                      disabled={member.role === 'admin'}
+                    >
+                      <option value="admin">Admin</option>
+                      <option value="translator">Translator</option>
+                      <option value="editor">Editor</option>
+                      <option value="uploader">Uploader</option>
+                    </select>
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                      onClick={() => handleKick(member.id)}
+                      disabled={member.role === 'admin'}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  )
+}
+

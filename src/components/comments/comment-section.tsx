@@ -5,7 +5,7 @@ import { MessageSquare } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { CommentItem } from '@/components/comments/comment-item'
 import { CommentInput } from '@/components/comments/comment-input'
-import { useComments, useAddComment, useDeleteComment } from '@/hooks/use-comments'
+import { useComments, useAddComment, useDeleteComment, useToggleReaction } from '@/hooks/use-comments'
 import { useAuthStore } from '@/stores/auth-store'
 
 interface CommentSectionProps {
@@ -18,6 +18,7 @@ export function CommentSection({ chapterId }: CommentSectionProps) {
   const { data, isLoading } = useComments(chapterId)
   const addMutation = useAddComment(chapterId)
   const deleteMutation = useDeleteComment(chapterId)
+  const toggleReactionMutation = useToggleReaction(chapterId)
 
   function handleAddComment(content: string) {
     addMutation.mutate({ content, parentId: null })
@@ -29,6 +30,10 @@ export function CommentSection({ chapterId }: CommentSectionProps) {
 
   function handleDelete(commentId: string) {
     deleteMutation.mutate(commentId)
+  }
+
+  function handleToggleReaction(commentId: string, type: string, isLiked: boolean) {
+    toggleReactionMutation.mutate({ commentId, type, isLiked })
   }
 
   return (
@@ -75,6 +80,7 @@ export function CommentSection({ chapterId }: CommentSectionProps) {
                 depth={0}
                 onDelete={handleDelete}
                 onReply={handleReply}
+                onToggleReaction={handleToggleReaction}
               />
             </div>
           ))}

@@ -119,3 +119,58 @@ export function useDeleteComment(chapterId: string) {
     },
   })
 }
+
+// ─── Reactions ────────────────────────────────────────────────────────────────
+
+export function useToggleReaction(chapterId: string) {
+  const qc = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ commentId, type, isLiked }: { commentId: string; type: string; isLiked: boolean }) => {
+      if (isLiked) {
+        return apiClient.removeCommentReaction(commentId, type)
+      } else {
+        return apiClient.addCommentReaction(commentId, type)
+      }
+    },
+    onMutate: async ({ commentId, type, isLiked }) => {
+      const key = queryKeys.comments.list(chapterId)
+      await qc.cancelQueries({ queryKey: key })
+      const prev = qc.getQueryData<PaginatedResponse<Comment>>(key)
+
+      qc.setQueryData<PaginatedResponse<Comment>>(key, (old) => {
+        if (!old) return old
+
+        const toggleReaction = (c: Comment): Comment => {
+          if (c.id === commentId) {
+            const tempReactions = [...c.reactions]
+            const rIdx = tempReactions.findIndex((r) => r.type === type)
+            if (rIdx >= 0) {
+              const r = tempReactions[rIdx]
+              tempReactions[rIdx] = { ...r, userReacted: !isLiked, count: Math.max(0, r.count + (isLiked ? -1 : 1)) }
+            } else if (!isLiked) {
+              tempReactions.push({ type, count: 1, userReacted: true })
+            }
+            return { ...c, reactions: tempReactions }
+          }
+          if (c.replies.length > 0) {
+            return { ...c, replies: c.replies.map(toggleReaction) }
+          }
+          return c
+        }
+
+        return { ...old, data: old.data.map(toggleReaction) }
+      })
+
+      return { prev }
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prev) {
+        qc.setQueryData(queryKeys.comments.list(chapterId), ctx.prev)
+      }
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.comments.list(chapterId) })
+    },
+  })
+}

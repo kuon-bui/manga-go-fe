@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { ArrowLeft, Settings } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
+import { useNovelProgress } from '@/hooks/use-novel-progress'
 import type { Chapter } from '@/types'
 
 interface NovelNavBarProps {
@@ -13,6 +14,8 @@ interface NovelNavBarProps {
 }
 
 export function NovelNavBar({ chapter, settingsOpen, onToggleSettings }: NovelNavBarProps) {
+  const progress = useNovelProgress()
+
   return (
     <header
       className="sticky top-0 z-40 flex h-12 items-center justify-between px-4 backdrop-blur-sm"
@@ -40,6 +43,14 @@ export function NovelNavBar({ chapter, settingsOpen, onToggleSettings }: NovelNa
       >
         <Settings className="h-4 w-4" />
       </Button>
+
+      {/* Reading Progress Bar */}
+      <div className="absolute bottom-0 left-0 right-0 h-[2px]">
+        <div
+          className="h-full bg-primary transition-all duration-150 ease-out"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
     </header>
   )
 }
