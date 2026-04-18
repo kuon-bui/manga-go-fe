@@ -45,13 +45,21 @@ function isLocalOrBlobSource(src: ImageProps['src']): boolean {
   return false
 }
 
+function resolveBackendUrl(src: ImageProps['src']): ImageProps['src'] {
+  if (typeof src !== 'string') return src
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:8080'
+  if (src.startsWith(backendUrl)) return src.replace(backendUrl, '/api/proxy')
+  return src
+}
+
 export function SafeImage(props: ImageProps) {
   const { src, unoptimized, ...rest } = props
+  const resolvedSrc = resolveBackendUrl(src)
 
   return (
     <NextImage
-      src={src}
-      unoptimized={unoptimized ?? isLocalOrBlobSource(src)}
+      src={resolvedSrc}
+      unoptimized={unoptimized ?? isLocalOrBlobSource(resolvedSrc)}
       {...rest}
     />
   )
