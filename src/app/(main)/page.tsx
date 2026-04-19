@@ -12,7 +12,7 @@ export default function HomePage() {
         <TrendingSection />
       </Suspense>
 
-      <div className="container mx-auto space-y-10 px-4 py-6 md:py-8 flex-1">
+      <div className="w-full max-w-screen-2xl mx-auto space-y-10 px-4 md:px-8 py-6 md:py-8 flex-1">
         <Suspense>
           <LatestUpdatesSection />
         </Suspense>

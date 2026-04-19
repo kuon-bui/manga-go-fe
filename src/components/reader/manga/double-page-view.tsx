@@ -1,8 +1,13 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { SafeImage as Image } from '@/components/ui/safe-image'
+import { MessageCircle } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
+import { ImageCommentModal } from './image-comment-modal'
 
+import { useMangaViewerStore } from '@/stores/manga-viewer-store'
 import { useImagePreloader } from '@/hooks/use-image-preloader'
 import { useAuthStore } from '@/stores/auth-store'
 import { apiClient } from '@/lib/api-client'
@@ -12,11 +17,15 @@ interface DoublePageViewProps {
   currentPage: number
   comicSlug: string
   chapterSlug: string
+  chapterId: string
+  mangaId: string
 }
 
-export function DoublePageView({ pages, currentPage, comicSlug, chapterSlug }: DoublePageViewProps) {
+export function DoublePageView({ pages, currentPage, comicSlug, chapterSlug, chapterId, mangaId }: DoublePageViewProps) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const { controlsVisible } = useMangaViewerStore()
   const markedReadRef = useRef(false)
+  const [activeModalIndex, setActiveModalIndex] = useState<number | null>(null)
 
   useImagePreloader(pages, currentPage, 3)
 
@@ -36,7 +45,7 @@ export function DoublePageView({ pages, currentPage, comicSlug, chapterSlug }: D
     <div className="relative flex min-h-screen items-center justify-center gap-0.5">
       {/* Left page */}
       {leftSrc && (
-        <div className="relative flex max-h-screen flex-1 justify-end">
+        <div className="relative flex max-h-screen flex-1 justify-end group">
           <Image
             src={leftSrc}
             alt={`Page ${currentPage + 1}`}
@@ -46,12 +55,28 @@ export function DoublePageView({ pages, currentPage, comicSlug, chapterSlug }: D
             unoptimized
             priority
           />
+          <div className={cn(
+            "absolute bottom-6 right-6 z-20 transition-opacity duration-300",
+            controlsVisible ? "opacity-100" : "opacity-0 md:group-hover:opacity-100"
+          )}>
+            <Button 
+              variant="secondary" 
+              size="icon" 
+              className="rounded-full shadow-lg bg-black/60 hover:bg-black/90 text-white border border-white/20 backdrop-blur-sm"
+              onClick={(e) => {
+                e.stopPropagation()
+                setActiveModalIndex(currentPage)
+              }}
+            >
+              <MessageCircle className="w-5 h-5" />
+            </Button>
+          </div>
         </div>
       )}
 
       {/* Right page */}
       {rightSrc ? (
-        <div className="relative flex max-h-screen flex-1">
+        <div className="relative flex max-h-screen flex-1 group">
           <Image
             src={rightSrc}
             alt={`Page ${currentPage + 2}`}
@@ -61,12 +86,38 @@ export function DoublePageView({ pages, currentPage, comicSlug, chapterSlug }: D
             unoptimized
             priority
           />
+          <div className={cn(
+            "absolute bottom-6 left-6 z-20 transition-opacity duration-300",
+            controlsVisible ? "opacity-100" : "opacity-0 md:group-hover:opacity-100"
+          )}>
+            <Button 
+              variant="secondary" 
+              size="icon" 
+              className="rounded-full shadow-lg bg-black/60 hover:bg-black/90 text-white border border-white/20 backdrop-blur-sm"
+              onClick={(e) => {
+                e.stopPropagation()
+                setActiveModalIndex(currentPage + 1)
+              }}
+            >
+              <MessageCircle className="w-5 h-5" />
+            </Button>
+          </div>
         </div>
       ) : (
         // Blank right side for odd last page
         <div className="flex-1" />
       )}
 
+      {activeModalIndex !== null && (
+        <ImageCommentModal
+          open={true}
+          onOpenChange={(open) => !open && setActiveModalIndex(null)}
+          imageSrc={pages[activeModalIndex]!}
+          pageIndex={activeModalIndex}
+          chapterId={chapterId}
+          comicId={mangaId}
+        />
+      )}
     </div>
   )
 }

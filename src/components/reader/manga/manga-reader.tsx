@@ -27,7 +27,7 @@ interface MangaReaderProps {
 
 export function MangaReader({ comicSlug, chapterSlug }: MangaReaderProps) {
   const { data: chapter, isLoading } = useChapter(comicSlug, chapterSlug)
-  const { mode, currentPage, nextPage, prevPage, toggleSettings, reset } = useMangaViewerStore()
+  const { mode, currentPage, nextPage, prevPage, toggleSettings, toggleControls, reset } = useMangaViewerStore()
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const createHistoryMutation = useCreateReadingHistory()
 
@@ -57,16 +57,45 @@ export function MangaReader({ comicSlug, chapterSlug }: MangaReaderProps) {
     )
   }
 
+  const handleContainerClick = (e: React.MouseEvent) => {
+    // Ignore clicks if they target an interactive element (buttons, links, form elements, svg)
+    if ((e.target as HTMLElement).closest('button, a, input, textarea, [role="button"], svg, path, .stop-propagation')) {
+      return
+    }
+
+    if (mode === 'vertical') {
+      toggleControls()
+      return
+    }
+
+    // 25% | 50% | 25% tap zones
+    const x = e.clientX
+    const width = window.innerWidth
+    if (x < width * 0.25) {
+      prevPage()
+    } else if (x > width * 0.75) {
+      if (chapter) nextPage(chapter.pages.length)
+    } else {
+      toggleControls()
+    }
+  }
+
   const pages = chapter.pages
 
   return (
-    <div className="relative min-h-screen bg-black">
+    <div className="relative min-h-screen bg-black" onClick={handleContainerClick}>
       {/* Controls overlay */}
       <MangaControls chapter={chapter} />
 
       {/* Viewer */}
       {mode === 'vertical' && (
-        <VerticalScrollView pages={pages} comicSlug={comicSlug} chapterSlug={chapterSlug} />
+        <VerticalScrollView
+          pages={pages}
+          comicSlug={comicSlug}
+          chapterSlug={chapterSlug}
+          chapterId={chapter.id}
+          mangaId={chapter.mangaId}
+        />
       )}
       {mode === 'single' && (
         <SinglePageView
@@ -74,6 +103,8 @@ export function MangaReader({ comicSlug, chapterSlug }: MangaReaderProps) {
           currentPage={currentPage}
           comicSlug={comicSlug}
           chapterSlug={chapterSlug}
+          chapterId={chapter.id}
+          mangaId={chapter.mangaId}
         />
       )}
       {mode === 'double' && (
@@ -82,6 +113,8 @@ export function MangaReader({ comicSlug, chapterSlug }: MangaReaderProps) {
           currentPage={currentPage}
           comicSlug={comicSlug}
           chapterSlug={chapterSlug}
+          chapterId={chapter.id}
+          mangaId={chapter.mangaId}
         />
       )}
     </div>

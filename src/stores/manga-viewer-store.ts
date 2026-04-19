@@ -7,12 +7,14 @@ interface MangaViewerState {
   mode: ViewerMode
   currentPage: number      // 0-indexed
   settingsOpen: boolean
+  controlsVisible: boolean // True when Top/Bottom bars are visible
 
   setMode: (_mode: ViewerMode) => void
   setCurrentPage: (_page: number) => void
   nextPage: (_total: number) => void
   prevPage: () => void
   toggleSettings: () => void
+  toggleControls: () => void
   reset: () => void
 }
 
@@ -22,6 +24,7 @@ export const useMangaViewerStore = create<MangaViewerState>()(
       mode: 'vertical',
       currentPage: 0,
       settingsOpen: false,
+      controlsVisible: true,
 
       setMode: (mode) => set({ mode, currentPage: 0 }),
       setCurrentPage: (currentPage) => set({ currentPage }),
@@ -37,7 +40,8 @@ export const useMangaViewerStore = create<MangaViewerState>()(
         set({ currentPage: Math.max(currentPage - step, 0) })
       },
       toggleSettings: () => set((s) => ({ settingsOpen: !s.settingsOpen })),
-      reset: () => set({ currentPage: 0, settingsOpen: false }),
+      toggleControls: () => set((s) => ({ controlsVisible: !s.controlsVisible })),
+      reset: () => set({ currentPage: 0, settingsOpen: false, controlsVisible: true }),
     }),
     {
       name: 'manga-go-viewer',

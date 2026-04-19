@@ -137,10 +137,60 @@ function UserMenu() {
 export function Header() {
   const pathname = usePathname();
   const { isAuthenticated } = useAuthStore();
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [scrollDir, setScrollDir] = useState<'up' | 'down'>('up');
+
+  // Những trang có banner background để Header trong suốt đè lên
+  const isTransparentCapable = pathname === '/' || pathname.startsWith('/manga/');
+
+  useEffect(() => {
+    const threshold = 20;
+    let lastScrollY = window.pageYOffset;
+    let ticking = false;
+
+    const updateScrollDir = () => {
+      const scrollY = window.pageYOffset;
+
+      if (Math.abs(scrollY - lastScrollY) < threshold) {
+        ticking = false;
+        return;
+      }
+      
+      setScrollDir(scrollY > lastScrollY ? 'down' : 'up');
+      setIsScrolled(scrollY > 50);
+      lastScrollY = scrollY > 0 ? scrollY : 0;
+      ticking = false;
+    };
+
+    const onScroll = () => {
+      // Always track if we are at top
+      if (window.pageYOffset <= 50) {
+        setIsScrolled(false);
+        setScrollDir('up');
+      }
+
+      if (!ticking) {
+        window.requestAnimationFrame(updateScrollDir);
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', onScroll);
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [scrollDir]);
 
   return (
-    <header className="sticky top-0 z-50 hidden border-b border-border bg-background/95 backdrop-blur-sm md:block">
-      <div className="container mx-auto flex h-14 items-center gap-4 px-4">
+    <>
+      <header 
+        className={cn(
+          "fixed top-0 left-0 right-0 z-50 hidden md:block transition-all duration-300",
+          !isTransparentCapable || isScrolled 
+            ? "bg-background/95 backdrop-blur-sm border-b border-border shadow-sm text-foreground" 
+            : "bg-transparent border-transparent text-white", // Giả định banner tối màu nên dùng text-white
+          scrollDir === 'down' && isScrolled ? "-translate-y-full" : "translate-y-0"
+        )}
+      >
+        <div className="mx-auto w-full max-w-screen-2xl flex h-16 items-center gap-4 px-4 md:px-8">
         {/* Logo */}
         <Link href="/" className="flex shrink-0 items-center gap-2 font-bold text-foreground">
           <BookOpen className="h-5 w-5 text-primary" aria-hidden />
@@ -200,5 +250,8 @@ export function Header() {
         </div>
       </div>
     </header>
+      {/* Spacer to push content down on pages without a transparent-capable hero banner */}
+      {!isTransparentCapable && <div className="hidden md:block h-16" aria-hidden />}
+    </>
   );
 }

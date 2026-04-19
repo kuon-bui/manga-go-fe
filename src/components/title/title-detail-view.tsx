@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
+import { Users } from 'lucide-react'
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { TitleHero } from '@/components/title/title-hero'
 import { TitleSynopsis } from '@/components/title/title-synopsis'
 import { ChapterList } from '@/components/title/chapter-list'
@@ -49,34 +50,50 @@ export function TitleDetailView({ id }: TitleDetailViewProps) {
       {/* Synopsis */}
       <TitleSynopsis text={manga.description ?? ''} />
 
-      {/* Tabs: Chapters / Comments */}
-      <Tabs defaultValue="chapters">
-        <TabsList>
-          <TabsTrigger value="chapters">
-            Chapters
-            {chaptersData && (
-              <span className="ml-1.5 rounded-full bg-muted-foreground/20 px-1.5 py-0.5 text-xs">
-                {chaptersData.total}
-              </span>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="comments">Comments</TabsTrigger>
-        </TabsList>
+      {/* Translation Group Tribute */}
+      {manga.translationGroup && (
+        <div className="flex flex-col gap-2 rounded-lg border border-primary/20 bg-primary/5 p-4 md:p-5 transition-colors hover:border-primary/40">
+          <div className="flex items-center gap-2 text-primary font-semibold text-sm">
+            <Users className="h-4 w-4" />
+            <span>Nhóm Dịch</span>
+          </div>
+          <p className="text-sm text-muted-foreground break-words">
+            Truyện được dịch và đăng tải bởi nhóm{' '}
+            <Link href={`/groups/${manga.translationGroup.slug}`} className="font-bold text-foreground hover:text-primary transition-colors hover:underline">
+              {manga.translationGroup.name}
+            </Link>
+            . Ủng hộ nhóm dịch để có thêm nhiều chương mới nhé!
+          </p>
+        </div>
+      )}
 
-        <TabsContent value="chapters" className="mt-4">
-          <ChapterList
-            chapters={chaptersData?.data ?? []}
-            isLoading={chaptersLoading}
-            comicSlug={id}
-            contentType={manga.type}
-            lastReadChapterId={lastReadChapterId}
-          />
-        </TabsContent>
+      {/* Chapters header */}
+      <div className="flex items-center justify-between pt-4">
+        <h2 className="text-xl font-bold flex items-center gap-2">
+          Danh Sách Chương
+          {chaptersData && (
+            <span className="rounded-full bg-muted-foreground/20 px-2 py-0.5 text-xs font-medium">
+              {chaptersData.total}
+            </span>
+          )}
+        </h2>
+      </div>
 
-        <TabsContent value="comments" className="mt-4">
-          <CommentSection scope={{ type: 'comic', comicId: manga.id }} />
-        </TabsContent>
-      </Tabs>
+      <div className="mt-2">
+        <ChapterList
+          chapters={chaptersData?.data ?? []}
+          isLoading={chaptersLoading}
+          comicSlug={id}
+          contentType={manga.type}
+          lastReadChapterId={lastReadChapterId}
+        />
+      </div>
+
+      {/* Comments section */}
+      <div className="pt-8">
+        <h2 className="text-xl font-bold mb-6">Bình Luận</h2>
+        <CommentSection scope={{ type: 'comic', comicId: manga.id }} />
+      </div>
 
       {/* Rating modal */}
       <RatingModal

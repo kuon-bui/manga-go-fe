@@ -41,6 +41,9 @@ export function TitleHero({ manga, onRateClick }: TitleHeroProps) {
     followMutation.mutate(isFollowing)
   }
 
+  const user = useAuthStore((s) => s.user)
+  const isUploader = user && (user.id === manga.uploaderId || user.role === 'admin' || user.role === 'superadmin')
+
   // Build first-chapter URL: detail response includes chapters array (oldest first)
   const firstChapterSlug = manga.chapters?.[0]?.slug ?? null
   const readerPath = manga.type === 'novel' ? 'novel' : 'manga'
@@ -106,13 +109,6 @@ export function TitleHero({ manga, onRateClick }: TitleHeroProps) {
         {/* Metadata */}
         <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm sm:grid-cols-3">
           <MetaRow label="Tác giả" value={authorNames} />
-          {manga.translationGroup && (
-            <MetaRow 
-              label="Nhóm dịch" 
-              value={manga.translationGroup.name} 
-              href={`/groups/${manga.translationGroup.slug}`}
-            />
-          )}
           {manga.chapterCount !== undefined && (
             <MetaRow label="Số chương" value={String(manga.chapterCount)} />
           )}
@@ -163,8 +159,16 @@ export function TitleHero({ manga, onRateClick }: TitleHeroProps) {
 
               <Button variant="outline" onClick={onRateClick} aria-label="Rate this title">
                 <Star className="h-4 w-4" />
-                Rate
+                Đánh giá
               </Button>
+
+              {isUploader && (
+                <Button variant="secondary" asChild className="border border-primary/30">
+                  <Link href={`/dashboard/titles/${manga.slug}`}>
+                    Chỉnh sửa
+                  </Link>
+                </Button>
+              )}
             </>
           )}
         </div>

@@ -11,7 +11,7 @@ import type { Comment, PaginatedResponse } from '@/types'
 type CommentScope =
   | { type: 'comic'; comicId: string }
   | { type: 'chapter'; chapterId: string }
-  | { type: 'page'; chapterId: string; pageIndex: number }
+  | { type: 'page'; chapterId: string; comicId: string; pageIndex: number }
 
 function getCommentKey(scope: CommentScope): string {
   switch (scope.type) {
@@ -38,6 +38,7 @@ export function useComments(scope: CommentScope) {
       } else if (scope.type === 'chapter') {
         params.append('chapterId', scope.chapterId)
       } else {
+        params.append('comicId', scope.comicId)
         params.append('chapterId', scope.chapterId)
         params.append('pageIndex', String(scope.pageIndex))
       }
@@ -82,6 +83,7 @@ export function useAddComment(scope: CommentScope) {
         })
       } else {
         return apiClient.createComment({
+          comicId: scope.comicId,
           chapterId: scope.chapterId,
           content: payload.content,
           pageIndex: scope.pageIndex,

@@ -11,7 +11,7 @@ import { useAuthStore } from '@/stores/auth-store'
 type CommentScope =
   | { type: 'comic'; comicId: string }
   | { type: 'chapter'; chapterId: string }
-  | { type: 'page'; chapterId: string; pageIndex: number }
+  | { type: 'page'; chapterId: string; comicId: string; pageIndex: number }
 
 interface CommentSectionProps {
   scope: CommentScope

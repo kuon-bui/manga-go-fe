@@ -107,6 +107,7 @@ export interface Manga {
     name: string;
     slug: string;
   } | null;
+  uploaderId?: string; // Missing API field added for Phase 3
   chapters?: ChapterSummary[]; // populated only in detail response
   // Fields not returned by backend (optional, for mocks / future aggregation)
   rating?: number;
