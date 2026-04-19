@@ -42,7 +42,12 @@ export function TitleHero({ manga, onRateClick }: TitleHeroProps) {
   }
 
   const user = useAuthStore((s) => s.user)
-  const isUploader = user && (user.id === manga.uploaderId || user.role === 'admin' || user.role === 'superadmin')
+  const isUploader = user && (
+    user.id === manga.uploaderId || 
+    user.role === 'admin' || 
+    user.role === 'superadmin' ||
+    (user.translationGroupId && manga.translationGroup?.id && user.translationGroupId === manga.translationGroup.id)
+  )
 
   // Build first-chapter URL: detail response includes chapters array (oldest first)
   const firstChapterSlug = manga.chapters?.[0]?.slug ?? null
@@ -80,9 +85,9 @@ export function TitleHero({ manga, onRateClick }: TitleHeroProps) {
           <h1 className="text-2xl font-bold leading-tight text-foreground md:text-3xl">
             {manga.title}
           </h1>
-          {manga.alternativeTitles.length > 0 && (
+          {(manga.alternativeTitles?.length ?? 0) > 0 && (
             <p className="mt-1 text-sm text-muted-foreground">
-              {manga.alternativeTitles.slice(0, 2).join(' · ')}
+              {manga.alternativeTitles!.slice(0, 2).join(' · ')}
             </p>
           )}
         </div>
@@ -164,7 +169,7 @@ export function TitleHero({ manga, onRateClick }: TitleHeroProps) {
 
               {isUploader && (
                 <Button variant="secondary" asChild className="border border-primary/30">
-                  <Link href={`/dashboard/titles/${manga.slug}`}>
+                  <Link href={`/dashboard/title/${manga.slug}`}>
                     Chỉnh sửa
                   </Link>
                 </Button>

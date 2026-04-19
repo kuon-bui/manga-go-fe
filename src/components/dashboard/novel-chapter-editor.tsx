@@ -54,6 +54,7 @@ export function NovelChapterEditor({ content: _content, onChange }: NovelChapter
           'prose dark:prose-invert max-w-none min-h-[400px] focus:outline-none px-4 py-3 text-sm leading-relaxed text-foreground',
       },
     },
+    immediatelyRender: false,
   })
 
   if (!editor) return null
