@@ -13,6 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { apiClient } from '@/lib/api-client'
 import { queryKeys } from '@/lib/query-keys'
 import { useUpdateGroup, useDeleteGroup } from '@/hooks/use-groups'
+import { useBrowse } from '@/hooks/use-manga'
 import type { Group } from '@/types'
 
 interface GroupManagementViewProps {
@@ -126,6 +127,9 @@ export function GroupManagementView({ groupSlug }: GroupManagementViewProps) {
           </form>
         </section>
       )}
+
+      {/* Group Comics */}
+      <GroupComicsSection groupSlug={groupSlug} />
 
       {/* Transfer ownership */}
       <TransferOwnershipSection groupSlug={groupSlug} />
@@ -304,6 +308,81 @@ function GroupMembersSection({ groupSlug: _groupSlug }: { groupSlug: string }) {
           </tbody>
         </table>
       </div>
+    </section>
+  )
+}
+
+// ─── Group Comics ─────────────────────────────────────────────────────────────
+
+function GroupComicsSection({ groupSlug }: { groupSlug: string }) {
+  const { data: comicsData, isLoading } = useBrowse({
+    translationGroupSlug: groupSlug,
+    page: 1,
+    limit: 24,
+  })
+
+  const comics = comicsData?.data ?? []
+
+  return (
+    <section className="rounded-xl border bg-card p-5">
+      <h2 className="mb-4 flex items-center gap-2 text-base font-semibold">
+        <BookOpen className="h-4 w-4 text-muted-foreground" />
+        Truyện của nhóm ({comicsData?.total ?? 0})
+      </h2>
+
+      {isLoading ? (
+        <div className="rounded-md border">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/50 text-muted-foreground border-b border-border">
+              <tr>
+                <th className="font-semibold px-4 py-3 text-left">Tiêu đề</th>
+                <th className="font-semibold px-4 py-3 text-left">Trạng thái</th>
+                <th className="font-semibold px-4 py-3 text-left">Chương</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Array.from({ length: 6 }).map((_, i) => (
+                <tr key={i} className="border-b border-border">
+                  <td className="px-4 py-3"><Skeleton className="h-4 w-32" /></td>
+                  <td className="px-4 py-3"><Skeleton className="h-4 w-20" /></td>
+                  <td className="px-4 py-3"><Skeleton className="h-4 w-12" /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : comics.length === 0 ? (
+        <p className="text-center py-6 text-muted-foreground text-sm">Nhóm chưa có truyện nào.</p>
+      ) : (
+        <div className="rounded-md border overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/50 text-muted-foreground border-b border-border sticky top-0">
+              <tr>
+                <th className="font-semibold px-4 py-3 text-left">Tiêu đề</th>
+                <th className="font-semibold px-4 py-3 text-left">Trạng thái</th>
+                <th className="font-semibold px-4 py-3 text-left">Chương</th>
+              </tr>
+            </thead>
+            <tbody>
+              {comics.map((comic) => (
+                <tr key={comic.id} className="border-b last:border-0 border-border hover:bg-muted/30">
+                  <td className="px-4 py-3 font-medium max-w-xs truncate">{comic.title}</td>
+                  <td className="px-4 py-3">
+                    <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
+                      comic.status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
+                      comic.status === 'ongoing' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' :
+                      'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                    }`}>
+                      {comic.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-muted-foreground">{comic.chapters?.length ?? 0}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </section>
   )
 }

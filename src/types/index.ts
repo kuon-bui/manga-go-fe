@@ -181,10 +181,12 @@ export interface CommentReaction {
 export interface Comment {
   id: string;
   content: string;      // backend field (was: body)
-  chapterId: string;
+  comicId?: string;     // For comic-level comments
+  chapterId?: string;   // For chapter/page comments
   pageIndex: number | null;
   author: CommentAuthor;
   parentId: string | null;
+  mentions?: CommentAuthor[];  // Users mentioned in this reply
   replies: Comment[];
   reactions: CommentReaction[];
   createdAt: string;
@@ -223,6 +225,8 @@ export interface BrowseFilters {
   status?: ContentStatus;
   sort?: SortOption;
   page?: number;
+  limit?: number;
+  translationGroupSlug?: string;
 }
 
 // ─── Translator Dashboard ─────────────────────────────────────────────────────

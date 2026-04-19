@@ -28,9 +28,9 @@ export function CommentItem({
   const [repliesVisible, setRepliesVisible] = useState(false)
 
   const currentUser = useAuthStore((s) => s.user)
-  const isOwn = currentUser?.id === comment.userId
+  const isOwn = currentUser?.id === comment.author?.id
   const isOptimistic = comment.id.startsWith('optimistic-')
-  const canReply = depth < 1 // max depth 2: root + 1 reply level
+  const canReply = depth < 2 // allow replies up to level 2 (root + 2 reply levels)
 
   const likeReaction = comment?.reactions?.find((r) => r.type === 'like')
   const likeCount = likeReaction?.count ?? 0
@@ -40,7 +40,7 @@ export function CommentItem({
   const initials = author.name.slice(0, 2).toUpperCase()
 
   return (
-    <div className={cn('flex gap-3', depth > 0 && 'ml-8 mt-3')}>
+    <div className={cn('flex gap-3', depth > 0 && 'mt-3', depth === 1 && 'ml-8', depth >= 2 && 'ml-16')}>
       {/* Avatar */}
       <Avatar className="h-8 w-8 shrink-0">
         {author.avatarUrl && (
@@ -64,7 +64,14 @@ export function CommentItem({
         </div>
 
         {/* Body */}
-        <p className="text-sm leading-relaxed text-foreground">{comment.content}</p>
+        <div className="space-y-1">
+          {comment.mentions && comment.mentions.length > 0 && (
+            <p className="text-xs text-muted-foreground">
+              {comment.mentions.map((m) => `@${m.name}`).join(', ')}
+            </p>
+          )}
+          <p className="text-sm leading-relaxed text-foreground">{comment.content}</p>
+        </div>
 
         {/* Actions */}
         <div className="flex items-center gap-3">
@@ -84,10 +91,10 @@ export function CommentItem({
             <button
               className="flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
               onClick={() => setReplyOpen((v) => !v)}
-              aria-label="Reply"
+              aria-label="Trả lời"
             >
               <MessageSquare className="h-3.5 w-3.5" />
-              Reply
+              Trả lời
             </button>
           )}
 
@@ -105,7 +112,7 @@ export function CommentItem({
         {/* Reply input */}
         {replyOpen && (
           <CommentInput
-            placeholder="Write a reply…"
+            placeholder="Viết trả lời…"
             autoFocus
             onSubmit={(body) => {
               onReply(comment.id, body)
@@ -116,15 +123,40 @@ export function CommentItem({
         )}
 
         {/* Replies */}
-        {comment.replies.length > 0 && (
+        {comment?.replies?.length > 0 && (
           <div className="mt-1">
-            {!repliesVisible ? (
-              <button
-                className="text-xs font-medium text-primary hover:underline"
-                onClick={() => setRepliesVisible(true)}
-              >
-                Show {comment.replies.length} {comment.replies.length === 1 ? 'reply' : 'replies'}
-              </button>
+            {depth < 1 ? (
+              <>
+                {!repliesVisible ? (
+                  <button
+                    className="text-xs font-medium text-primary hover:underline"
+                    onClick={() => setRepliesVisible(true)}
+                  >
+                    Xem {comment.replies.length} {comment.replies.length === 1 ? 'trả lời' : 'trả lời'}
+                  </button>
+                ) : (
+                  <>
+                    <div className="space-y-3">
+                      {comment.replies.map((reply) => (
+                        <CommentItem
+                          key={reply.id}
+                          comment={reply}
+                          depth={depth + 1}
+                          onDelete={onDelete}
+                          onReply={onReply}
+                          onToggleReaction={onToggleReaction}
+                        />
+                      ))}
+                    </div>
+                    <button
+                      className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+                      onClick={() => setRepliesVisible(false)}
+                    >
+                      Ẩn trả lời
+                    </button>
+                  </>
+                )}
+              </>
             ) : (
               <div className="space-y-3">
                 {comment.replies.map((reply) => (
@@ -137,12 +169,6 @@ export function CommentItem({
                     onToggleReaction={onToggleReaction}
                   />
                 ))}
-                <button
-                  className="text-xs text-muted-foreground hover:text-foreground hover:underline"
-                  onClick={() => setRepliesVisible(false)}
-                >
-                  Hide replies
-                </button>
               </div>
             )}
           </div>

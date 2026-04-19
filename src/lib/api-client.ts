@@ -127,7 +127,7 @@ export interface UpdateGroupPayload {
 
 type RawComment = Record<string, unknown>;
 
-function normalizeComment(raw: RawComment): Comment {
+export function normalizeComment(raw: RawComment): Comment {
   const user = (raw.user ?? {}) as { id?: string; name?: string };
   const author = (raw.author ?? {
     id: user.id ?? '',
@@ -475,7 +475,7 @@ class ApiClient {
       .then((res) => ({ ...res, data: res.data.map(normalizeComment) }));
   }
 
-  createComment(payload: { chapterId: string; content: string; pageIndex?: number | null; parentId?: string | null }): Promise<Comment> {
+  createComment(payload: { comicId?: string; chapterId?: string; content: string; pageIndex?: number | null; parentId?: string | null }): Promise<Comment> {
     return this.post<RawComment>('/comments', payload).then(normalizeComment);
   }
 

@@ -1,9 +1,9 @@
 import { Suspense } from 'react'
 
-
 import { TrendingSection } from '@/components/home/trending-section'
-import { RecentlyUpdatedSection } from '@/components/home/recently-updated-section'
-import { GenreSection } from '@/components/home/genre-section'
+import { LatestUpdatesSection } from '@/components/home/latest-updates-section'
+import { RecentlyAddedSection } from '@/components/home/recently-added-section'
+import { CompletedSection } from '@/components/home/completed-section'
 
 export default function HomePage() {
   return (
@@ -11,13 +11,16 @@ export default function HomePage() {
       <Suspense>
         <TrendingSection />
       </Suspense>
-      
-      <div className="container mx-auto space-y-8 px-4 py-6 md:py-8 flex-1">
+
+      <div className="container mx-auto space-y-10 px-4 py-6 md:py-8 flex-1">
         <Suspense>
-          <GenreSection />
+          <LatestUpdatesSection />
         </Suspense>
         <Suspense>
-          <RecentlyUpdatedSection />
+          <RecentlyAddedSection />
+        </Suspense>
+        <Suspense>
+          <CompletedSection />
         </Suspense>
       </div>
     </div>

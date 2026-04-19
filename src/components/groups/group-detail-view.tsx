@@ -19,7 +19,7 @@ export function GroupDetailView({ slug }: GroupDetailViewProps) {
     translationGroupSlug: slug,
     page: 1,
     limit: 24,
-  } as any)
+  })
 
   if (groupLoading) {
     return (

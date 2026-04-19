@@ -107,12 +107,13 @@ export function LibraryView() {
             </Select>
 
             {/* Grid / List toggle */}
-            <div className="flex rounded-md border dark:border-border">
+            <div className="flex rounded-lg border border-border bg-muted/30">
               <Button
                 variant={gridVariant === 'card' ? 'default' : 'ghost'}
                 size="icon"
                 className="h-8 w-8 rounded-r-none"
                 aria-label="Grid view"
+                aria-pressed={gridVariant === 'card'}
                 onClick={() => setGridVariant('card')}
               >
                 <LayoutGrid className="h-4 w-4" />
@@ -122,6 +123,7 @@ export function LibraryView() {
                 size="icon"
                 className="h-8 w-8 rounded-l-none"
                 aria-label="List view"
+                aria-pressed={gridVariant === 'list'}
                 onClick={() => setGridVariant('list')}
               >
                 <List className="h-4 w-4" />
