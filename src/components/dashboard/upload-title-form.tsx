@@ -16,8 +16,9 @@ import {
 } from '@/components/ui/select'
 import {
   useCreateTitle, useAllAuthors, useCreateAuthor,
-  useAllTags, useCreateTag, useUploadFile, titleToSlug, useMyGroups,
+  useAllTags, useCreateTag, useUploadCover, titleToSlug, useMyGroups,
 } from '@/hooks/use-dashboard'
+import { apiClient } from '@/lib/api-client'
 import { useGenres } from '@/hooks/use-manga'
 import { cn } from '@/lib/utils'
 import type { ContentType, ContentStatus, ComicAgeRating } from '@/types'
@@ -350,12 +351,13 @@ function GenrePicker({
 export function UploadTitleForm() {
   const router = useRouter()
   const createMutation = useCreateTitle()
-  const uploadFileMutation = useUploadFile()
+  const uploadCoverMutation = useUploadCover()
   const { data: myGroups } = useMyGroups()
 
   const [step, setStep] = useState<Step>(0)
   const [form, setForm] = useState<FormState & { groupSlug?: string }>(INITIAL)
   const [coverPreview, setCoverPreview] = useState<string | null>(null)
+  const [coverFile, setCoverFile] = useState<File | null>(null)
   const coverInputRef = useRef<HTMLInputElement>(null)
 
   // Auto-select first group once loaded if none set
@@ -373,6 +375,7 @@ export function UploadTitleForm() {
     const file = e.target.files?.[0]
     if (!file) return
     set('coverFile', file)
+    setCoverFile(file)
     setCoverPreview(URL.createObjectURL(file))
   }
 
@@ -385,22 +388,11 @@ export function UploadTitleForm() {
       return
     }
 
-    let thumbnailUrl = form.thumbnailUrl
-
-    if (form.coverFile) {
-      try {
-        const result = await uploadFileMutation.mutateAsync(form.coverFile)
-        thumbnailUrl = result.url
-      } catch {
-        toast.error('Không thể upload ảnh bìa')
-        return
-      }
-    }
-
     const slug = titleToSlug(form.title)
 
-    createMutation.mutate(
-      {
+    try {
+      // Step 1: Create comic without thumbnail
+      const createResponse = await createMutation.mutateAsync({
         title: form.title.trim(),
         slug,
         alternativeTitles: form.alternativeTitles,
@@ -410,23 +402,42 @@ export function UploadTitleForm() {
         artistNames: [],
         genreSlugs: form.genres,
         tagSlugs: form.tags,
-        thumbnail: thumbnailUrl ?? null,
+        thumbnail: null,
         ageRating: form.ageRating,
         publishedYear: form.year ? Number(form.year) : null,
-      },
-      {
-        onSuccess: (data) => {
-          toast.success('Đã tạo truyện thành công!')
-          router.push(`/dashboard/upload/chapter/${data.slug}`)
-        },
-        onError: (err) => {
-          toast.error(`Lỗi: ${err instanceof Error ? err.message : 'Không thể tạo truyện'}`)
-        },
+      })
+
+      const comicId = createResponse.id
+
+      // Step 2: Upload cover if provided
+      let thumbnailUrl: string | null = null
+      if (coverFile) {
+        try {
+          const uploadResult = await uploadCoverMutation.mutateAsync({ file: coverFile, comicId })
+          thumbnailUrl = uploadResult.path // Store path in DB as per spec
+        } catch (err) {
+          console.error('Cover upload failed:', err)
+          toast.warning('Tạo truyện thành công nhưng không thể upload ảnh bìa')
+        }
       }
-    )
+
+      // Step 3: Update comic with thumbnail if uploaded
+      if (thumbnailUrl) {
+        try {
+          await apiClient.updateComic(slug, { thumbnail: thumbnailUrl })
+        } catch (err) {
+          console.error('Failed to update comic thumbnail:', err)
+        }
+      }
+
+      toast.success('Đã tạo truyện thành công!')
+      router.push(`/dashboard/upload/chapter/${slug}`)
+    } catch (err) {
+      toast.error(`Lỗi: ${err instanceof Error ? err.message : 'Không thể tạo truyện'}`)
+    }
   }
 
-  const isSubmitting = createMutation.isPending || uploadFileMutation.isPending
+  const isSubmitting = createMutation.isPending || uploadCoverMutation.isPending
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">

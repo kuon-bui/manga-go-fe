@@ -12,7 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { MangaPageUploader } from '@/components/dashboard/manga-page-uploader'
 import { NovelChapterEditor } from '@/components/dashboard/novel-chapter-editor'
 import { useMangaDetail } from '@/hooks/use-title-detail'
-import { useUploadChapter, useUploadFile } from '@/hooks/use-dashboard'
+import { useUploadChapter, useUploadChapterImage } from '@/hooks/use-dashboard'
 
 interface UploadChapterViewProps {
   titleSlug: string
@@ -26,7 +26,7 @@ export function UploadChapterView({ titleSlug }: UploadChapterViewProps) {
   const router = useRouter()
   const { data: manga, isLoading } = useMangaDetail(titleSlug)
   const uploadMutation = useUploadChapter()
-  const uploadFileMutation = useUploadFile()
+  const uploadImageMutation = useUploadChapterImage()
 
   const [chapterNumber, setChapterNumber] = useState('')
   const [chapterTitle, setChapterTitle] = useState('')
@@ -39,6 +39,7 @@ export function UploadChapterView({ titleSlug }: UploadChapterViewProps) {
 
   const isManga = manga.type === 'manga'
   const comicSlug = manga.slug
+  const comicId = manga.id
 
   async function handleSubmit() {
     if (!chapterNumber.trim()) {
@@ -58,7 +59,10 @@ export function UploadChapterView({ titleSlug }: UploadChapterViewProps) {
       const chapterPages = isManga
         ? await Promise.all(
           pages.map(async (file) => {
-            const uploaded = await uploadFileMutation.mutateAsync(file)
+            const uploaded = await uploadImageMutation.mutateAsync({
+              file,
+              comicId,
+            })
             return {
               pageType: 'image' as const,
               imageUrl: uploaded.url,
@@ -143,8 +147,8 @@ export function UploadChapterView({ titleSlug }: UploadChapterViewProps) {
 
       <div className="flex justify-end gap-3">
         <Button variant="outline" onClick={() => router.back()}>Huỷ</Button>
-        <Button onClick={handleSubmit} disabled={uploadMutation.isPending || uploadFileMutation.isPending}>
-          {uploadMutation.isPending || uploadFileMutation.isPending ? 'Đang đăng…' : 'Đăng chương'}
+        <Button onClick={handleSubmit} disabled={uploadMutation.isPending || uploadImageMutation.isPending}>
+          {uploadMutation.isPending || uploadImageMutation.isPending ? 'Đang đăng…' : 'Đăng chương'}
         </Button>
       </div>
     </div>

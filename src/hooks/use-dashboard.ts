@@ -275,3 +275,34 @@ export function useUploadFile() {
     mutationFn: (file: File) => apiClient.uploadFile(file),
   })
 }
+export function useUploadChapterImage() {
+  return useMutation({
+    mutationFn: ({ file, comicId }: { file: File; comicId: string }) =>
+      apiClient.uploadChapterImage(file, comicId),
+  })
+}
+
+export function useUploadCover() {
+  return useMutation({
+    mutationFn: ({ file, comicId }: { file: File; comicId: string }) =>
+      apiClient.uploadCover(file, comicId),
+  })
+}
+
+export function useUpdateChapterPages() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      comicId,
+      chapterId,
+      pages,
+    }: {
+      comicId: string;
+      chapterId: string;
+      pages: Array<{ pageType: 'image'; imageUrl: string }>;
+    }) => apiClient.updateChapterPages(comicId, chapterId, pages),
+    onSettled: (_d, _e, vars) => {
+      qc.invalidateQueries({ queryKey: queryKeys.manga.chapters(vars.comicId) })
+    },
+  })
+}
