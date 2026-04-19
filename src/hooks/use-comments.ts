@@ -2,17 +2,49 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-import { apiClient } from '@/lib/api-client'
+import { apiClient, normalizeComment } from '@/lib/api-client'
 import { queryKeys } from '@/lib/query-keys'
 import type { Comment, PaginatedResponse } from '@/types'
 
+// ─── Comment scope types ──────────────────────────────────────────────────────
+
+type CommentScope =
+  | { type: 'comic'; comicId: string }
+  | { type: 'chapter'; chapterId: string }
+  | { type: 'page'; chapterId: string; pageIndex: number }
+
+function getCommentKey(scope: CommentScope): string {
+  switch (scope.type) {
+    case 'comic':
+      return `comic-${scope.comicId}`
+    case 'chapter':
+      return `chapter-${scope.chapterId}`
+    case 'page':
+      return `page-${scope.chapterId}-${scope.pageIndex}`
+  }
+}
+
 // ─── Fetch ────────────────────────────────────────────────────────────────────
 
-export function useComments(chapterId: string) {
+export function useComments(scope: CommentScope) {
+  const key = getCommentKey(scope)
+
   return useQuery<PaginatedResponse<Comment>>({
-    queryKey: queryKeys.comments.list(chapterId),
-    queryFn: () => apiClient.getComments(chapterId),
-    enabled: Boolean(chapterId),
+    queryKey: queryKeys.comments.list(key),
+    queryFn: async () => {
+      const params = new URLSearchParams()
+      if (scope.type === 'comic') {
+        params.append('comicId', scope.comicId)
+      } else if (scope.type === 'chapter') {
+        params.append('chapterId', scope.chapterId)
+      } else {
+        params.append('chapterId', scope.chapterId)
+        params.append('pageIndex', String(scope.pageIndex))
+      }
+      const res = await apiClient.get<PaginatedResponse<unknown>>('/comments', { params: Object.fromEntries(params) })
+      return { ...res, data: (res.data as Array<Record<string, unknown>>).map(normalizeComment) }
+    },
+    enabled: Boolean(scope),
   })
 }
 
@@ -20,31 +52,57 @@ export function useComments(chapterId: string) {
 
 interface AddCommentPayload {
   content: string
-  parentId: string | null
+  parentId?: string | null | undefined
+  mentionedAuthor?: {
+    id: string
+    name: string
+    avatarUrl: string | null
+  }
 }
 
-export function useAddComment(chapterId: string) {
+export function useAddComment(scope: CommentScope) {
   const qc = useQueryClient()
+  const key = getCommentKey(scope)
 
   return useMutation({
-    mutationFn: (payload: AddCommentPayload) =>
-      apiClient.createComment({
-        chapterId,
-        content: payload.content,
-        pageIndex: null,
-      }),
+    mutationFn: (payload: AddCommentPayload) => {
+      if (scope.type === 'comic') {
+        return apiClient.createComment({
+          comicId: scope.comicId,
+          content: payload.content,
+          pageIndex: null,
+          parentId: payload.parentId,
+        })
+      } else if (scope.type === 'chapter') {
+        return apiClient.createComment({
+          chapterId: scope.chapterId,
+          content: payload.content,
+          pageIndex: null,
+          parentId: payload.parentId,
+        })
+      } else {
+        return apiClient.createComment({
+          chapterId: scope.chapterId,
+          content: payload.content,
+          pageIndex: scope.pageIndex,
+          parentId: payload.parentId,
+        })
+      }
+    },
 
     onMutate: async (payload) => {
-      const key = queryKeys.comments.list(chapterId)
-      await qc.cancelQueries({ queryKey: key })
-      const prev = qc.getQueryData<PaginatedResponse<Comment>>(key)
+      const queryKey = queryKeys.comments.list(key)
+      await qc.cancelQueries({ queryKey })
+      const prev = qc.getQueryData<PaginatedResponse<Comment>>(queryKey)
 
       const optimistic: Comment = {
         id: `optimistic-${Date.now()}`,
         content: payload.content,
-        chapterId,
-        pageIndex: null,
-        parentId: payload.parentId,
+        ...(scope.type === 'comic' && { comicId: scope.comicId }),
+        ...(scope.type !== 'comic' && { chapterId: scope.chapterId }),
+        pageIndex: scope.type === 'page' ? scope.pageIndex : null,
+        parentId: payload.parentId ?? null,
+        ...(payload.mentionedAuthor && { mentions: [payload.mentionedAuthor] }),
         replies: [],
         reactions: [],
         createdAt: new Date().toISOString(),
@@ -56,7 +114,7 @@ export function useAddComment(chapterId: string) {
         },
       }
 
-      qc.setQueryData<PaginatedResponse<Comment>>(key, (old) => {
+      qc.setQueryData<PaginatedResponse<Comment>>(queryKey, (old) => {
         if (!old) return old
         if (payload.parentId) {
           const updated = old.data.map((c) => {
@@ -74,29 +132,30 @@ export function useAddComment(chapterId: string) {
     },
     onError: (_err, _vars, ctx) => {
       if (ctx?.prev) {
-        qc.setQueryData(queryKeys.comments.list(chapterId), ctx.prev)
+        qc.setQueryData(queryKeys.comments.list(key), ctx.prev)
       }
     },
     onSettled: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.comments.list(chapterId) })
+      qc.invalidateQueries({ queryKey: queryKeys.comments.list(key) })
     },
   })
 }
 
 // ─── Delete comment (optimistic) ──────────────────────────────────────────────
 
-export function useDeleteComment(chapterId: string) {
+export function useDeleteComment(scope: CommentScope) {
   const qc = useQueryClient()
+  const key = getCommentKey(scope)
 
   return useMutation({
     mutationFn: (commentId: string) => apiClient.deleteComment(commentId),
 
     onMutate: async (commentId) => {
-      const key = queryKeys.comments.list(chapterId)
-      await qc.cancelQueries({ queryKey: key })
-      const prev = qc.getQueryData<PaginatedResponse<Comment>>(key)
+      const queryKey = queryKeys.comments.list(key)
+      await qc.cancelQueries({ queryKey })
+      const prev = qc.getQueryData<PaginatedResponse<Comment>>(queryKey)
 
-      qc.setQueryData<PaginatedResponse<Comment>>(key, (old) => {
+      qc.setQueryData<PaginatedResponse<Comment>>(queryKey, (old) => {
         if (!old) return old
         const filtered = old.data
           .filter((c) => c.id !== commentId)
@@ -111,19 +170,20 @@ export function useDeleteComment(chapterId: string) {
     },
     onError: (_err, _vars, ctx) => {
       if (ctx?.prev) {
-        qc.setQueryData(queryKeys.comments.list(chapterId), ctx.prev)
+        qc.setQueryData(queryKeys.comments.list(key), ctx.prev)
       }
     },
     onSettled: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.comments.list(chapterId) })
+      qc.invalidateQueries({ queryKey: queryKeys.comments.list(key) })
     },
   })
 }
 
-// ─── Reactions ────────────────────────────────────────────────────────────────
+// ─── Reactions ────────────────────────────────────────────────────────────
 
-export function useToggleReaction(chapterId: string) {
+export function useToggleReaction(scope: CommentScope) {
   const qc = useQueryClient()
+  const key = getCommentKey(scope)
 
   return useMutation({
     mutationFn: ({ commentId, type, isLiked }: { commentId: string; type: string; isLiked: boolean }) => {
@@ -134,11 +194,11 @@ export function useToggleReaction(chapterId: string) {
       }
     },
     onMutate: async ({ commentId, type, isLiked }) => {
-      const key = queryKeys.comments.list(chapterId)
-      await qc.cancelQueries({ queryKey: key })
-      const prev = qc.getQueryData<PaginatedResponse<Comment>>(key)
+      const queryKey = queryKeys.comments.list(key)
+      await qc.cancelQueries({ queryKey })
+      const prev = qc.getQueryData<PaginatedResponse<Comment>>(queryKey)
 
-      qc.setQueryData<PaginatedResponse<Comment>>(key, (old) => {
+      qc.setQueryData<PaginatedResponse<Comment>>(queryKey, (old) => {
         if (!old) return old
 
         const toggleReaction = (c: Comment): Comment => {
@@ -166,11 +226,29 @@ export function useToggleReaction(chapterId: string) {
     },
     onError: (_err, _vars, ctx) => {
       if (ctx?.prev) {
-        qc.setQueryData(queryKeys.comments.list(chapterId), ctx.prev)
+        qc.setQueryData(queryKeys.comments.list(key), ctx.prev)
       }
     },
     onSettled: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.comments.list(chapterId) })
+      qc.invalidateQueries({ queryKey: queryKeys.comments.list(key) })
     },
   })
+}
+
+// ─── Backwards compatibility ──────────────────────────────────────────────────
+
+export function useCommentsChapter(chapterId: string) {
+  return useComments({ type: 'chapter', chapterId })
+}
+
+export function useAddCommentChapter(chapterId: string) {
+  return useAddComment({ type: 'chapter', chapterId })
+}
+
+export function useDeleteCommentChapter(chapterId: string) {
+  return useDeleteComment({ type: 'chapter', chapterId })
+}
+
+export function useToggleReactionChapter(chapterId: string) {
+  return useToggleReaction({ type: 'chapter', chapterId })
 }

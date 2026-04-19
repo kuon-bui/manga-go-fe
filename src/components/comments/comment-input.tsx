@@ -44,7 +44,7 @@ export function CommentInput({
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder={placeholder}
+        placeholder={placeholder ?? 'Viết bình luận…'}
         autoFocus={autoFocus}
         rows={3}
         className="resize-none text-sm"
@@ -52,11 +52,11 @@ export function CommentInput({
       <div className="flex items-center justify-end gap-2">
         {onCancel && (
           <Button variant="ghost" size="sm" onClick={onCancel}>
-            Cancel
+            Huỷ
           </Button>
         )}
         <Button size="sm" disabled={!value.trim()} onClick={handleSubmit}>
-          Post
+          Gửi
         </Button>
       </div>
     </div>

@@ -35,6 +35,39 @@ export function useGenres() {
   })
 }
 
+export function useLatestUpdates() {
+  return useQuery<PaginatedResponse<Manga>>({
+    queryKey: queryKeys.home.latestUpdates(),
+    queryFn: () =>
+      apiClient.get<PaginatedResponse<Manga>>('/comics', {
+        params: { sortBy: 'lastChapterAt', order: 'desc', limit: '12', page: '1' },
+      }),
+    staleTime: 2 * 60 * 1000, // 2 min
+  })
+}
+
+export function useRecentlyAdded() {
+  return useQuery<PaginatedResponse<Manga>>({
+    queryKey: queryKeys.home.recentlyAdded(),
+    queryFn: () =>
+      apiClient.get<PaginatedResponse<Manga>>('/comics', {
+        params: { sortBy: 'createdAt', order: 'desc', limit: '12', page: '1' },
+      }),
+    staleTime: 2 * 60 * 1000, // 2 min
+  })
+}
+
+export function useCompleted() {
+  return useQuery<PaginatedResponse<Manga>>({
+    queryKey: queryKeys.home.completed(),
+    queryFn: () =>
+      apiClient.get<PaginatedResponse<Manga>>('/comics', {
+        params: { status: 'completed', limit: '12', page: '1' },
+      }),
+    staleTime: 5 * 60 * 1000, // 5 min — completed titles don't change often
+  })
+}
+
 // ─── Search ───────────────────────────────────────────────────────────────────
 
 export function useSearch(filters: SearchFilters) {

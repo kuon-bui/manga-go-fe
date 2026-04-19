@@ -15,7 +15,8 @@ const NAV_ITEMS = [
 export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
     <PermissionGate 
-      permission="*" 
+      permission="admin_panel"
+      allowedRoles={['admin', 'superadmin']}
       fallback={
         <div className="flex min-h-[50vh] flex-col items-center justify-center p-8 text-center space-y-4">
           <ShieldAlert className="h-16 w-16 text-destructive" />

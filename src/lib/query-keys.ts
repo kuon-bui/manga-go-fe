@@ -43,6 +43,9 @@ export const queryKeys = {
   home: {
     trending: () => ['home', 'trending'] as const,
     recentlyUpdated: () => ['home', 'recently-updated'] as const,
+    latestUpdates: () => ['home', 'latest-updates'] as const,
+    recentlyAdded: () => ['home', 'recently-added'] as const,
+    completed: () => ['home', 'completed'] as const,
     genres: () => ['home', 'genres'] as const,
   },
   genres: {

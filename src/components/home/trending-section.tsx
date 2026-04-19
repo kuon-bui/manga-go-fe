@@ -45,7 +45,7 @@ export function TrendingSection() {
   const active = mangas[currentIndex]
 
   return (
-    <div className="relative w-full bg-zinc-950 overflow-hidden h-[400px] md:h-[500px] group mb-8">
+    <div className="relative w-full bg-zinc-950 overflow-hidden h-[320px] md:h-[420px] group mb-8">
       {/* Blurred background */}
       {mangas.map((m, i) => (
         <div
@@ -70,10 +70,10 @@ export function TrendingSection() {
       ))}
 
       {/* Content wrapper */}
-      <div className="container relative mx-auto h-full flex flex-col justify-end pb-12 pt-16 px-4 md:flex-row md:items-center md:pb-0 z-10">
-        
+      <div className="max-w-screen-2xl relative mx-auto h-full flex flex-col justify-end pb-8 pt-12 px-4 md:flex-row md:items-center md:pb-0 z-10">
+
         {/* Info */}
-        <div className="flex-1 md:pr-12 animate-in slide-in-from-bottom-4 fade-in duration-500" key={active.id}>
+        <div className="flex-1 md:pr-8 animate-in slide-in-from-bottom-4 fade-in duration-500" key={active.id}>
           <div className="flex items-center gap-2 mb-3">
             <Badge className={active.type === 'manga' ? 'bg-blue-600' : 'bg-purple-600'}>
               {TYPE_LABEL[active.type]}
@@ -81,11 +81,11 @@ export function TrendingSection() {
             <span className="text-primary font-bold tracking-widest text-sm uppercase">#{currentIndex + 1} Trending</span>
           </div>
 
-          <h1 className="text-3xl md:text-5xl font-black text-white mb-2 line-clamp-2 leading-tight">
+          <h1 className="text-2xl md:text-4xl font-black text-white mb-2 line-clamp-2 leading-tight">
             {active.title}
           </h1>
 
-          <div className="flex flex-wrap items-center gap-3 text-sm text-zinc-300 font-medium mb-4">
+          <div className="flex flex-wrap items-center gap-3 text-sm text-zinc-300 font-medium mb-3">
             {active.rating !== undefined && (
               <span className="flex items-center gap-1">
                 <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
@@ -102,15 +102,17 @@ export function TrendingSection() {
               </span>
             )}
           </div>
-          
-          <div className="hidden md:block text-zinc-400 text-sm mb-6 max-w-2xl line-clamp-3">
-            <p>Trải nghiệm ngay bộ truyện đang được đón đọc nhiều nhất trên nền tảng Manga-Go. Khám phá các diễn biến hấp dẫn mới nhất!</p>
-          </div>
 
-          <div className="flex gap-3 mt-4 md:mt-0">
+          {active.description && (
+            <div className="hidden md:block text-zinc-400 text-sm mb-4 max-w-xl line-clamp-2">
+              <p>{active.description.slice(0, 160)}...</p>
+            </div>
+          )}
+
+          <div className="flex gap-3 mt-3 md:mt-0">
             <Link
               href={`/titles/${active.slug}`}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2.5 rounded-full font-bold transition-transform hover:scale-105 active:scale-95"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground px-5 py-2 rounded-full font-bold text-sm transition-transform hover:scale-105 active:scale-95"
             >
               Đọc Ngay
             </Link>
@@ -118,14 +120,14 @@ export function TrendingSection() {
         </div>
 
         {/* Cover Stand */}
-        <div className="hidden md:block w-1/3 max-w-[280px] shrink-0 mr-[10%]">
+        <div className="hidden md:block w-1/4 max-w-[240px] shrink-0 ml-8">
           <div className="relative aspect-[3/4] rounded-xl overflow-hidden shadow-2xl ring-1 ring-white/10 transform rotate-2 hover:rotate-0 transition-transform duration-500" key={`cover-${active.id}`}>
              {active.thumbnail ? (
                <Image
                  src={active.thumbnail}
                  alt={active.title}
                  fill
-                 sizes="280px"
+                 sizes="240px"
                  className="object-cover"
                  priority
                />

@@ -22,8 +22,13 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
   admin:       ['follow', 'rate', 'comment', 'upload_chapter', 'manage_group', 'create_title', 'admin_panel'],
 }
 
-export function roleHasPermission(role: UserRole, permission: Permission): boolean {
-  return ROLE_PERMISSIONS[role]?.includes(permission) ?? false
+export function normalizeRoleName(name: string): string {
+  return name.toLowerCase().trim().replace(/\s+/g, '_')
+}
+
+export function roleHasPermission(role: UserRole | string, permission: Permission): boolean {
+  const normalized = normalizeRoleName(String(role))
+  return ROLE_PERMISSIONS[normalized as UserRole]?.includes(permission) ?? false
 }
 
 const PERMISSION_ALIASES: Record<Permission, string[]> = {

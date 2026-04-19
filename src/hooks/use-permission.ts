@@ -1,7 +1,7 @@
 'use client'
 
 import { useAuthStore } from '@/stores/auth-store'
-import { roleHasPermission, type Permission } from '@/lib/permissions'
+import { normalizeRoleName, roleHasPermission, type Permission } from '@/lib/permissions'
 
 /**
  * Returns true if the current user has the given permission.
@@ -14,9 +14,9 @@ export function usePermission(permission: Permission): boolean {
 
   if (!user) return roleHasPermission('guest', permission)
 
-  // Check against all backend roles stored at login time
+  // Check against all backend roles stored at login time (with normalization)
   if (roles.length > 0) {
-    return roles.some((roleName) => roleHasPermission(roleName, permission))
+    return roles.some((roleName) => roleHasPermission(normalizeRoleName(roleName), permission))
   }
 
   // Fallback to the static role field on the user object

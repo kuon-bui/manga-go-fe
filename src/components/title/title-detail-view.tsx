@@ -32,9 +32,6 @@ export function TitleDetailView({ id }: TitleDetailViewProps) {
   // Extract last read chapter ID if present
   const lastReadChapterId = historyData?.data?.[0]?.chapterId ?? null
 
-  // Use latest chapter's id for comments (API requires a chapterId)
-  const latestChapterId = chaptersData?.data?.[0]?.id ?? manga?.chapters?.[0]?.id ?? ''
-
   if (isLoading || !manga) {
     return (
       <div className="container mx-auto px-4 py-6 space-y-4">
@@ -77,7 +74,7 @@ export function TitleDetailView({ id }: TitleDetailViewProps) {
         </TabsContent>
 
         <TabsContent value="comments" className="mt-4">
-          <CommentSection chapterId={latestChapterId} />
+          <CommentSection scope={{ type: 'comic', comicId: manga.id }} />
         </TabsContent>
       </Tabs>
 

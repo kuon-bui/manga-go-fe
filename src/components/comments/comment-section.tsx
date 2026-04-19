@@ -8,24 +8,40 @@ import { CommentInput } from '@/components/comments/comment-input'
 import { useComments, useAddComment, useDeleteComment, useToggleReaction } from '@/hooks/use-comments'
 import { useAuthStore } from '@/stores/auth-store'
 
+type CommentScope =
+  | { type: 'comic'; comicId: string }
+  | { type: 'chapter'; chapterId: string }
+  | { type: 'page'; chapterId: string; pageIndex: number }
+
 interface CommentSectionProps {
-  chapterId: string
+  scope: CommentScope
 }
 
-export function CommentSection({ chapterId }: CommentSectionProps) {
+export function CommentSection({ scope }: CommentSectionProps) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
 
-  const { data, isLoading } = useComments(chapterId)
-  const addMutation = useAddComment(chapterId)
-  const deleteMutation = useDeleteComment(chapterId)
-  const toggleReactionMutation = useToggleReaction(chapterId)
+  const { data, isLoading } = useComments(scope)
+  const addMutation = useAddComment(scope)
+  const deleteMutation = useDeleteComment(scope)
+  const toggleReactionMutation = useToggleReaction(scope)
 
   function handleAddComment(content: string) {
     addMutation.mutate({ content, parentId: null })
   }
 
-  function handleReply(parentId: string, content: string) {
-    addMutation.mutate({ content, parentId })
+  function handleReply(targetCommentId: string, content: string) {
+    const targetComment = data?.data.find((c) => c.id === targetCommentId || c.replies?.some((r) => r.id === targetCommentId))
+    const target = targetComment?.id === targetCommentId ? targetComment : targetComment?.replies?.find((r) => r.id === targetCommentId)
+
+    // Always use root comment as parentId, mention the target author if replying to nested comment
+    const rootParentId = targetComment?.id ?? null
+    const mentionedAuthor = target?.id !== targetComment?.id ? target?.author : undefined
+
+    addMutation.mutate({
+      content,
+      parentId: rootParentId,
+      mentionedAuthor,
+    })
   }
 
   function handleDelete(commentId: string) {
@@ -40,7 +56,7 @@ export function CommentSection({ chapterId }: CommentSectionProps) {
     <div className="space-y-5">
       {/* Header */}
       <div className="flex items-center gap-2">
-        <h3 className="text-base font-semibold text-foreground">Comments</h3>
+        <h3 className="text-base font-semibold text-foreground">Bình luận</h3>
         {data && (
           <span className="text-sm text-muted-foreground">({data.total})</span>
         )}
@@ -51,7 +67,7 @@ export function CommentSection({ chapterId }: CommentSectionProps) {
         <CommentInput onSubmit={handleAddComment} />
       ) : (
         <p className="rounded-lg border border-dashed border-border p-4 text-center text-sm text-muted-foreground dark:border-border">
-          <a href="/login" className="text-primary hover:underline">Sign in</a> to join the discussion.
+          <a href="/login" className="text-primary hover:underline">Đăng nhập</a> để bình luận.
         </p>
       )}
 
@@ -90,7 +106,7 @@ export function CommentSection({ chapterId }: CommentSectionProps) {
       {!isLoading && (!data || data.data.length === 0) && (
         <div className="py-10 text-center text-muted-foreground">
           <MessageSquare className="mx-auto mb-2 h-8 w-8 opacity-30" />
-          <p className="text-sm">No comments yet. Be the first!</p>
+          <p className="text-sm">Chưa có bình luận nào. Hãy là người đầu tiên!</p>
         </div>
       )}
     </div>

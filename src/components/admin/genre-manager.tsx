@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/dialog'
 import { useGenres } from '@/hooks/use-manga'
 import { apiClient } from '@/lib/api-client'
-import { titleToSlug } from '@/lib/utils'
+import { titleToSlug } from '@/hooks/use-dashboard'
 
 export function GenreManager() {
   const qc = useQueryClient()
