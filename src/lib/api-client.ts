@@ -112,6 +112,30 @@ export interface UpdateChapterPayload {
   title?: string;
 }
 
+// ─── File Upload Response Types ───────────────────────────────────────────
+
+export interface FileUploadResponse {
+  url: string;
+  filename: string;
+  path: string;
+  content_type: string;
+  size: number;
+}
+
+export interface ChapterImageUploadResponse extends FileUploadResponse {}
+
+export interface CoverUploadResponse {
+  url: string;
+  path: string;
+}
+
+export interface UpdateChapterPagesPayload {
+  pages: Array<{
+    pageType: 'image';
+    imageUrl: string;
+  }>;
+}
+
 export interface CreateGroupPayload {
   name: string;
   slug: string;
@@ -388,8 +412,12 @@ class ApiClient {
     return this.put<void>(`/comics/${comicSlug}/chapters/${chapterSlug}`, payload);
   }
 
-  updateChapterPages(comicSlug: string, chapterSlug: string, pages: string[]): Promise<void> {
-    return this.put<void>(`/comics/${comicSlug}/chapters/${chapterSlug}/pages`, { pages });
+  updateChapterPages(
+    comicId: string,
+    chapterId: string,
+    pages: Array<{ pageType: 'image'; imageUrl: string }>
+  ): Promise<void> {
+    return this.put<void>(`/comics/${comicId}/chapters/${chapterId}/pages`, { pages });
   }
 
   publishChapter(comicSlug: string, chapterSlug: string, isPublished: boolean): Promise<void> {
@@ -523,8 +551,73 @@ class ApiClient {
     return data;
   }
 
+  async uploadChapterImage(
+    file: File,
+    comicId: string
+  ): Promise<FileUploadResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', 'chapter');
+    formData.append('comicId', comicId);
+
+    const response = await fetch(`${this.baseUrl}/files/upload`, {
+      method: 'POST',
+      body: formData,
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new ApiClientError({
+        message: (error as Record<string, unknown>).error as string || 'Chapter image upload failed',
+        statusCode: response.status,
+      });
+    }
+
+    const json = (await response.json()) as ApiEnvelope<FileUploadResponse>;
+    const data = 'data' in json && json.data ? json.data : (json as unknown as FileUploadResponse);
+    // url is a relative path (/files/content/…) — make it absolute
+    if (data.url.startsWith('/')) {
+      data.url = `${this.baseUrl}${data.url}`;
+    }
+    return data;
+  }
+
+  async uploadCover(file: File, comicId: string): Promise<CoverUploadResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', 'cover');
+    formData.append('comicId', comicId);
+
+    const response = await fetch(`${this.baseUrl}/files/upload`, {
+      method: 'POST',
+      body: formData,
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new ApiClientError({
+        message: (error as Record<string, unknown>).error as string || 'Cover upload failed',
+        statusCode: response.status,
+      });
+    }
+
+    const json = (await response.json()) as ApiEnvelope<CoverUploadResponse>;
+    const data = 'data' in json && json.data ? json.data : (json as unknown as CoverUploadResponse);
+    // url is a relative path (/files/content/…) — make it absolute
+    if (data.url.startsWith('/')) {
+      data.url = `${this.baseUrl}${data.url}`;
+    }
+    return data;
+  }
+
   getPresignedUrl(filename: string): Promise<{ url: string }> {
     return this.get<{ url: string }>(`/files/presign/${encodeURIComponent(filename)}`);
+  }
+
+  updateComicThumbnail(comicId: string, thumbnail: string): Promise<Manga> {
+    return this.patch<Manga>(`/comics/${comicId}`, { thumbnail });
   }
 
   // ─── Reading History ─────────────────────────────────────────────────────────
