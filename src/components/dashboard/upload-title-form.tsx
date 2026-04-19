@@ -414,7 +414,7 @@ export function UploadTitleForm() {
       if (coverFile) {
         try {
           const uploadResult = await uploadCoverMutation.mutateAsync({ file: coverFile, comicId })
-          thumbnailUrl = uploadResult.path // Store path in DB as per spec
+          thumbnailUrl = uploadResult.path ?? uploadResult.url
         } catch (err) {
           console.error('Cover upload failed:', err)
           toast.warning('Tạo truyện thành công nhưng không thể upload ảnh bìa')
@@ -424,7 +424,11 @@ export function UploadTitleForm() {
       // Step 3: Update comic with thumbnail if uploaded
       if (thumbnailUrl) {
         try {
-          await apiClient.updateComic(slug, { thumbnail: thumbnailUrl })
+          await apiClient.updateComic(slug, {
+            title: form.title.trim(),
+            slug,
+            thumbnail: thumbnailUrl
+          })
         } catch (err) {
           console.error('Failed to update comic thumbnail:', err)
         }

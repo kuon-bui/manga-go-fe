@@ -14,6 +14,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
 import { SafeImage as Image } from '@/components/ui/safe-image'
+import { TitleEditModal } from '@/components/dashboard/title-edit-modal'
 import { useMangaDetail, useChapterList } from '@/hooks/use-title-detail'
 import { usePublishComic, useDeleteComic, useDeleteChapter } from '@/hooks/use-dashboard'
 
@@ -32,6 +33,7 @@ export function TitleManagementView({ titleSlug }: TitleManagementViewProps) {
   const deleteChapterMutation = useDeleteChapter(titleSlug)
 
   const [deletingChapter, setDeletingChapter] = useState<string | null>(null)
+  const [editModalOpen, setEditModalOpen] = useState(false)
 
   function handleTogglePublish() {
     if (!title) return
@@ -111,6 +113,13 @@ export function TitleManagementView({ titleSlug }: TitleManagementViewProps) {
           <h1 className="text-2xl font-bold text-foreground">Quản lý nội dung</h1>
         </div>
         <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => setEditModalOpen(true)}
+          >
+            <Edit2 className="mr-1.5 h-4 w-4" />
+            Chỉnh sửa
+          </Button>
           <Button 
             variant="outline" 
             onClick={handleTogglePublish}
@@ -224,6 +233,15 @@ export function TitleManagementView({ titleSlug }: TitleManagementViewProps) {
           </div>
         )}
       </section>
+
+      {/* Edit modal */}
+      {title && (
+        <TitleEditModal 
+          title={title} 
+          open={editModalOpen} 
+          onOpenChange={setEditModalOpen}
+        />
+      )}
     </div>
   )
 }

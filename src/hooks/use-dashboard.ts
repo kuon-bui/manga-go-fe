@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api-client'
-import type { CreateComicPayload, CreateChapterPayload } from '@/lib/api-client'
+import type { CreateComicPayload, CreateChapterPayload, UpdateComicPayload } from '@/lib/api-client'
 import { queryKeys } from '@/lib/query-keys'
 import type { User } from '@/types/auth'
 import type {
@@ -225,6 +225,18 @@ export function useDeleteComic() {
   return useMutation({
     mutationFn: (slug: string) => apiClient.deleteComic(slug),
     onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.dashboard.titles() }),
+  })
+}
+
+export function useUpdateComic() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ slug, payload }: { slug: string; payload: UpdateComicPayload }) =>
+      apiClient.updateComic(slug, payload),
+    onSettled: (_d, _e, vars) => {
+      qc.invalidateQueries({ queryKey: queryKeys.manga.detail(vars.slug) })
+      qc.invalidateQueries({ queryKey: queryKeys.dashboard.titles() })
+    },
   })
 }
 
