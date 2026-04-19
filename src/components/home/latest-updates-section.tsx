@@ -26,9 +26,19 @@ export function LatestUpdatesSection() {
       </div>
 
       {isLoading && (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <Skeleton key={i} className="aspect-[3/4] w-full rounded-lg" />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 18 }).map((_, i) => (
+            <div key={i} className="flex gap-3 rounded-lg border border-border p-3">
+              <Skeleton className="h-20 w-14 shrink-0 rounded-md" />
+              <div className="flex flex-1 flex-col py-0.5">
+                <Skeleton className="h-4 w-3/4 mb-1.5" />
+                <Skeleton className="h-3 w-1/2 mb-auto" />
+                <div className="flex gap-1.5 mt-2">
+                  <Skeleton className="h-4 w-10" />
+                  <Skeleton className="h-4 w-12" />
+                </div>
+              </div>
+            </div>
           ))}
         </div>
       )}
@@ -44,10 +54,10 @@ export function LatestUpdatesSection() {
       )}
 
       {!isLoading && !isError && mangas.length > 0 && (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {mangas.map((manga, i) => (
             <div key={manga.id} className="animate-in fade-in duration-300" style={{ animationDelay: `${i * 30}ms` }}>
-              <MangaCard manga={manga} />
+              <MangaCard manga={manga} variant="list" />
             </div>
           ))}
         </div>

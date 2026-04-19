@@ -1,8 +1,13 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { SafeImage as Image } from '@/components/ui/safe-image'
+import { MessageCircle } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
+import { ImageCommentModal } from './image-comment-modal'
 
+import { useMangaViewerStore } from '@/stores/manga-viewer-store'
 import { useImagePreloader } from '@/hooks/use-image-preloader'
 import { useAuthStore } from '@/stores/auth-store'
 import { apiClient } from '@/lib/api-client'
@@ -12,6 +17,8 @@ interface SinglePageViewProps {
   currentPage: number
   comicSlug: string
   chapterSlug: string
+  chapterId: string
+  mangaId: string
 }
 
 export function SinglePageView({
@@ -19,9 +26,13 @@ export function SinglePageView({
   currentPage,
   comicSlug,
   chapterSlug,
+  chapterId,
+  mangaId,
 }: SinglePageViewProps) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const { controlsVisible } = useMangaViewerStore()
   const markedReadRef = useRef(false)
+  const [modalOpen, setModalOpen] = useState(false)
 
   useImagePreloader(pages, currentPage)
 
@@ -40,7 +51,7 @@ export function SinglePageView({
   return (
     <div className="relative flex min-h-screen items-center justify-center">
       {/* Page image */}
-      <div className="relative max-h-screen max-w-3xl">
+      <div className="relative max-h-screen max-w-3xl group">
         <Image
           src={src}
           alt={`Page ${currentPage + 1}`}
@@ -50,8 +61,34 @@ export function SinglePageView({
           unoptimized
           priority
         />
+        
+        {/* Floating action button */}
+        <div className={cn(
+          "absolute bottom-6 right-6 z-20 transition-opacity duration-300",
+          controlsVisible ? "opacity-100" : "opacity-0 md:group-hover:opacity-100"
+        )}>
+          <Button 
+            variant="secondary" 
+            size="icon" 
+            className="rounded-full shadow-lg bg-black/60 hover:bg-black/90 text-white border border-white/20 backdrop-blur-sm"
+            onClick={(e) => {
+              e.stopPropagation()
+              setModalOpen(true)
+            }}
+          >
+            <MessageCircle className="w-5 h-5" />
+          </Button>
+        </div>
       </div>
 
+      <ImageCommentModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        imageSrc={src}
+        pageIndex={currentPage}
+        chapterId={chapterId}
+        comicId={mangaId}
+      />
     </div>
   )
 }

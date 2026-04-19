@@ -26,9 +26,15 @@ export function RecentlyAddedSection() {
       </div>
 
       {isLoading && (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-none">
           {Array.from({ length: 12 }).map((_, i) => (
-            <Skeleton key={i} className="aspect-[3/4] w-full rounded-lg" />
+            <div key={i} className="relative shrink-0 w-36 sm:w-40">
+              <div className="flex flex-col gap-1.5">
+                <Skeleton className="aspect-[3/4] w-full rounded-lg" />
+                <Skeleton className="h-3.5 w-full" />
+                <Skeleton className="h-3 w-2/3" />
+              </div>
+            </div>
           ))}
         </div>
       )}
@@ -44,9 +50,9 @@ export function RecentlyAddedSection() {
       )}
 
       {!isLoading && !isError && mangas.length > 0 && (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+        <div className="flex gap-4 overflow-x-auto pb-4 pt-1 scrollbar-none snap-x snap-mandatory">
           {mangas.map((manga, i) => (
-            <div key={manga.id} className="animate-in fade-in duration-300" style={{ animationDelay: `${i * 30}ms` }}>
+            <div key={manga.id} className="relative shrink-0 w-36 sm:w-40 snap-start animate-in fade-in duration-300" style={{ animationDelay: `${i * 30}ms` }}>
               <MangaCard manga={manga} />
             </div>
           ))}

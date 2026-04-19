@@ -1,6 +1,5 @@
 'use client'
 
-import { useState, useCallback } from 'react'
 import Link from 'next/link'
 import {
   ArrowLeft, Columns2, BookOpen, AlignJustify,
@@ -11,6 +10,8 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useMangaViewerStore, type ViewerMode } from '@/stores/manga-viewer-store'
 import type { Chapter } from '@/types'
+import { TOCDrawer } from './toc-drawer'
+import { CommentsDrawer } from './comments-drawer'
 
 const MODE_OPTIONS: { value: ViewerMode; label: string; icon: React.ReactNode }[] = [
   { value: 'vertical', label: 'Cuộn', icon: <AlignJustify className="h-3.5 w-3.5" /> },
@@ -23,55 +24,16 @@ interface MangaControlsProps {
 }
 
 export function MangaControls({ chapter }: MangaControlsProps) {
-  const [visible, setVisible] = useState(true)
-  const { mode, currentPage, setMode, setCurrentPage, nextPage, prevPage } = useMangaViewerStore()
+  const { mode, currentPage, controlsVisible, setMode, setCurrentPage } = useMangaViewerStore()
   const totalPages = chapter.pages.length
-
-  const toggle = useCallback(() => setVisible((v) => !v), [])
-  const handleNext = useCallback(() => nextPage(totalPages), [nextPage, totalPages])
-  const handlePrev = useCallback(() => prevPage(), [prevPage])
 
   return (
     <>
-      {/* ── Tap zones: 25% PREV / 50% TOGGLE / 25% NEXT ─────────────────────── */}
-      {/* Only active in single/double page modes — vertical scroll uses natural scroll */}
-      {mode !== 'vertical' && (
-        <div className="fixed inset-0 z-10 flex select-none">
-          {/* Left 25% → prev page */}
-          <div
-            className="w-1/4 cursor-pointer"
-            onClick={handlePrev}
-            aria-label="Trang trước"
-          />
-          {/* Centre 50% → toggle UI */}
-          <div
-            className="flex-1 cursor-pointer"
-            onClick={toggle}
-            aria-label="Bật/tắt giao diện"
-          />
-          {/* Right 25% → next page */}
-          <div
-            className="w-1/4 cursor-pointer"
-            onClick={handleNext}
-            aria-label="Trang sau"
-          />
-        </div>
-      )}
-
-      {/* Vertical mode: tapping anywhere toggles UI */}
-      {mode === 'vertical' && (
-        <div
-          className="fixed inset-0 z-10 cursor-pointer"
-          onClick={toggle}
-          aria-label="Bật/tắt giao diện"
-        />
-      )}
-
       {/* ── Top bar ─────────────────────────────────────────────────────────── */}
       <header
         className={cn(
-          'fixed left-0 right-0 top-0 z-20 flex h-14 items-center gap-2 bg-black/80 px-3 backdrop-blur-md transition-transform duration-200',
-          visible ? 'translate-y-0' : '-translate-y-full'
+          'fixed left-0 right-0 top-0 z-40 flex h-14 items-center gap-2 bg-black/80 px-3 backdrop-blur-md transition-transform duration-200',
+          controlsVisible ? 'translate-y-0' : '-translate-y-full'
         )}
         onClick={(e) => e.stopPropagation()}
       >
@@ -88,7 +50,7 @@ export function MangaControls({ chapter }: MangaControlsProps) {
         </Button>
 
         {/* Title + page counter */}
-        <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex min-w-0 flex-1 flex-col mx-2">
           <span className="truncate text-sm font-semibold text-white">
             {chapter.title ?? `Chương ${chapter.number}`}
           </span>
@@ -98,6 +60,14 @@ export function MangaControls({ chapter }: MangaControlsProps) {
             </span>
           )}
         </div>
+
+        {/* TOC Button */}
+        <TOCDrawer chapter={chapter} />
+
+        {/* Comments Button (Only for single/double) */}
+        {mode !== 'vertical' && chapter.mangaId && (
+          <CommentsDrawer chapterId={chapter.id} />
+        )}
 
         {/* Mode switcher */}
         <div className="flex shrink-0 overflow-hidden rounded-lg border border-white/15">
@@ -124,8 +94,8 @@ export function MangaControls({ chapter }: MangaControlsProps) {
       {/* ── Bottom bar ──────────────────────────────────────────────────────── */}
       <footer
         className={cn(
-          'fixed bottom-0 left-0 right-0 z-20 bg-black/80 px-4 pb-4 pt-2 backdrop-blur-md transition-transform duration-200',
-          visible ? 'translate-y-0' : 'translate-y-full'
+          'fixed bottom-0 left-0 right-0 z-40 bg-black/80 px-4 pb-4 pt-2 backdrop-blur-md transition-transform duration-200',
+          controlsVisible ? 'translate-y-0' : 'translate-y-full'
         )}
         onClick={(e) => e.stopPropagation()}
       >
