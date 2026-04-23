@@ -13,15 +13,17 @@ export function RecentlyAddedSection() {
   return (
     <section className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex items-center justify-between">
-        <h2 className="flex items-center gap-2 text-lg font-bold text-foreground">
-          <Sparkles className="h-5 w-5 text-primary" />
+        <h2 className="flex items-center gap-2.5 text-lg font-bold text-foreground">
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/15 text-primary">
+            <Sparkles className="h-4 w-4" />
+          </span>
           Truyện Mới Thêm
         </h2>
         <Link
           href="/browse?sort=newest"
-          className="flex items-center gap-0.5 text-sm text-muted-foreground transition-colors hover:text-primary"
+          className="flex items-center gap-1 rounded-full border border-border/60 bg-background px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
         >
-          Xem thêm <ChevronRight className="h-4 w-4" />
+          Xem thêm <ChevronRight className="h-3.5 w-3.5" />
         </Link>
       </div>
 

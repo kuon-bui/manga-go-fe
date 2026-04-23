@@ -32,7 +32,7 @@ export function NotificationBell() {
             className={cn(
               'absolute right-1.5 top-1.5',
               'flex h-4 w-4 items-center justify-center',
-              'rounded-full bg-destructive text-[10px] font-bold text-white',
+              'rounded-full bg-primary text-[10px] font-bold text-primary-foreground',
               'animate-in zoom-in-75 duration-200'
             )}
             aria-hidden

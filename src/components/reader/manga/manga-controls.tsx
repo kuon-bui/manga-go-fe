@@ -32,7 +32,7 @@ export function MangaControls({ chapter }: MangaControlsProps) {
       {/* ── Top bar ─────────────────────────────────────────────────────────── */}
       <header
         className={cn(
-          'fixed left-0 right-0 top-0 z-40 flex h-14 items-center gap-2 bg-black/80 px-3 backdrop-blur-md transition-transform duration-200',
+          'fixed left-0 right-0 top-0 z-40 flex h-14 items-center gap-2 bg-background/90 px-3 backdrop-blur-xl border-b border-border shadow-sakura-sm transition-transform duration-200',
           controlsVisible ? 'translate-y-0' : '-translate-y-full'
         )}
         onClick={(e) => e.stopPropagation()}
@@ -41,7 +41,7 @@ export function MangaControls({ chapter }: MangaControlsProps) {
         <Button
           variant="ghost"
           size="icon"
-          className="shrink-0 text-white/80 hover:bg-white/10 hover:text-white"
+          className="shrink-0 text-foreground hover:bg-primary/15 hover:text-primary"
           asChild
         >
           <Link href={`/titles/${chapter.comicSlug}`} aria-label="Quay lại">
@@ -51,11 +51,11 @@ export function MangaControls({ chapter }: MangaControlsProps) {
 
         {/* Title + page counter */}
         <div className="flex min-w-0 flex-1 flex-col mx-2">
-          <span className="truncate text-sm font-semibold text-white">
+          <span className="truncate text-sm font-semibold text-foreground">
             {chapter.title ?? `Chương ${chapter.number}`}
           </span>
           {mode !== 'vertical' && (
-            <span className="text-[11px] text-white/50">
+            <span className="text-[11px] text-muted-foreground">
               {currentPage + 1} / {totalPages}
             </span>
           )}
@@ -70,16 +70,16 @@ export function MangaControls({ chapter }: MangaControlsProps) {
         )}
 
         {/* Mode switcher */}
-        <div className="flex shrink-0 overflow-hidden rounded-lg border border-white/15">
+        <div className="flex shrink-0 items-center overflow-hidden rounded-full bg-muted p-1">
           {MODE_OPTIONS.map((opt) => (
             <button
               key={opt.value}
               onClick={() => setMode(opt.value)}
               className={cn(
-                'flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium transition-colors',
+                'flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-all',
                 mode === opt.value
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-white/50 hover:bg-white/10 hover:text-white'
+                  ? 'bg-primary text-primary-foreground shadow-sakura-sm'
+                  : 'text-muted-foreground hover:bg-background hover:text-foreground'
               )}
               aria-pressed={mode === opt.value}
               aria-label={`Chế độ ${opt.label}`}
@@ -94,25 +94,24 @@ export function MangaControls({ chapter }: MangaControlsProps) {
       {/* ── Bottom bar ──────────────────────────────────────────────────────── */}
       <footer
         className={cn(
-          'fixed bottom-0 left-0 right-0 z-40 bg-black/80 px-4 pb-4 pt-2 backdrop-blur-md transition-transform duration-200',
+          'fixed bottom-0 left-0 right-0 z-40 bg-background/90 px-4 pb-4 pt-2 backdrop-blur-xl border-t border-border transition-transform duration-200',
           controlsVisible ? 'translate-y-0' : 'translate-y-full'
         )}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Progress slider — replaces dot indicators for all page counts */}
         {mode !== 'vertical' && totalPages > 1 && (
           <div className="mb-3 flex items-center gap-3">
-            <span className="shrink-0 text-[11px] text-white/50">1</span>
+            <span className="shrink-0 text-[11px] text-muted-foreground">1</span>
             <input
               type="range"
               min={0}
               max={totalPages - 1}
               value={currentPage}
               onChange={(e) => setCurrentPage(Number(e.target.value))}
-              className="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-white/20 accent-primary"
+              className="h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-muted accent-primary"
               aria-label="Thanh tiến độ trang"
             />
-            <span className="shrink-0 text-[11px] text-white/50">{totalPages}</span>
+            <span className="shrink-0 text-[11px] text-muted-foreground">{totalPages}</span>
           </div>
         )}
 
@@ -122,7 +121,7 @@ export function MangaControls({ chapter }: MangaControlsProps) {
             <Button
               variant="ghost"
               size="sm"
-              className="gap-1 text-white/70 hover:bg-white/10 hover:text-white"
+              className="gap-1 text-muted-foreground hover:bg-primary/15 hover:text-primary"
               asChild
             >
               <Link href={`/read/manga/${chapter.comicSlug}/${chapter.prevChapter.slug}`}>
@@ -134,8 +133,7 @@ export function MangaControls({ chapter }: MangaControlsProps) {
             <div />
           )}
 
-          {/* Current chapter info */}
-          <span className="text-xs font-medium text-white/60">
+          <span className="text-xs font-medium text-muted-foreground">
             Chương {chapter.number}
           </span>
 

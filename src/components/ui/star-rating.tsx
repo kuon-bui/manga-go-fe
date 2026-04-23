@@ -93,9 +93,9 @@ export function StarRating({
                 className={cn(
                   'h-5 w-5 transition-colors',
                   filled
-                    ? 'fill-yellow-400 text-yellow-400'
+                    ? 'fill-primary text-primary'
                     : halfFilled
-                      ? 'fill-yellow-200 text-yellow-400 dark:fill-yellow-600'
+                      ? 'fill-primary/40 text-primary dark:fill-primary/60'
                       : 'fill-transparent text-muted-foreground/40'
                 )}
               />

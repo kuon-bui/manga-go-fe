@@ -9,7 +9,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       <RolesSyncProvider />
       <NotificationProvider />
       <Header />
-      <main className="flex-1 pb-16 md:pb-0">{children}</main>
+      <main className="flex-1 pb-24 md:pb-0">{children}</main>
       <BottomNav />
     </div>
   );

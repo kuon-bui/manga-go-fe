@@ -61,7 +61,7 @@ export function TitleHero({ manga, onRateClick }: TitleHeroProps) {
   return (
     <div className="flex flex-col gap-6 md:flex-row">
       {/* Cover */}
-      <div className="relative mx-auto h-64 w-44 shrink-0 overflow-hidden rounded-xl shadow-lg md:mx-0 md:h-80 md:w-56">
+      <div className="relative mx-auto h-64 w-44 shrink-0 overflow-hidden rounded-2xl shadow-sakura md:mx-0 md:h-80 md:w-56">
         {manga.thumbnail ? (
           <Image
             src={manga.thumbnail}
@@ -129,7 +129,7 @@ export function TitleHero({ manga, onRateClick }: TitleHeroProps) {
               <Link
                 key={g.id}
                 href={`/browse?genre=${g.slug}`}
-                className="rounded-full border border-border bg-background px-2.5 py-0.5 text-xs text-foreground transition-colors hover:bg-accent dark:bg-card"
+                className="rounded-full border border-border bg-background px-2.5 py-0.5 text-xs text-foreground transition-colors hover:bg-primary/15 hover:border-primary/40 hover:text-primary dark:bg-card"
               >
                 {g.name}
               </Link>
@@ -149,7 +149,7 @@ export function TitleHero({ manga, onRateClick }: TitleHeroProps) {
           {isAuthenticated && (
             <>
               <Button
-                variant={isFollowing ? 'secondary' : 'outline'}
+                variant={isFollowing ? 'soft' : 'soft'}
                 onClick={handleFollow}
                 disabled={followMutation.isPending}
                 aria-label={isFollowing ? 'Unfollow title' : 'Follow title'}

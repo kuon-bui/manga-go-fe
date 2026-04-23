@@ -60,7 +60,7 @@ export function VerticalScrollView({ pages, comicSlug, chapterSlug, chapterId, m
       {/* Chapter comments at the bottom for long strip */}
       {mangaId && (
         <div className="w-full max-w-3xl mt-12 mb-20 px-4 md:px-0 relative z-20 stop-propagation">
-          <h2 className="text-xl font-bold mb-6 text-white cursor-text">Bình luận chương</h2>
+          <h2 className="text-xl font-bold mb-6 text-foreground cursor-text">Bình luận chương</h2>
           <CommentSection scope={{ type: 'chapter', chapterId }} />
         </div>
       )}
@@ -125,7 +125,7 @@ function PageImage({ src, index, total, controlsVisible, observeElement, onLastV
           <Button 
             variant="secondary" 
             size="icon" 
-            className="rounded-full shadow-lg bg-black/60 hover:bg-black/90 text-white border border-white/20 backdrop-blur-sm"
+            className="rounded-full shadow-sakura-sm bg-background/80 hover:bg-primary/15 text-foreground hover:text-primary border border-border backdrop-blur-md"
             onClick={(e) => {
               e.stopPropagation()
               setModalOpen(true)

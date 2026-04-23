@@ -26,11 +26,11 @@ export function ImageCommentModal({ open, onOpenChange, imageSrc, pageIndex, cha
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] w-full h-[90vh] md:h-[85vh] md:max-w-6xl p-0 overflow-hidden bg-black flex flex-col md:flex-row gap-0 border-zinc-800">
+      <DialogContent className="max-w-[95vw] w-full h-[90vh] md:h-[85vh] md:max-w-6xl p-0 overflow-hidden bg-zinc-950 flex flex-col md:flex-row gap-0 border-zinc-800/60">
         <DialogTitle className="sr-only">Chi tiết trang {pageIndex + 1}</DialogTitle>
-        
+
         {/* Left side: Image Viewer */}
-        <div className="relative flex-1 bg-zinc-950 flex flex-col h-[40vh] md:h-full border-b md:border-b-0 md:border-r border-zinc-800">
+        <div className="relative flex-1 bg-zinc-950 flex flex-col h-[40vh] md:h-full border-b md:border-b-0 md:border-r border-zinc-800/60">
           <div className="flex-1 relative w-full h-full p-4 flex items-center justify-center">
             <Image
               src={imageSrc}
@@ -40,20 +40,20 @@ export function ImageCommentModal({ open, onOpenChange, imageSrc, pageIndex, cha
               unoptimized
             />
           </div>
-          
+
           {/* Reaction Bar */}
-          <div className="h-14 shrink-0 bg-zinc-900 flex items-center justify-between px-4">
+          <div className="h-14 shrink-0 bg-zinc-900/80 flex items-center justify-between px-4">
             <div className="flex items-center gap-2">
-               <Button variant="ghost" size="sm" className="text-zinc-400 hover:text-red-500 hover:bg-zinc-800">
+               <Button variant="ghost" size="sm" className="text-zinc-300 hover:text-primary hover:bg-zinc-800">
                  <Heart className="w-4 h-4 mr-2" />
                  Thích
                </Button>
-               <Button variant="ghost" size="sm" className="text-zinc-400 hover:text-white hover:bg-zinc-800">
+               <Button variant="ghost" size="sm" className="text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800">
                  <MessageCircle className="w-4 h-4 mr-2" />
                  Bình luận
                </Button>
             </div>
-            <span className="text-xs text-zinc-500">Trang {pageIndex + 1}</span>
+            <span className="text-xs text-zinc-400">Trang {pageIndex + 1}</span>
           </div>
         </div>
 

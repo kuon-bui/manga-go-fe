@@ -16,8 +16,8 @@ import { useAuthStore } from '@/stores/auth-store'
 // ─── CSS custom properties map ────────────────────────────────────────────────
 
 const THEME_VARS = {
-  day:   { '--reader-bg': '#ffffff', '--reader-text': '#1a1a1a', '--reader-surface': '#f5f5f5' },
-  night: { '--reader-bg': '#1a1a2e', '--reader-text': '#e0e0e0', '--reader-surface': '#16213e' },
+  day:   { '--reader-bg': '#FFFAFB', '--reader-text': '#4B2A36', '--reader-surface': '#FBECF2' },
+  night: { '--reader-bg': '#1F141D', '--reader-text': '#F7E7EE', '--reader-surface': '#2E1E2C' },
   sepia: { '--reader-bg': '#f4ecd8', '--reader-text': '#3b2a1a', '--reader-surface': '#ede0c8' },
 } as const
 

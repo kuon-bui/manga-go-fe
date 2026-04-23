@@ -18,8 +18,8 @@ export function GenreChip({ label, slug, active = false, className }: GenreChipP
       className={cn(
         'inline-flex items-center rounded-full border px-3 py-1 text-sm font-medium transition-colors',
         active
-          ? 'border-primary bg-primary text-primary-foreground'
-          : 'border-border bg-background text-foreground hover:bg-accent hover:text-accent-foreground dark:border-border dark:bg-card dark:hover:bg-accent',
+          ? 'border-primary bg-primary text-primary-foreground shadow-sakura-sm'
+          : 'border-border bg-background text-foreground hover:bg-primary/15 hover:text-primary hover:border-primary/40 dark:border-border dark:bg-card dark:hover:bg-primary/20',
         className
       )}
     >

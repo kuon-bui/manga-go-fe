@@ -5,8 +5,7 @@ import { useThemeStore, THEME_CLASS, type Theme } from '@/stores/theme-store';
 
 function applyThemeClasses(theme: Theme) {
   const root = document.documentElement;
-  // Remove all known theme classes
-  root.classList.remove('dark', 'light', 'midnight', 'sepia-theme', 'slate-theme', 'forest-theme');
+  root.classList.remove('dark');
 
   if (theme === 'system') {
     const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;

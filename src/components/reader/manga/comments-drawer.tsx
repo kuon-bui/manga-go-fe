@@ -16,7 +16,7 @@ export function CommentsDrawer({ chapterId }: { chapterId: string }) {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="text-white/80 hover:bg-white/10 hover:text-white" aria-label="Bình luận">
+        <Button variant="ghost" size="icon" className="text-foreground/80 hover:bg-muted hover:text-foreground" aria-label="Bình luận">
           <MessageSquare className="h-4 w-4" />
         </Button>
       </SheetTrigger>
