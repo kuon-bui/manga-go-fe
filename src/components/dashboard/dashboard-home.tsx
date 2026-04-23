@@ -39,7 +39,9 @@ export function DashboardHome() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Tổng số truyện</CardTitle>
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/15">
+              <BookOpen className="h-4 w-4 text-primary" />
+            </div>
           </CardHeader>
           <CardContent>
             {titlesLoading ? <Skeleton className="h-7 w-12" /> : <div className="text-2xl font-bold">{totalTitles}</div>}
@@ -49,7 +51,9 @@ export function DashboardHome() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Tổng số chương</CardTitle>
-            <ListPlus className="h-4 w-4 text-muted-foreground" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary">
+              <ListPlus className="h-4 w-4 text-secondary-foreground" />
+            </div>
           </CardHeader>
           <CardContent>
             {titlesLoading ? <Skeleton className="h-7 w-12" /> : <div className="text-2xl font-bold">{totalChapters}</div>}
@@ -59,7 +63,9 @@ export function DashboardHome() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Lượt xem (Dự kiến)</CardTitle>
-            <Eye className="h-4 w-4 text-muted-foreground" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent">
+              <Eye className="h-4 w-4 text-accent-foreground" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">---</div>
@@ -69,7 +75,9 @@ export function DashboardHome() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Lượt theo dõi</CardTitle>
-            <Heart className="h-4 w-4 text-muted-foreground" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/15">
+              <Heart className="h-4 w-4 text-primary" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">---</div>
@@ -94,8 +102,10 @@ export function DashboardHome() {
             {titlesLoading && <Skeleton className="h-48 w-full rounded-lg" />}
             
             {!titlesLoading && (!titlesData || titlesData.data.length === 0) && (
-              <div className="flex h-[200px] flex-col items-center justify-center rounded-md border border-dashed text-center">
-                <BookOpen className="mx-auto mb-4 h-8 w-8 text-muted-foreground/50" />
+              <div className="flex h-[200px] flex-col items-center justify-center rounded-2xl border border-dashed bg-primary/5 text-center">
+                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary/15">
+                  <BookOpen className="h-6 w-6 text-primary" />
+                </div>
                 <h3 className="text-lg font-semibold text-foreground">Chưa có truyện nào</h3>
                 <p className="mb-4 text-sm text-muted-foreground">Bạn chưa đóng góp truyện nào lên nền tảng.</p>
                 <Button size="sm" asChild>
@@ -183,8 +193,10 @@ export function DashboardHome() {
             )}
 
             {!groupsLoading && (!groups || groups.data.length === 0) && (
-              <div className="flex flex-col items-center rounded-lg border border-dashed border-border py-8 text-center text-sm text-muted-foreground">
-                <Users className="mb-2 h-6 w-6 opacity-30" />
+              <div className="flex flex-col items-center rounded-2xl border border-dashed border-border bg-primary/5 py-8 text-center text-sm text-muted-foreground">
+                <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-primary/15">
+                  <Users className="h-5 w-5 text-primary" />
+                </div>
                 Bạn chưa tham gia nhóm dịch nào.
               </div>
             )}
@@ -195,7 +207,7 @@ export function DashboardHome() {
                   <Link
                     key={g.id}
                     href={`/dashboard/groups/${g.slug}`}
-                    className="flex flex-row items-center gap-4 rounded-xl border bg-card p-3 shadow-sm transition-all hover:bg-accent/50 dark:border-border"
+                    className="flex flex-row items-center gap-4 rounded-2xl border border-border bg-card p-3 shadow-sakura-sm transition-all hover:border-primary/40 hover:bg-primary/5 hover:shadow-sakura"
                   >
                     {g.logoUrl ? (
                       <Image

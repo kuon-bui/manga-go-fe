@@ -13,9 +13,9 @@ export function BottomNav() {
   const canCreateTitle = usePermission('create_title');
 
   const items = [
-    { href: '/', label: 'Home', icon: BookOpen },
-    { href: '/search', label: 'Search', icon: Search },
-    { href: '/library', label: 'Library', icon: Library },
+    { href: '/',        label: 'Home',      icon: BookOpen },
+    { href: '/search',  label: 'Search',    icon: Search },
+    { href: '/library', label: 'Library',   icon: Library },
     ...(isAuthenticated
       ? [{ href: '/profile', label: 'Profile', icon: User }]
       : []),
@@ -31,8 +31,8 @@ export function BottomNav() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background md:hidden">
-      <div className="flex h-16 items-center justify-around">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pb-4 md:hidden">
+      <div className="flex items-center gap-1 rounded-full border border-border bg-background/95 px-3 py-2 shadow-sakura backdrop-blur-xl">
         {items.map(({ href, label, icon: Icon }) => {
           const isActive = pathname === href || (href !== '/' && pathname.startsWith(href));
           return (
@@ -40,10 +40,10 @@ export function BottomNav() {
               key={href}
               href={href}
               className={cn(
-                'flex flex-col items-center gap-1 px-3 py-2 text-xs transition-colors',
+                'flex flex-col items-center gap-0.5 rounded-full px-3 py-1.5 text-[10px] font-medium transition-all',
                 isActive
-                  ? 'text-foreground'
-                  : 'text-muted-foreground hover:text-foreground'
+                  ? 'bg-primary/15 text-primary'
+                  : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'
               )}
               aria-current={isActive ? 'page' : undefined}
             >

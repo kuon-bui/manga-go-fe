@@ -4,15 +4,18 @@ import { useEffect } from 'react'
 
 import dynamic from 'next/dynamic'
 
-const VerticalScrollView = dynamic(() => import('@/components/reader/manga/vertical-scroll-view').then(mod => mod.VerticalScrollView), {
-  loading: () => <div className="h-screen w-full flex items-center justify-center animate-pulse bg-zinc-900" />,
-})
-const SinglePageView = dynamic(() => import('@/components/reader/manga/single-page-view').then(mod => mod.SinglePageView), {
-  loading: () => <div className="h-screen w-full flex items-center justify-center animate-pulse bg-zinc-900" />,
-})
-const DoublePageView = dynamic(() => import('@/components/reader/manga/double-page-view').then(mod => mod.DoublePageView), {
-  loading: () => <div className="h-screen w-full flex items-center justify-center animate-pulse bg-zinc-900" />,
-})
+const VerticalScrollView = dynamic(
+  () => import('@/components/reader/manga/vertical-scroll-view').then((mod) => mod.VerticalScrollView),
+  { loading: () => <div className="h-screen w-full flex items-center justify-center animate-pulse bg-background" /> }
+)
+const SinglePageView = dynamic(
+  () => import('@/components/reader/manga/single-page-view').then((mod) => mod.SinglePageView),
+  { loading: () => <div className="h-screen w-full flex items-center justify-center animate-pulse bg-background" /> }
+)
+const DoublePageView = dynamic(
+  () => import('@/components/reader/manga/double-page-view').then((mod) => mod.DoublePageView),
+  { loading: () => <div className="h-screen w-full flex items-center justify-center animate-pulse bg-background" /> }
+)
 import { MangaControls } from '@/components/reader/manga/manga-controls'
 import { useChapter } from '@/hooks/use-chapter-data'
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts'
@@ -27,16 +30,15 @@ interface MangaReaderProps {
 
 export function MangaReader({ comicSlug, chapterSlug }: MangaReaderProps) {
   const { data: chapter, isLoading } = useChapter(comicSlug, chapterSlug)
-  const { mode, currentPage, nextPage, prevPage, toggleSettings, toggleControls, reset } = useMangaViewerStore()
+  const { mode, currentPage, nextPage, prevPage, toggleSettings, toggleControls, reset } =
+    useMangaViewerStore()
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const createHistoryMutation = useCreateReadingHistory()
 
-  // Reset page position when chapter changes
   useEffect(() => {
     reset()
   }, [comicSlug, chapterSlug, reset])
 
-  // Record reading history when chapter data loads (fire-and-forget)
   useEffect(() => {
     if (!isAuthenticated || !chapter?.mangaId || !chapter?.id) return
     createHistoryMutation.mutate({ comicId: chapter.mangaId, chapterId: chapter.id })
@@ -51,15 +53,18 @@ export function MangaReader({ comicSlug, chapterSlug }: MangaReaderProps) {
 
   if (isLoading || !chapter) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-black">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-white border-t-transparent" />
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>
     )
   }
 
   const handleContainerClick = (e: React.MouseEvent) => {
-    // Ignore clicks if they target an interactive element (buttons, links, form elements, svg)
-    if ((e.target as HTMLElement).closest('button, a, input, textarea, [role="button"], svg, path, .stop-propagation')) {
+    if (
+      (e.target as HTMLElement).closest(
+        'button, a, input, textarea, [role="button"], svg, path, .stop-propagation'
+      )
+    ) {
       return
     }
 
@@ -68,7 +73,6 @@ export function MangaReader({ comicSlug, chapterSlug }: MangaReaderProps) {
       return
     }
 
-    // 25% | 50% | 25% tap zones
     const x = e.clientX
     const width = window.innerWidth
     if (x < width * 0.25) {
@@ -83,11 +87,9 @@ export function MangaReader({ comicSlug, chapterSlug }: MangaReaderProps) {
   const pages = chapter.pages
 
   return (
-    <div className="relative min-h-screen bg-black" onClick={handleContainerClick}>
-      {/* Controls overlay */}
+    <div className="relative min-h-screen bg-background" onClick={handleContainerClick}>
       <MangaControls chapter={chapter} />
 
-      {/* Viewer */}
       {mode === 'vertical' && (
         <VerticalScrollView
           pages={pages}

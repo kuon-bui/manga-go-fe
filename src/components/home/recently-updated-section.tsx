@@ -32,15 +32,17 @@ export function RecentlyUpdatedSection() {
   return (
     <section className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="flex items-center gap-2 text-lg font-bold text-foreground">
-          <Clock className="h-5 w-5 text-primary" />
+        <h2 className="flex items-center gap-2.5 text-lg font-bold text-foreground">
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/15 text-primary">
+            <Clock className="h-4 w-4" />
+          </span>
           Mới Cập Nhật
         </h2>
         <Link
           href="/browse?sort=latest"
-          className="flex items-center gap-0.5 text-sm text-muted-foreground transition-colors hover:text-primary"
+          className="flex items-center gap-1 rounded-full border border-border/60 bg-background px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
         >
-          Xem thêm <ChevronRight className="h-4 w-4" />
+          Xem thêm <ChevronRight className="h-3.5 w-3.5" />
         </Link>
       </div>
 
@@ -87,7 +89,7 @@ function RecentlyUpdatedCard({
   return (
     <Link
       href={`/titles/${manga.slug}`}
-      className="group flex gap-3 rounded-xl border border-border/60 bg-card p-2.5 transition-all duration-200 hover:border-primary/30 hover:bg-accent/50 hover:shadow-sm animate-in fade-in duration-300"
+      className="group flex gap-3 rounded-2xl border border-border/60 bg-card p-2.5 transition-all duration-200 hover:border-primary/40 hover:bg-primary/5 hover:shadow-sakura-sm animate-in fade-in duration-300"
       style={style}
     >
       {/* Thumbnail */}
@@ -122,14 +124,14 @@ function RecentlyUpdatedCard({
                 className={cn(
                   'inline-flex shrink-0 items-center rounded px-1.5 py-0.5 text-[10px] font-bold',
                   novel
-                    ? 'bg-purple-600/90 text-white'
+                    ? 'bg-[hsl(280_65%_92%)] text-[hsl(280_50%_38%)] dark:bg-[hsl(280_40%_22%)] dark:text-[hsl(280_60%_80%)]'
                     : 'bg-primary/90 text-primary-foreground'
                 )}
               >
                 {novel ? 'Ch.' : 'Ch.'}{latestChapter.number}
               </span>
               {showNew && (
-                <span className="inline-flex shrink-0 items-center rounded bg-red-500 px-1 py-0.5 text-[9px] font-black uppercase tracking-wide text-white">
+                <span className="inline-flex shrink-0 items-center rounded-full bg-primary px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-primary-foreground">
                   MỚI
                 </span>
               )}

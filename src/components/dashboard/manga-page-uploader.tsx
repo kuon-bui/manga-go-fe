@@ -141,17 +141,17 @@ export function MangaPageUploader({ onChange }: MangaPageUploaderProps) {
                 className="object-cover"
               />
               {/* Page number */}
-              <span className="absolute bottom-1 left-1 rounded bg-black/60 px-1 py-0.5 text-[10px] text-white">
+              <span className="absolute bottom-1 left-1 rounded-md bg-background/80 px-1 py-0.5 text-[10px] text-foreground backdrop-blur-sm">
                 {i + 1}
               </span>
               {/* Drag handle */}
-              <span className="absolute left-1 top-1 cursor-grab text-white/70 opacity-0 transition-opacity group-hover:opacity-100">
+              <span className="absolute left-1 top-1 cursor-grab text-foreground/70 opacity-0 transition-opacity group-hover:opacity-100">
                 <GripVertical className="h-4 w-4" />
               </span>
               {/* Remove button */}
               <button
                 type="button"
-                className="absolute right-1 top-1 rounded-full bg-black/60 p-0.5 text-white opacity-0 transition-opacity group-hover:opacity-100 hover:bg-destructive"
+                className="absolute right-1 top-1 rounded-full bg-background/80 p-0.5 text-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:bg-destructive hover:text-destructive-foreground backdrop-blur-sm"
                 onClick={() => handleRemove(item.id)}
                 aria-label={`Remove page ${i + 1}`}
               >

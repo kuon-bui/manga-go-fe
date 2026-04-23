@@ -21,10 +21,10 @@ const TYPE_LABEL: Record<ContentType, string> = {
 }
 
 const STATUS_DOT: Record<ContentStatus, string> = {
-  ongoing:   'bg-green-500',
-  completed: 'bg-blue-500',
-  hiatus:    'bg-yellow-500',
-  cancelled: 'bg-red-500',
+  ongoing:   'bg-[hsl(160_55%_55%)]',
+  completed: 'bg-[hsl(220_70%_65%)]',
+  hiatus:    'bg-[hsl(40_90%_65%)]',
+  cancelled: 'bg-primary/70',
 }
 
 function timeAgo(dateStr: string | null): string {
@@ -58,7 +58,7 @@ export function MangaCard({ manga, variant = 'card', className }: MangaCardProps
       className={cn('group relative flex flex-col', className)}
     >
       {/* Cover */}
-      <div className="relative aspect-[3/4] w-full overflow-hidden rounded-md bg-muted shadow-sm">
+      <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-muted shadow-sakura-sm group-hover:shadow-sakura transition-shadow duration-300">
         {manga.thumbnail ? (
           <Image
             src={manga.thumbnail}
@@ -74,34 +74,27 @@ export function MangaCard({ manga, variant = 'card', className }: MangaCardProps
         )}
 
         {/* Gradient overlay on hover */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
 
         {/* Type badge */}
-        <div className="absolute left-1 top-1">
-          <span
-            className={cn(
-              'inline-flex items-center rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white shadow-sm',
-              manga.type === 'manga'
-                ? 'bg-blue-600/90'
-                : 'bg-purple-600/90'
-            )}
-          >
+        <div className="absolute left-1.5 top-1.5">
+          <Badge variant={manga.type === 'manga' ? 'manga' : 'novel'} className="text-[9px] px-1.5 py-0 shadow-sm">
             {TYPE_LABEL[manga.type]}
-          </span>
+          </Badge>
         </div>
 
         {/* Rating badge */}
         {manga.rating !== undefined && (
-          <div className="absolute right-1 top-1 flex items-center gap-0.5 rounded bg-black/60 px-1 py-0.5 backdrop-blur-sm">
-            <Star className="h-2.5 w-2.5 fill-yellow-400 text-yellow-400" />
-            <span className="text-[10px] font-semibold text-white">{manga.rating.toFixed(1)}</span>
+          <div className="absolute right-1.5 top-1.5 flex items-center gap-0.5 rounded-full bg-background/80 px-1.5 py-0.5 backdrop-blur-sm shadow-sm">
+            <Star className="h-2.5 w-2.5 fill-primary text-primary" />
+            <span className="text-[10px] font-semibold text-foreground">{manga.rating.toFixed(1)}</span>
           </div>
         )}
 
         {/* Latest chapter — shows on hover */}
         {manga.chapters && manga.chapters.length > 0 && (
           <div className="absolute bottom-0 left-0 right-0 translate-y-2 px-1.5 pb-1.5 opacity-0 transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100">
-            <span className="inline-flex items-center gap-1 rounded bg-primary/90 px-1.5 py-0.5 text-[10px] font-medium text-primary-foreground backdrop-blur-md">
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary/90 px-2 py-0.5 text-[10px] font-medium text-primary-foreground backdrop-blur-md shadow-sakura-sm">
               Ch.{manga.chapters[manga.chapters.length - 1].number}
             </span>
           </div>
@@ -109,7 +102,7 @@ export function MangaCard({ manga, variant = 'card', className }: MangaCardProps
       </div>
 
       {/* Info */}
-      <div className="mt-1.5 flex flex-col gap-0.5">
+      <div className="mt-2 flex flex-col gap-0.5">
         <h3
           className="line-clamp-2 text-xs font-semibold leading-tight text-foreground transition-colors group-hover:text-primary"
           title={manga.title}
@@ -141,12 +134,12 @@ function MangaListItem({ manga, className }: { manga: Manga; className?: string 
     <Link
       href={`/titles/${manga.slug}`}
       className={cn(
-        'group flex gap-3 rounded-lg border border-border bg-card p-3 transition-colors hover:border-primary/30 hover:bg-accent',
+        'group flex gap-3 rounded-2xl border border-border bg-card p-3 transition-all hover:border-primary/40 hover:bg-primary/5 hover:shadow-sakura-sm',
         className
       )}
     >
       {/* Cover */}
-      <div className="relative h-20 w-14 shrink-0 overflow-hidden rounded-md bg-muted">
+      <div className="relative h-20 w-14 shrink-0 overflow-hidden rounded-xl bg-muted">
         {manga.thumbnail ? (
           <Image
             src={manga.thumbnail}
@@ -190,7 +183,7 @@ function MangaListItem({ manga, className }: { manga: Manga; className?: string 
 
           {manga.rating !== undefined && (
             <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
-              <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+              <Star className="h-3 w-3 fill-primary text-primary" />
               {manga.rating.toFixed(1)}
             </span>
           )}

@@ -66,7 +66,7 @@ export function CommentSection({ scope }: CommentSectionProps) {
       {isAuthenticated ? (
         <CommentInput onSubmit={handleAddComment} />
       ) : (
-        <p className="rounded-lg border border-dashed border-border p-4 text-center text-sm text-muted-foreground dark:border-border">
+        <p className="rounded-2xl border border-dashed border-border bg-primary/5 p-4 text-center text-sm text-muted-foreground">
           <a href="/login" className="text-primary hover:underline">Đăng nhập</a> để bình luận.
         </p>
       )}

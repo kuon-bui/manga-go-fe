@@ -77,7 +77,7 @@ export function TrendingSection() {
       >
         {/* Cover Stand (Visible on all screens now) */}
         <div className="w-[100px] sm:w-[140px] md:w-1/4 md:max-w-[220px] shrink-0">
-          <div className="relative aspect-[3/4] rounded-lg md:rounded-xl overflow-hidden shadow-2xl ring-1 ring-white/20" key={`cover-${active.id}`}>
+          <div className="relative aspect-[3/4] rounded-2xl overflow-hidden shadow-sakura ring-1 ring-border/40" key={`cover-${active.id}`}>
             {active.thumbnail ? (
               <Image
                 src={active.thumbnail}
@@ -106,12 +106,12 @@ export function TrendingSection() {
           </h1>
 
           <div className="flex flex-wrap items-center gap-1.5 md:gap-3 text-[10px] md:text-sm text-muted-foreground font-medium mb-1.5 md:mb-3">
-            <Badge className={active.type === 'manga' ? 'bg-blue-600/90 text-white' : 'bg-purple-600/90 text-white'} style={{ fontSize: '10px', padding: '0 6px' }}>
+            <Badge variant={active.type === 'manga' ? 'manga' : 'novel'} style={{ fontSize: '10px' }}>
               {TYPE_LABEL[active.type]}
             </Badge>
             {active.rating !== undefined && (
-              <span className="flex items-center gap-0.5 text-yellow-500">
-                <Star className="w-3 h-3 md:w-4 md:h-4 fill-yellow-500" />
+              <span className="flex items-center gap-0.5 text-primary">
+                <Star className="w-3 h-3 md:w-4 md:h-4 fill-primary" />
                 {active.rating.toFixed(1)}
               </span>
             )}
@@ -148,14 +148,14 @@ export function TrendingSection() {
       <div className="absolute bottom-6 right-6 md:right-12 z-20 flex gap-2">
         <button
           onClick={prev}
-          className="h-10 w-10 flex items-center justify-center rounded-full bg-black/50 backdrop-blur-md text-white border border-white/10 hover:bg-white/20 transition-colors"
+          className="h-10 w-10 flex items-center justify-center rounded-full bg-background/80 backdrop-blur-md text-foreground border border-border hover:bg-primary/15 hover:border-primary/40 hover:text-primary transition-colors"
           aria-label="Sau"
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
         <button
           onClick={next}
-          className="h-10 w-10 flex items-center justify-center rounded-full bg-black/50 backdrop-blur-md text-white border border-white/10 hover:bg-white/20 transition-colors"
+          className="h-10 w-10 flex items-center justify-center rounded-full bg-background/80 backdrop-blur-md text-foreground border border-border hover:bg-primary/15 hover:border-primary/40 hover:text-primary transition-colors"
           aria-label="Tiếp"
         >
           <ChevronRight className="h-5 w-5" />
@@ -170,7 +170,7 @@ export function TrendingSection() {
             onClick={() => setCurrentIndex(i)}
             className={cn(
               "h-1.5 rounded-full transition-all",
-              i === currentIndex ? "bg-primary w-6" : "bg-white/40 w-1.5"
+              i === currentIndex ? "bg-primary w-6" : "bg-muted-foreground/40 w-1.5"
             )}
             aria-label={`Slide ${i + 1}`}
           />

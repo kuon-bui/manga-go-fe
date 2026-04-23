@@ -62,7 +62,7 @@ export function DoublePageView({ pages, currentPage, comicSlug, chapterSlug, cha
             <Button 
               variant="secondary" 
               size="icon" 
-              className="rounded-full shadow-lg bg-black/60 hover:bg-black/90 text-white border border-white/20 backdrop-blur-sm"
+              className="rounded-full shadow-sakura-sm bg-background/80 hover:bg-primary/15 text-foreground hover:text-primary border border-border backdrop-blur-md"
               onClick={(e) => {
                 e.stopPropagation()
                 setActiveModalIndex(currentPage)
@@ -93,7 +93,7 @@ export function DoublePageView({ pages, currentPage, comicSlug, chapterSlug, cha
             <Button 
               variant="secondary" 
               size="icon" 
-              className="rounded-full shadow-lg bg-black/60 hover:bg-black/90 text-white border border-white/20 backdrop-blur-sm"
+              className="rounded-full shadow-sakura-sm bg-background/80 hover:bg-primary/15 text-foreground hover:text-primary border border-border backdrop-blur-md"
               onClick={(e) => {
                 e.stopPropagation()
                 setActiveModalIndex(currentPage + 1)

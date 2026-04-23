@@ -94,7 +94,7 @@ function HistoryRow({
     <div className="group flex items-center gap-3 rounded-xl border border-border/50 bg-card p-3 transition-colors hover:bg-accent/50 dark:border-border">
       {/* Cover */}
       <Link href={`/titles/${manga.slug}`} className="shrink-0">
-        <div className="relative h-16 w-11 overflow-hidden rounded-lg bg-muted">
+        <div className="relative h-16 w-11 overflow-hidden rounded-xl bg-muted">
           {manga.thumbnail ? (
             <Image
               src={manga.thumbnail}

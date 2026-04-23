@@ -53,7 +53,7 @@ export function ChapterList({ chapters, isLoading, comicSlug, contentType, lastR
   return (
     <div
       ref={parentRef}
-      className="overflow-auto rounded-lg border dark:border-border"
+      className="overflow-auto rounded-2xl border border-border"
       style={{ maxHeight: '600px' }}
     >
       {/* Virtual scroll container */}
@@ -111,8 +111,8 @@ function ChapterRow({
     <Link
       href={`/read/${readerPath}/${comicSlug}/${chapter.slug}`}
       className={cn(
-        'flex items-center justify-between px-4 py-3 transition-colors hover:bg-accent dark:hover:bg-accent',
-        !isLast && 'border-b dark:border-border'
+        'flex items-center justify-between px-4 py-3 transition-colors hover:bg-primary/5',
+        !isLast && 'border-b border-border'
       )}
       style={{ height: ROW_HEIGHT }}
     >

@@ -52,7 +52,7 @@ export function TitleDetailView({ id }: TitleDetailViewProps) {
 
       {/* Translation Group Tribute */}
       {manga.translationGroup && (
-        <div className="flex flex-col gap-2 rounded-lg border border-primary/20 bg-primary/5 p-4 md:p-5 transition-colors hover:border-primary/40">
+        <div className="flex flex-col gap-2 rounded-2xl border border-primary/20 bg-primary/8 p-4 md:p-5 transition-colors hover:border-primary/40 hover:shadow-sakura-sm">
           <div className="flex items-center gap-2 text-primary font-semibold text-sm">
             <Users className="h-4 w-4" />
             <span>Nhóm Dịch</span>

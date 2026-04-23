@@ -42,7 +42,7 @@ export function CommentItem({
   return (
     <div className={cn('flex gap-3', depth > 0 && 'mt-3', depth === 1 && 'ml-8', depth >= 2 && 'ml-16')}>
       {/* Avatar */}
-      <Avatar className="h-8 w-8 shrink-0">
+      <Avatar className="h-8 w-8 shrink-0 ring-2 ring-border ring-offset-1 ring-offset-background">
         {author.avatarUrl && (
           <AvatarImage src={author.avatarUrl} alt={author.name} />
         )}
@@ -78,7 +78,7 @@ export function CommentItem({
           <button
             className={cn(
               'flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground',
-              isLiked && 'text-red-500 hover:text-red-600'
+              isLiked && 'text-primary hover:text-primary/80'
             )}
             onClick={() => onToggleReaction(comment.id, 'like', isLiked)}
             aria-label={`Like comment (${likeCount})`}

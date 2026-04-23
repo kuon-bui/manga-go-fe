@@ -369,9 +369,9 @@ function GroupComicsSection({ groupSlug }: { groupSlug: string }) {
                   <td className="px-4 py-3 font-medium max-w-xs truncate">{comic.title}</td>
                   <td className="px-4 py-3">
                     <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
-                      comic.status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
-                      comic.status === 'ongoing' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' :
-                      'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                      comic.status === 'completed' ? 'bg-[hsl(220_70%_92%)] text-[hsl(220_60%_35%)] dark:bg-[hsl(220_50%_22%)] dark:text-[hsl(220_70%_75%)]' :
+                      comic.status === 'ongoing' ? 'bg-[hsl(160_55%_88%)] text-[hsl(160_50%_25%)] dark:bg-[hsl(160_40%_22%)] dark:text-[hsl(160_55%_80%)]' :
+                      'bg-[hsl(40_90%_88%)] text-[hsl(30_70%_35%)] dark:bg-[hsl(40_50%_22%)] dark:text-[hsl(40_80%_75%)]'
                     }`}>
                       {comic.status}
                     </span>

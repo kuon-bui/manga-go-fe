@@ -80,10 +80,17 @@ const config: Config = {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
+        xl: 'calc(var(--radius) + 0.25rem)',
+        '2xl': 'calc(var(--radius) + 0.5rem)',
+        '3xl': 'calc(var(--radius) + 1rem)',
       },
       fontFamily: {
-        sans: ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+        sans: ['var(--font-nunito)', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
         mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'monospace'],
+      },
+      boxShadow: {
+        sakura: '0 8px 24px -8px hsl(340 82% 70% / 0.30)',
+        'sakura-sm': '0 4px 12px -4px hsl(340 82% 70% / 0.20)',
       },
       spacing: {
         '18': '4.5rem',
