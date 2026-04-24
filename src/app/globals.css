@@ -3,61 +3,133 @@
 @tailwind utilities;
 
 @layer base {
-  /* ─── Sakura Light (default) ─────────────────────────────────────────────── */
+  /* ── Kawaii Pastel Light ─────────────────────────────────────────── */
   :root {
-    --background: 340 60% 99%;
-    --foreground: 335 35% 22%;
-    --card: 0 0% 100%;
-    --card-foreground: 335 35% 22%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 335 35% 22%;
-    --primary: 340 82% 70%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 280 65% 94%;
-    --secondary-foreground: 280 40% 30%;
-    --muted: 340 40% 96%;
-    --muted-foreground: 335 15% 50%;
-    --accent: 160 55% 90%;
-    --accent-foreground: 160 50% 25%;
-    --destructive: 0 78% 68%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 340 45% 91%;
-    --input: 340 45% 93%;
-    --ring: 340 82% 70%;
     --radius: 1rem;
-    --chart-1: 340 82% 70%;
-    --chart-2: 280 65% 73%;
-    --chart-3: 160 55% 55%;
-    --chart-4: 30 90% 72%;
-    --chart-5: 45 90% 68%;
+
+    --background:         325 45% 97%;
+    --foreground:         285 20% 23%;
+
+    --card:               55 12% 99%;
+    --card-foreground:    285 20% 23%;
+
+    --popover:            55 12% 99%;
+    --popover-foreground: 285 20% 23%;
+
+    --primary:            4 58% 65%;
+    --primary-foreground: 0 5% 99%;
+
+    --secondary:          325 50% 93%;
+    --secondary-foreground: 325 28% 28%;
+
+    --muted:              55 22% 97%;
+    --muted-foreground:   295 14% 48%;
+
+    --accent:             255 55% 89%;
+    --accent-foreground:  270 30% 25%;
+
+    --destructive:        18 65% 63%;
+    --destructive-foreground: 0 0% 99%;
+
+    --success:            152 48% 78%;
+    --success-foreground: 152 35% 25%;
+
+    --warning:            80 58% 83%;
+    --warning-foreground: 58 40% 30%;
+
+    --border:             325 32% 92%;
+    --input:              325 24% 95%;
+    --ring:               4 58% 65%;
+
+    --chart-1: 4 58% 65%;
+    --chart-2: 152 48% 78%;
+    --chart-3: 250 50% 65%;
+    --chart-4: 80 55% 82%;
+    --chart-5: 295 48% 65%;
+
+    /* Extra pastel surfaces */
+    --cream:    75 36% 97%;
+    --mint:     158 52% 91%;
+    --lavender: 295 50% 91%;
+    --peach:    38 55% 92%;
+    --sky-soft: 225 42% 93%;
+
+    /* Gradients */
+    --gradient-bg: linear-gradient(
+      180deg,
+      hsl(210 75% 96%) 0%,
+      hsl(325 55% 97%) 50%,
+      hsl(158 52% 95%) 100%
+    );
+    --gradient-primary: linear-gradient(135deg, hsl(350 58% 86%), hsl(285 55% 86%));
+    --gradient-card: linear-gradient(
+      135deg,
+      hsl(0 0% 100% / 0.75),
+      hsl(325 50% 97% / 0.6)
+    );
+
+    /* Shadows */
+    --shadow-soft: 0 8px 24px -8px hsl(320 60% 70% / 0.25);
+    --shadow-glow: 0 0 32px hsl(350 65% 80% / 0.4);
+    --shadow-card: 0 4px 20px -6px hsl(280 48% 65% / 0.18);
+
+    --cute-card-border: hsl(0 0% 100% / 0.55);
   }
 
-  /* ─── Sakura Dark ────────────────────────────────────────────────────────── */
+  /* ── Kawaii Pastel Dark ──────────────────────────────────────────── */
   .dark {
-    --background: 300 22% 10%;
-    --foreground: 340 30% 95%;
-    --card: 295 20% 14%;
-    --card-foreground: 340 30% 95%;
-    --popover: 295 20% 14%;
-    --popover-foreground: 340 30% 95%;
-    --primary: 340 82% 75%;
-    --primary-foreground: 300 22% 10%;
-    --secondary: 285 22% 22%;
-    --secondary-foreground: 340 30% 95%;
-    --muted: 290 20% 20%;
-    --muted-foreground: 340 15% 72%;
-    --accent: 160 35% 30%;
-    --accent-foreground: 160 40% 92%;
-    --destructive: 0 70% 55%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 285 22% 25%;
-    --input: 285 22% 25%;
-    --ring: 340 82% 75%;
-    --chart-1: 340 82% 75%;
-    --chart-2: 280 60% 72%;
-    --chart-3: 160 50% 55%;
-    --chart-4: 30 85% 70%;
-    --chart-5: 45 85% 65%;
+    --background:         285 16% 14%;
+    --foreground:         325 20% 96%;
+
+    --card:               285 18% 19%;
+    --card-foreground:    325 20% 96%;
+
+    --popover:            285 18% 19%;
+    --popover-foreground: 325 20% 96%;
+
+    --primary:            350 58% 76%;
+    --primary-foreground: 320 18% 15%;
+
+    --secondary:          295 18% 25%;
+    --secondary-foreground: 325 20% 96%;
+
+    --muted:              285 15% 23%;
+    --muted-foreground:   320 14% 72%;
+
+    --accent:             265 28% 33%;
+    --accent-foreground:  325 20% 96%;
+
+    --destructive:        18 65% 55%;
+    --destructive-foreground: 0 0% 99%;
+
+    --success:            152 40% 60%;
+    --success-foreground: 152 35% 90%;
+
+    --warning:            80 50% 65%;
+    --warning-foreground: 58 40% 90%;
+
+    --border:             285 18% 30%;
+    --input:              285 18% 32%;
+    --ring:               350 58% 76%;
+
+    --chart-1: 350 58% 76%;
+    --chart-2: 152 48% 65%;
+    --chart-3: 250 50% 72%;
+    --chart-4: 80 55% 72%;
+    --chart-5: 295 48% 72%;
+
+    --gradient-bg: linear-gradient(
+      180deg,
+      hsl(285 18% 12%) 0%,
+      hsl(285 16% 14%) 50%,
+      hsl(285 20% 16%) 100%
+    );
+    --gradient-card: linear-gradient(
+      135deg,
+      hsl(285 18% 20% / 0.9),
+      hsl(285 20% 22% / 0.7)
+    );
+    --cute-card-border: hsl(var(--border));
   }
 }
 
@@ -65,11 +137,65 @@
   * {
     @apply border-border;
   }
-  body {
-    @apply bg-background text-foreground;
-  }
-  /* Smooth theme transitions */
+
   html {
+    scroll-behavior: smooth;
     transition: background-color 0.2s ease, color 0.2s ease;
   }
+
+  body {
+    background: var(--gradient-bg);
+    background-attachment: fixed;
+    @apply text-foreground font-sans antialiased min-h-screen;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-quicksand), 'Comic Sans MS', system-ui, sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+}
+
+@layer components {
+  .cute-card {
+    background: var(--gradient-card);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--cute-card-border);
+    border-radius: calc(var(--radius) + 0.5rem);
+    box-shadow: var(--shadow-card);
+  }
+
+  .cute-pill {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 9999px;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.25;
+  }
+
+  .sparkle-bg {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .sparkle-bg::before {
+    content: "✦ ✧ ✦ ✧ ✦";
+    position: absolute;
+    top: 0.5rem;
+    right: 1rem;
+    color: hsl(325 60% 70% / 0.25);
+    font-size: 0.875rem;
+    pointer-events: none;
+  }
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-6px); }
+}
+
+.animate-float {
+  animation: float-slow 4s ease-in-out infinite;
 }

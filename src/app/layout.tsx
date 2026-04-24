@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Nunito } from 'next/font/google';
+import { Nunito, Quicksand } from 'next/font/google';
 import { Providers } from '@/components/providers/providers';
 import { Toaster } from '@/components/ui/sonner';
 import '@/app/globals.css';
@@ -10,18 +10,29 @@ const nunito = Nunito({
   display: 'swap',
 });
 
+const quicksand = Quicksand({
+  subsets: ['latin'],
+  variable: '--font-quicksand',
+  weight: ['500', '600', '700'],
+  display: 'swap',
+});
+
 export const metadata: Metadata = {
   title: {
     default: 'Manga Go',
     template: '%s | Manga Go',
   },
-  description: 'Read manga and light novels — a modern multi-mode reading platform.',
+  description: 'Đọc manga và light novel — nền tảng đọc truyện đa thể loại.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={nunito.variable} suppressHydrationWarning>
-      <body className="min-h-screen bg-background font-sans antialiased">
+    <html
+      lang="vi"
+      className={`${nunito.variable} ${quicksand.variable}`}
+      suppressHydrationWarning
+    >
+      <body>
         <Providers>{children}</Providers>
         <Toaster richColors position="top-right" />
       </body>
