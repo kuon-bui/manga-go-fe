@@ -10,7 +10,6 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // shadcn/ui CSS variable tokens
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         card: {
@@ -24,34 +23,10 @@ const config: Config = {
         primary: {
           DEFAULT: 'hsl(var(--primary))',
           foreground: 'hsl(var(--primary-foreground))',
-          // Brand scale kept for custom use
-          50: '#f0f9ff',
-          100: '#e0f2fe',
-          200: '#bae6fd',
-          300: '#7dd3fc',
-          400: '#38bdf8',
-          500: '#0ea5e9',
-          600: '#0284c7',
-          700: '#0369a1',
-          800: '#075985',
-          900: '#0c4a6e',
-          950: '#082f49',
         },
         secondary: {
           DEFAULT: 'hsl(var(--secondary))',
           foreground: 'hsl(var(--secondary-foreground))',
-          // Brand scale kept for custom use
-          50: '#fdf4ff',
-          100: '#fae8ff',
-          200: '#f5d0fe',
-          300: '#f0abfc',
-          400: '#e879f9',
-          500: '#d946ef',
-          600: '#c026d3',
-          700: '#a21caf',
-          800: '#86198f',
-          900: '#701a75',
-          950: '#4a044e',
         },
         muted: {
           DEFAULT: 'hsl(var(--muted))',
@@ -65,9 +40,17 @@ const config: Config = {
           DEFAULT: 'hsl(var(--destructive))',
           foreground: 'hsl(var(--destructive-foreground))',
         },
+        success: {
+          DEFAULT: 'hsl(var(--success))',
+          foreground: 'hsl(var(--success-foreground))',
+        },
+        warning: {
+          DEFAULT: 'hsl(var(--warning))',
+          foreground: 'hsl(var(--warning-foreground))',
+        },
         border: 'hsl(var(--border))',
-        input: 'hsl(var(--input))',
-        ring: 'hsl(var(--ring))',
+        input:  'hsl(var(--input))',
+        ring:   'hsl(var(--ring))',
         chart: {
           '1': 'hsl(var(--chart-1))',
           '2': 'hsl(var(--chart-2))',
@@ -75,26 +58,38 @@ const config: Config = {
           '4': 'hsl(var(--chart-4))',
           '5': 'hsl(var(--chart-5))',
         },
+        /* extra pastel surfaces */
+        cream:    'hsl(var(--cream))',
+        mint:     'hsl(var(--mint))',
+        lavender: 'hsl(var(--lavender))',
+        peach:    'hsl(var(--peach))',
+        'sky-soft': 'hsl(var(--sky-soft))',
       },
       borderRadius: {
-        lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
-        xl: 'calc(var(--radius) + 0.25rem)',
+        sm:   'calc(var(--radius) - 4px)',
+        md:   'calc(var(--radius) - 2px)',
+        lg:   'var(--radius)',
+        xl:   'calc(var(--radius) + 0.25rem)',
         '2xl': 'calc(var(--radius) + 0.5rem)',
         '3xl': 'calc(var(--radius) + 1rem)',
+        '4xl': 'calc(var(--radius) + 1.5rem)',
       },
       fontFamily: {
-        sans: ['var(--font-nunito)', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+        sans: ['var(--font-nunito)', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ['var(--font-quicksand)', '"Comic Sans MS"', 'system-ui', 'sans-serif'],
         mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'monospace'],
       },
       boxShadow: {
-        sakura: '0 8px 24px -8px hsl(340 82% 70% / 0.30)',
-        'sakura-sm': '0 4px 12px -4px hsl(340 82% 70% / 0.20)',
+        soft:  'var(--shadow-soft)',
+        glow:  'var(--shadow-glow)',
+        card:  'var(--shadow-card)',
+        /* keep sakura aliases for any remaining legacy usage */
+        sakura:    '0 8px 24px -8px hsl(4 58% 65% / 0.28)',
+        'sakura-sm': '0 4px 12px -4px hsl(4 58% 65% / 0.18)',
       },
       spacing: {
-        '18': '4.5rem',
-        '88': '22rem',
+        '18':  '4.5rem',
+        '88':  '22rem',
         '112': '28rem',
         '128': '32rem',
       },
@@ -104,16 +99,16 @@ const config: Config = {
       keyframes: {
         'accordion-down': {
           from: { height: '0' },
-          to: { height: 'var(--radix-accordion-content-height)' },
+          to:   { height: 'var(--radix-accordion-content-height)' },
         },
         'accordion-up': {
           from: { height: 'var(--radix-accordion-content-height)' },
-          to: { height: '0' },
+          to:   { height: '0' },
         },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
-        'accordion-up': 'accordion-up 0.2s ease-out',
+        'accordion-up':   'accordion-up 0.2s ease-out',
       },
     },
   },

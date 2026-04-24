@@ -3,10 +3,7 @@ import Link from 'next/link'
 import { Star, BookOpen } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
-import { Badge } from '@/components/ui/badge'
 import type { Manga, ContentStatus, ContentType } from '@/types'
-
-// ─── Badge helpers ────────────────────────────────────────────────────────────
 
 const STATUS_LABEL: Record<ContentStatus, string> = {
   ongoing:   'Ongoing',
@@ -20,26 +17,24 @@ const TYPE_LABEL: Record<ContentType, string> = {
   novel: 'Novel',
 }
 
-const STATUS_DOT: Record<ContentStatus, string> = {
-  ongoing:   'bg-[hsl(160_55%_55%)]',
-  completed: 'bg-[hsl(220_70%_65%)]',
-  hiatus:    'bg-[hsl(40_90%_65%)]',
-  cancelled: 'bg-primary/70',
+const STATUS_COLORS: Record<ContentStatus, string> = {
+  ongoing:   'bg-success text-success-foreground',
+  completed: 'bg-accent text-accent-foreground',
+  hiatus:    'bg-warning text-warning-foreground',
+  cancelled: 'bg-muted text-muted-foreground',
 }
 
 function timeAgo(dateStr: string | null): string {
   if (!dateStr) return ''
-  const diff = Date.now() - new Date(dateStr).getTime()
+  const diff  = Date.now() - new Date(dateStr).getTime()
   const mins  = Math.floor(diff / 60_000)
   const hours = Math.floor(diff / 3_600_000)
   const days  = Math.floor(diff / 86_400_000)
-  if (mins  < 60)  return `${mins}m ago`
-  if (hours < 24)  return `${hours}h ago`
-  if (days  < 30)  return `${days}d ago`
+  if (mins  < 60) return `${mins}m ago`
+  if (hours < 24) return `${hours}h ago`
+  if (days  < 30) return `${days}d ago`
   return new Date(dateStr).toLocaleDateString()
 }
-
-// ─── Props ────────────────────────────────────────────────────────────────────
 
 export interface MangaCardProps {
   manga: Manga
@@ -47,25 +42,23 @@ export interface MangaCardProps {
   className?: string
 }
 
-// ─── Card variant ─────────────────────────────────────────────────────────────
-
 export function MangaCard({ manga, variant = 'card', className }: MangaCardProps) {
   if (variant === 'list') return <MangaListItem manga={manga} className={className} />
 
   return (
     <Link
       href={`/titles/${manga.slug}`}
-      className={cn('group relative flex flex-col', className)}
+      className={cn('group block cute-card overflow-hidden hover:-translate-y-1 hover:shadow-[var(--shadow-glow)] transition-all duration-300', className)}
     >
       {/* Cover */}
-      <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-muted shadow-sakura-sm group-hover:shadow-sakura transition-shadow duration-300">
+      <div className="aspect-[3/4] overflow-hidden bg-muted">
         {manga.thumbnail ? (
           <Image
             src={manga.thumbnail}
             alt={`Cover of ${manga.title}`}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            className="object-cover group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
           <div className="flex h-full items-center justify-center bg-muted">
@@ -73,28 +66,25 @@ export function MangaCard({ manga, variant = 'card', className }: MangaCardProps
           </div>
         )}
 
-        {/* Gradient overlay on hover */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
-
         {/* Type badge */}
         <div className="absolute left-1.5 top-1.5">
-          <Badge variant={manga.type === 'manga' ? 'manga' : 'novel'} className="text-[9px] px-1.5 py-0 shadow-sm">
+          <span className="cute-pill bg-secondary text-secondary-foreground text-[9px] px-1.5 py-0 shadow-sm">
             {TYPE_LABEL[manga.type]}
-          </Badge>
+          </span>
         </div>
 
         {/* Rating badge */}
         {manga.rating !== undefined && (
-          <div className="absolute right-1.5 top-1.5 flex items-center gap-0.5 rounded-full bg-background/80 px-1.5 py-0.5 backdrop-blur-sm shadow-sm">
-            <Star className="h-2.5 w-2.5 fill-primary text-primary" />
-            <span className="text-[10px] font-semibold text-foreground">{manga.rating.toFixed(1)}</span>
+          <div className="absolute right-1.5 top-1.5 flex items-center gap-0.5 rounded-full bg-card/80 px-1.5 py-0.5 backdrop-blur-sm shadow-sm">
+            <Star className="h-2.5 w-2.5 fill-warning text-warning" />
+            <span className="text-[10px] font-semibold">{manga.rating.toFixed(1)}</span>
           </div>
         )}
 
-        {/* Latest chapter — shows on hover */}
+        {/* Latest chapter on hover */}
         {manga.chapters && manga.chapters.length > 0 && (
           <div className="absolute bottom-0 left-0 right-0 translate-y-2 px-1.5 pb-1.5 opacity-0 transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100">
-            <span className="inline-flex items-center gap-1 rounded-full bg-primary/90 px-2 py-0.5 text-[10px] font-medium text-primary-foreground backdrop-blur-md shadow-sakura-sm">
+            <span className="cute-pill bg-primary/90 text-primary-foreground text-[9px] backdrop-blur-md shadow-soft">
               Ch.{manga.chapters[manga.chapters.length - 1].number}
             </span>
           </div>
@@ -102,30 +92,22 @@ export function MangaCard({ manga, variant = 'card', className }: MangaCardProps
       </div>
 
       {/* Info */}
-      <div className="mt-2 flex flex-col gap-0.5">
-        <h3
-          className="line-clamp-2 text-xs font-semibold leading-tight text-foreground transition-colors group-hover:text-primary"
-          title={manga.title}
-        >
+      <div className="p-2.5">
+        <h3 className="font-display font-bold text-sm leading-tight line-clamp-2 group-hover:text-primary transition-colors">
           {manga.title}
         </h3>
-
-        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
-          <span className={cn('h-1.5 w-1.5 shrink-0 rounded-full', STATUS_DOT[manga.status])} />
-          <span className="text-[10px] text-muted-foreground">{STATUS_LABEL[manga.status]}</span>
+        <div className="flex items-center gap-1.5 mt-1">
+          <span className={cn('cute-pill text-[9px] px-1.5 py-0', STATUS_COLORS[manga.status])}>
+            {STATUS_LABEL[manga.status]}
+          </span>
           {manga.lastChapterAt && (
-            <div className="flex items-center gap-1">
-              <span className="text-[10px] text-muted-foreground/30">·</span>
-              <span className="text-[10px] text-muted-foreground/60">{timeAgo(manga.lastChapterAt)}</span>
-            </div>
+            <span className="text-[10px] text-muted-foreground">{timeAgo(manga.lastChapterAt)}</span>
           )}
         </div>
       </div>
     </Link>
   )
 }
-
-// ─── List variant ─────────────────────────────────────────────────────────────
 
 function MangaListItem({ manga, className }: { manga: Manga; className?: string }) {
   const latestChapter = manga.chapters?.[manga.chapters.length - 1]
@@ -134,11 +116,10 @@ function MangaListItem({ manga, className }: { manga: Manga; className?: string 
     <Link
       href={`/titles/${manga.slug}`}
       className={cn(
-        'group flex gap-3 rounded-2xl border border-border bg-card p-3 transition-all hover:border-primary/40 hover:bg-primary/5 hover:shadow-sakura-sm',
+        'group flex gap-3 rounded-2xl border border-border bg-card/60 p-3 hover:bg-secondary/60 hover:border-primary/30 transition-all',
         className
       )}
     >
-      {/* Cover */}
       <div className="relative h-20 w-14 shrink-0 overflow-hidden rounded-xl bg-muted">
         {manga.thumbnail ? (
           <Image
@@ -155,10 +136,9 @@ function MangaListItem({ manga, className }: { manga: Manga; className?: string 
         )}
       </div>
 
-      {/* Info */}
       <div className="flex min-w-0 flex-1 flex-col justify-between py-0.5">
         <div>
-          <h3 className="line-clamp-1 text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
+          <h3 className="font-display font-bold text-sm line-clamp-1 group-hover:text-primary transition-colors">
             {manga.title}
           </h3>
           {manga.authors.length > 0 && (
@@ -169,21 +149,20 @@ function MangaListItem({ manga, className }: { manga: Manga; className?: string 
         </div>
 
         <div className="flex flex-wrap items-center gap-1.5">
-          <Badge variant={manga.type} className="text-[10px] px-1.5 py-0">
+          <span className="cute-pill bg-secondary text-secondary-foreground text-[10px] px-1.5 py-0">
             {TYPE_LABEL[manga.type]}
-          </Badge>
-          <span className={cn('h-1.5 w-1.5 shrink-0 rounded-full', STATUS_DOT[manga.status])} />
-          <span className="text-[11px] text-muted-foreground">{STATUS_LABEL[manga.status]}</span>
-
+          </span>
+          <span className={cn('cute-pill text-[10px] px-1.5 py-0', STATUS_COLORS[manga.status])}>
+            {STATUS_LABEL[manga.status]}
+          </span>
           {latestChapter && (
             <span className="ml-auto text-[11px] text-muted-foreground">
               Ch.{latestChapter.number}
             </span>
           )}
-
           {manga.rating !== undefined && (
             <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
-              <Star className="h-3 w-3 fill-primary text-primary" />
+              <Star className="h-3 w-3 fill-warning text-warning" />
               {manga.rating.toFixed(1)}
             </span>
           )}

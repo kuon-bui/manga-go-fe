@@ -1,68 +1,114 @@
 'use client'
 
 import Link from 'next/link'
-import { Zap, ChevronRight } from 'lucide-react'
+import { ChevronRight, BookOpen, Zap } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
+import { SafeImage as Image } from '@/components/ui/safe-image'
 import { useLatestUpdates } from '@/hooks/use-manga'
-import { MangaCard } from '@/components/manga/manga-card'
+import type { Manga } from '@/types'
+
+function timeAgo(dateStr: string | null | undefined): string {
+  if (!dateStr) return ''
+  const diff = Date.now() - new Date(dateStr).getTime()
+  const mins  = Math.floor(diff / 60000)
+  const hours = Math.floor(diff / 3600000)
+  const days  = Math.floor(diff / 86400000)
+  if (mins < 1)  return 'Vừa xong'
+  if (mins < 60) return `${mins}m`
+  if (hours < 24) return `${hours}h`
+  if (days < 30)  return `${days}d`
+  return new Date(dateStr).toLocaleDateString('vi-VN', { month: 'short', day: 'numeric' })
+}
+
+function ChapterItem({ manga }: { manga: Manga }) {
+  const group     = manga.translationGroup?.name ?? manga.authors?.[0]?.name ?? ''
+  const latestCh  = manga.chapters?.[manga.chapters.length - 1]
+
+  return (
+    <Link
+      href={`/titles/${manga.slug}`}
+      className="flex items-center gap-3 p-2 rounded-xl hover:bg-secondary/60 transition-colors group"
+    >
+      <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-muted">
+        {manga.thumbnail ? (
+          <Image src={manga.thumbnail} alt={manga.title} fill sizes="48px" className="object-cover" />
+        ) : (
+          <div className="flex h-full items-center justify-center">
+            <BookOpen className="h-4 w-4 text-muted-foreground/40" />
+          </div>
+        )}
+      </div>
+
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold truncate group-hover:text-primary transition-colors">
+          {manga.title}
+        </p>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          {latestCh ? `Ch. ${latestCh.number}` : 'New chapter'}
+          {group ? ` · ${group}` : ''}
+        </p>
+      </div>
+
+      <span className="shrink-0 text-xs text-muted-foreground self-start mt-0.5">
+        {timeAgo(manga.lastChapterAt)}
+      </span>
+    </Link>
+  )
+}
 
 export function LatestUpdatesSection() {
   const { data, isLoading, isError } = useLatestUpdates()
   const mangas = data?.data ?? []
 
   return (
-    <section className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <section className="cute-card p-5 flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h2 className="flex items-center gap-2.5 text-lg font-bold text-foreground">
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/15 text-primary">
-            <Zap className="h-4 w-4" />
-          </span>
-          Chương Mới Nhất
+        <h2 className="font-display text-xl flex items-center gap-2">
+          <Zap className="h-5 w-5 text-primary" />
+          Chapter Mới
         </h2>
         <Link
           href="/browse?sort=latest"
-          className="flex items-center gap-1 rounded-full border border-border/60 bg-background px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
+          className="text-sm font-semibold text-primary hover:underline flex items-center gap-0.5"
         >
           Xem thêm <ChevronRight className="h-3.5 w-3.5" />
         </Link>
       </div>
 
       {isLoading && (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 18 }).map((_, i) => (
-            <div key={i} className="flex gap-3 rounded-lg border border-border p-3">
-              <Skeleton className="h-20 w-14 shrink-0 rounded-md" />
-              <div className="flex flex-1 flex-col py-0.5">
-                <Skeleton className="h-4 w-3/4 mb-1.5" />
-                <Skeleton className="h-3 w-1/2 mb-auto" />
-                <div className="flex gap-1.5 mt-2">
-                  <Skeleton className="h-4 w-10" />
-                  <Skeleton className="h-4 w-12" />
-                </div>
+        <div className="space-y-2">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-3 p-2">
+              <Skeleton className="h-12 w-12 shrink-0 rounded-lg" />
+              <div className="flex-1 space-y-1.5">
+                <Skeleton className="h-3.5 w-4/5" />
+                <Skeleton className="h-3 w-2/3" />
               </div>
+              <Skeleton className="h-3 w-8 shrink-0" />
             </div>
           ))}
         </div>
       )}
 
       {isError && (
-        <p className="rounded-lg border border-dashed border-border py-6 text-center text-sm text-muted-foreground">
-          Không thể tải nội dung.{' '}
-          <Link href="/login" className="text-primary hover:underline">
-            Đăng nhập
-          </Link>{' '}
-          để xem.
+        <p className="py-6 text-center text-sm text-muted-foreground">
+          Không thể tải.{' '}
+          <Link href="/login" className="text-primary hover:underline">Đăng nhập</Link>
         </p>
       )}
 
       {!isLoading && !isError && mangas.length > 0 && (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <ul className="space-y-1">
           {mangas.map((manga, i) => (
-            <div key={manga.id} className="animate-in fade-in duration-300" style={{ animationDelay: `${i * 30}ms` }}>
-              <MangaCard manga={manga} variant="list" />
-            </div>
+            <li
+              key={manga.id}
+              className="animate-in fade-in duration-300"
+              style={{ animationDelay: `${i * 30}ms` }}
+            >
+              <ChapterItem manga={manga} />
+            </li>
           ))}
-        </div>
+        </ul>
       )}
     </section>
   )
