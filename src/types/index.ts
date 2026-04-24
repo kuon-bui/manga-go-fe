@@ -79,6 +79,7 @@ export interface ChapterSummary {
   title: string | null;
   uploadedAt: string;
   group: TranslatorGroup | null;
+  volume?: string | null; // volume grouping (null → "Toàn tập")
 }
 
 export interface Manga {

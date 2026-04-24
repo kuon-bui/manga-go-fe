@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { ChevronRight, BookOpen, Sparkles } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
+import { MangaCarousel } from '@/components/ui/manga-carousel'
 import { SafeImage as Image } from '@/components/ui/safe-image'
 import { useRecentlyAdded } from '@/hooks/use-manga'
 import type { Manga } from '@/types'
@@ -59,8 +60,8 @@ export function RecentlyAddedSection() {
       </div>
 
       {isLoading && (
-        <div className="flex gap-3 overflow-x-auto pb-2">
-          {Array.from({ length: 5 }).map((_, i) => (
+        <div className="flex gap-3 pb-1">
+          {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="shrink-0 w-[120px] sm:w-[132px] flex flex-col gap-2">
               <Skeleton className="aspect-[3/4] w-full rounded-2xl" />
               <Skeleton className="h-3.5 w-full" />
@@ -78,17 +79,17 @@ export function RecentlyAddedSection() {
       )}
 
       {!isLoading && !isError && mangas.length > 0 && (
-        <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-none">
+        <MangaCarousel>
           {mangas.map((manga, i) => (
             <div
               key={manga.id}
-              className="snap-start animate-in fade-in duration-300"
+              className="animate-in fade-in duration-300"
               style={{ animationDelay: `${i * 35}ms` }}
             >
               <NewCard manga={manga} />
             </div>
           ))}
-        </div>
+        </MangaCarousel>
       )}
     </section>
   )

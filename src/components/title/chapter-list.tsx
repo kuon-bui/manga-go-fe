@@ -1,15 +1,46 @@
 'use client'
 
-import { useRef } from 'react'
+import { useRef, useMemo } from 'react'
 import Link from 'next/link'
 import { useVirtualizer } from '@tanstack/react-virtual'
-import { Clock } from 'lucide-react'
+import { Clock, BookOpen } from 'lucide-react'
 
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import type { ChapterSummary, ContentType } from '@/types'
 
-const ROW_HEIGHT = 56 // px — each chapter row
+/* ── flat virtual items ────────────────────────────────────────────────────── */
+
+type VirtualItem =
+  | { kind: 'header'; volume: string; count: number }
+  | { kind: 'chapter'; chapter: ChapterSummary; isLast: boolean }
+
+const CHAPTER_H = 56
+const HEADER_H  = 40
+
+function buildItems(chapters: ChapterSummary[]): VirtualItem[] {
+  // Group by volume — null / undefined → 'Toàn tập'
+  const groups = new Map<string, ChapterSummary[]>()
+
+  for (const ch of chapters) {
+    const vol = ch.volume ?? 'Toàn tập'
+    if (!groups.has(vol)) groups.set(vol, [])
+    groups.get(vol)!.push(ch)
+  }
+
+  const items: VirtualItem[] = []
+
+  for (const [volume, chs] of groups) {
+    items.push({ kind: 'header', volume, count: chs.length })
+    chs.forEach((ch, i) => {
+      items.push({ kind: 'chapter', chapter: ch, isLast: i === chs.length - 1 })
+    })
+  }
+
+  return items
+}
+
+/* ── Props ─────────────────────────────────────────────────────────────────── */
 
 interface ChapterListProps {
   chapters: ChapterSummary[]
@@ -19,13 +50,23 @@ interface ChapterListProps {
   lastReadChapterId?: string | null
 }
 
-export function ChapterList({ chapters, isLoading, comicSlug, contentType, lastReadChapterId }: ChapterListProps) {
+/* ── Main component ─────────────────────────────────────────────────────────── */
+
+export function ChapterList({
+  chapters,
+  isLoading,
+  comicSlug,
+  contentType,
+  lastReadChapterId,
+}: ChapterListProps) {
   const parentRef = useRef<HTMLDivElement>(null)
 
+  const items = useMemo(() => buildItems(chapters), [chapters])
+
   const virtualizer = useVirtualizer({
-    count: chapters.length,
+    count: items.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => ROW_HEIGHT,
+    estimateSize: (i) => (items[i]?.kind === 'header' ? HEADER_H : CHAPTER_H),
     overscan: 5,
   })
 
@@ -33,7 +74,7 @@ export function ChapterList({ chapters, isLoading, comicSlug, contentType, lastR
     return (
       <div className="space-y-2">
         {Array.from({ length: 8 }).map((_, i) => (
-          <Skeleton key={i} className="h-14 w-full rounded-lg" />
+          <Skeleton key={i} className="h-14 w-full rounded-xl" />
         ))}
       </div>
     )
@@ -41,45 +82,51 @@ export function ChapterList({ chapters, isLoading, comicSlug, contentType, lastR
 
   if (chapters.length === 0) {
     return (
-      <p className="py-10 text-center text-sm text-muted-foreground">
-        No chapters available yet.
-      </p>
+      <div className="flex flex-col items-center gap-2 py-10 text-muted-foreground">
+        <BookOpen className="h-8 w-8 opacity-30" />
+        <p className="text-sm">Chưa có chương nào.</p>
+      </div>
     )
   }
 
-  const items = virtualizer.getVirtualItems()
-  const totalHeight = virtualizer.getTotalSize()
+  const virtualItems = virtualizer.getVirtualItems()
+  const totalHeight  = virtualizer.getTotalSize()
 
   return (
     <div
       ref={parentRef}
-      className="overflow-auto rounded-2xl border border-border"
-      style={{ maxHeight: '600px' }}
+      className="overflow-auto rounded-xl border border-border/60"
+      style={{ maxHeight: '520px' }}
     >
-      {/* Virtual scroll container */}
       <div style={{ height: totalHeight, position: 'relative' }}>
-        {items.map((virtualRow) => {
-          const chapter = chapters[virtualRow.index]
+        {virtualItems.map((vRow) => {
+          const item = items[vRow.index]
+          if (!item) return null
+
           return (
             <div
-              key={virtualRow.key}
-              data-index={virtualRow.index}
+              key={vRow.key}
+              data-index={vRow.index}
               ref={virtualizer.measureElement}
               style={{
                 position: 'absolute',
                 top: 0,
                 left: 0,
                 width: '100%',
-                transform: `translateY(${virtualRow.start}px)`,
+                transform: `translateY(${vRow.start}px)`,
               }}
             >
-              <ChapterRow
-                chapter={chapter}
-                isLast={virtualRow.index === chapters.length - 1}
-                contentType={contentType}
-                comicSlug={comicSlug}
-                isRead={chapter.id === lastReadChapterId}
-              />
+              {item.kind === 'header' ? (
+                <VolumeHeader volume={item.volume} count={item.count} />
+              ) : (
+                <ChapterRow
+                  chapter={item.chapter}
+                  isLast={item.isLast}
+                  contentType={contentType}
+                  comicSlug={comicSlug}
+                  isRead={item.chapter.id === lastReadChapterId}
+                />
+              )}
             </div>
           )
         })}
@@ -88,7 +135,25 @@ export function ChapterList({ chapters, isLoading, comicSlug, contentType, lastR
   )
 }
 
-// ─── Chapter row ──────────────────────────────────────────────────────────────
+/* ── Volume header row ──────────────────────────────────────────────────────── */
+
+function VolumeHeader({ volume, count }: { volume: string; count: number }) {
+  return (
+    <div
+      className="flex items-center gap-2 sticky top-0 z-10 bg-muted/80 backdrop-blur-sm px-4 border-b border-border/60"
+      style={{ height: HEADER_H }}
+    >
+      <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+        {volume}
+      </span>
+      <span className="rounded-full bg-border px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+        {count}
+      </span>
+    </div>
+  )
+}
+
+/* ── Chapter row ────────────────────────────────────────────────────────────── */
 
 function ChapterRow({
   chapter,
@@ -104,62 +169,62 @@ function ChapterRow({
   isRead?: boolean
 }) {
   const uploadDate = new Date(chapter.uploadedAt)
-  const isRecent = Date.now() - uploadDate.getTime() < 1000 * 60 * 60 * 24 * 3 // 3 days
+  const isRecent   = Date.now() - uploadDate.getTime() < 1000 * 60 * 60 * 24 * 3
   const readerPath = contentType === 'novel' ? 'novel' : 'manga'
 
   return (
     <Link
       href={`/read/${readerPath}/${comicSlug}/${chapter.slug}`}
       className={cn(
-        'flex items-center justify-between px-4 py-3 transition-colors hover:bg-primary/5',
-        !isLast && 'border-b border-border'
+        'flex items-center justify-between px-4 transition-colors hover:bg-secondary/60',
+        !isLast && 'border-b border-border/60',
+        isRead && 'opacity-55',
       )}
-      style={{ height: ROW_HEIGHT }}
+      style={{ height: CHAPTER_H }}
     >
-      {/* Left: chapter number + title */}
-      <div className={cn("flex min-w-0 flex-col", isRead && "opacity-60")}>
-        <span className="flex items-center gap-2 text-sm font-medium text-foreground">
-          Chapter {chapter.number}
+      <div className="flex min-w-0 flex-col">
+        <span className="flex items-center gap-2 text-sm font-semibold">
+          Ch.{chapter.number}
           {isRead && (
-            <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground uppercase">
-              Current
+            <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+              Đã đọc
             </span>
           )}
           {!isRead && isRecent && (
-            <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-primary-foreground">
-              NEW
+            <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-primary-foreground">
+              MỚI
             </span>
           )}
         </span>
         {chapter.title && (
-          <span className="truncate text-xs text-muted-foreground">{chapter.title}</span>
+          <span className="truncate text-xs text-muted-foreground mt-0.5">{chapter.title}</span>
         )}
       </div>
 
-      {/* Right: group + date */}
       <div className="flex shrink-0 flex-col items-end gap-0.5 pl-2">
         {chapter.group && (
-          <span className="text-xs font-medium text-primary">{chapter.group.name}</span>
+          <span className="text-xs font-medium text-primary truncate max-w-[100px]">
+            {chapter.group.name}
+          </span>
         )}
         <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
           <Clock className="h-3 w-3" />
-          {formatRelativeDate(uploadDate)}
+          {formatDate(uploadDate)}
         </span>
       </div>
     </Link>
   )
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+/* ── Helpers ────────────────────────────────────────────────────────────────── */
 
-function formatRelativeDate(date: Date): string {
-  const diff = Date.now() - date.getTime()
-  const mins = Math.floor(diff / 60000)
+function formatDate(date: Date): string {
+  const diff  = Date.now() - date.getTime()
+  const mins  = Math.floor(diff / 60000)
   const hours = Math.floor(diff / 3600000)
-  const days = Math.floor(diff / 86400000)
-
-  if (mins < 60) return `${mins}m ago`
-  if (hours < 24) return `${hours}h ago`
-  if (days < 30) return `${days}d ago`
-  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+  const days  = Math.floor(diff / 86400000)
+  if (mins  < 60) return `${mins}m`
+  if (hours < 24) return `${hours}h`
+  if (days  < 30) return `${days}d`
+  return date.toLocaleDateString('vi-VN', { day: 'numeric', month: 'short', year: 'numeric' })
 }
