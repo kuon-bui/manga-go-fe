@@ -67,7 +67,7 @@ export function SearchView() {
   const isEmpty = !isLoading && (data?.data.length ?? 0) === 0 && Object.keys(filters).length > 1
 
   return (
-    <div className="container mx-auto px-4 py-6">
+    <div className="mx-auto max-w-7xl px-4 md:px-6 pt-2 pb-10 space-y-5">
       {/* Search bar */}
       <form onSubmit={handleSearch} className="flex gap-2">
         <div className="relative flex-1">

@@ -2,34 +2,49 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
-
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Separator } from '@/components/ui/separator'
-import { Switch } from '@/components/ui/switch'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select'
-import { AvatarCropModal } from '@/components/profile/avatar-crop-modal'
-import { useAuthStore } from '@/stores/auth-store'
+  User, Lock, BookOpen, Bell, Palette,
+  Camera, Check,
+} from 'lucide-react'
+
+import { Input }    from '@/components/ui/input'
+import { Label }    from '@/components/ui/label'
+import { Switch }   from '@/components/ui/switch'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { AvatarCropModal }   from '@/components/profile/avatar-crop-modal'
+import { useAuthStore }       from '@/stores/auth-store'
 import { useNovelReaderStore } from '@/stores/novel-reader-store'
 import { useMangaViewerStore, type ViewerMode } from '@/stores/manga-viewer-store'
+import { useThemeStore, THEME_OPTIONS } from '@/stores/theme-store'
+import { cn } from '@/lib/utils'
+
+type NavTab = 'profile' | 'appearance' | 'reading' | 'notifications' | 'account'
+
+const NAV_ITEMS: { id: NavTab; label: string; icon: React.ReactNode }[] = [
+  { id: 'profile',       label: 'Hồ sơ',        icon: <User className="h-4 w-4" /> },
+  { id: 'appearance',    label: 'Giao diện',     icon: <Palette className="h-4 w-4" /> },
+  { id: 'reading',       label: 'Đọc truyện',    icon: <BookOpen className="h-4 w-4" /> },
+  { id: 'notifications', label: 'Thông báo',     icon: <Bell className="h-4 w-4" /> },
+  { id: 'account',       label: 'Tài khoản',     icon: <Lock className="h-4 w-4" /> },
+]
 
 export function SettingsView() {
   const { user, updateUser } = useAuthStore()
-  const novelStore = useNovelReaderStore()
+  const novelStore  = useNovelReaderStore()
   const viewerStore = useMangaViewerStore()
+  const { theme, setTheme } = useThemeStore()
 
+  const [activeTab,       setActiveTab]       = useState<NavTab>('profile')
   const [avatarModalOpen, setAvatarModalOpen] = useState(false)
-  const [displayName, setDisplayName] = useState(user?.name ?? '')
+  const [displayName,     setDisplayName]     = useState(user?.name ?? '')
   const [currentPassword, setCurrentPassword] = useState('')
-  const [newPassword, setNewPassword] = useState('')
-  const [saving, setSaving] = useState(false)
+  const [newPassword,     setNewPassword]     = useState('')
+  const [saving,          setSaving]          = useState(false)
 
   if (!user) return null
+
+  const initials = user.name.slice(0, 2).toUpperCase()
 
   async function handleSaveProfile() {
     if (!displayName.trim()) return
@@ -52,182 +67,236 @@ export function SettingsView() {
     }, 600)
   }
 
-  async function handleAvatarCrop(blob: Blob) {
+  function handleAvatarCrop(blob: Blob) {
     const url = URL.createObjectURL(blob)
     updateUser({ avatarUrl: url })
     toast.success('Đã thay đổi ảnh đại diện!')
   }
 
-  function handleOpenAvatarModal() {
-    setAvatarModalOpen((prev) => !prev)
-  }
-
-  const initials = user.name.slice(0, 2).toUpperCase()
-
   return (
-    <div className="container mx-auto max-w-2xl px-4 py-8">
-      <h1 className="mb-6 text-2xl font-bold text-foreground">Settings</h1>
+    <div className="mx-auto max-w-4xl px-4 md:px-6 pt-2 pb-10 space-y-5">
 
-      <Tabs defaultValue="profile">
-        <TabsList className="mb-6">
-          <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="account">Account</TabsTrigger>
-          <TabsTrigger value="reading">Reading</TabsTrigger>
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
-        </TabsList>
+      {/* ── Profile card at top ──────────────────────────────── */}
+      <div className="cute-card p-5 flex items-center gap-4">
+        <div className="relative shrink-0">
+          <Avatar className="h-16 w-16 ring-2 ring-primary/30">
+            {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.name} />}
+            <AvatarFallback className="text-lg font-bold bg-primary/15 text-primary">{initials}</AvatarFallback>
+          </Avatar>
+          <button
+            onClick={() => setAvatarModalOpen(true)}
+            className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md hover:opacity-90 transition-opacity"
+            aria-label="Đổi ảnh"
+          >
+            <Camera className="h-3 w-3" />
+          </button>
+        </div>
+        <div className="min-w-0">
+          <p className="font-display text-lg font-bold truncate">{user.name}</p>
+          <p className="text-sm text-muted-foreground truncate">{user.email}</p>
+          <p className="mt-0.5 inline-flex items-center gap-1 text-xs font-semibold text-primary bg-primary/10 rounded-full px-2 py-0.5 capitalize">
+            {user.role}
+          </p>
+        </div>
+      </div>
 
-        {/* ── Profile ── */}
-        <TabsContent value="profile" className="space-y-6">
-          {/* Avatar */}
-          <section className="space-y-3">
-            <h2 className="text-base font-semibold text-foreground">Avatar</h2>
-            <div className="flex items-center gap-4">
-              <Avatar className="h-20 w-20">
-                {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.name} />}
-                <AvatarFallback className="text-xl">{initials}</AvatarFallback>
-              </Avatar>
-              <Button variant="outline" onClick={handleOpenAvatarModal}>
-                Change Avatar
-              </Button>
-            </div>
-          </section>
+      {/* ── Body: sidebar nav + content ─────────────────────── */}
+      <div className="grid md:grid-cols-[200px_1fr] gap-5 items-start">
 
-          <Separator />
-
-          <section className="space-y-3">
-            <div className="space-y-1">
-              <Label htmlFor="displayName">Display Name</Label>
-              <Input
-                id="displayName"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-              />
-            </div>
-            <div className="space-y-1">
-              <Label>Email</Label>
-              <Input value={user.email} disabled className="opacity-60" />
-              <p className="text-xs text-muted-foreground">Email cannot be changed here.</p>
-            </div>
-            <Button onClick={handleSaveProfile} disabled={saving}>
-              {saving ? 'Saving…' : 'Save Profile'}
-            </Button>
-          </section>
-        </TabsContent>
-
-        {/* ── Account ── */}
-        <TabsContent value="account" className="space-y-6">
-          <section className="space-y-3">
-            <h2 className="text-base font-semibold text-foreground">Email</h2>
-            <Input value={user.email} disabled className="opacity-60" />
-            <p className="text-xs text-muted-foreground">Contact support to change your email.</p>
-          </section>
-
-          <Separator />
-
-          <section className="space-y-3">
-            <h2 className="text-base font-semibold text-foreground">Change Password</h2>
-            <div className="space-y-1">
-              <Label htmlFor="currentPassword">Current Password</Label>
-              <Input
-                id="currentPassword"
-                type="password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-              />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="newPassword">New Password</Label>
-              <Input
-                id="newPassword"
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-              />
-            </div>
-            <Button
-              onClick={handleChangePassword}
-              disabled={saving || !currentPassword || !newPassword}
+        {/* Sidebar nav */}
+        <nav className="cute-card p-2 flex flex-col gap-0.5">
+          {NAV_ITEMS.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              className={cn(
+                'flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors text-left',
+                activeTab === item.id
+                  ? 'bg-primary/15 text-primary'
+                  : 'text-muted-foreground hover:bg-secondary/60 hover:text-foreground'
+              )}
             >
-              {saving ? 'Saving…' : 'Change Password'}
-            </Button>
-          </section>
-        </TabsContent>
+              {item.icon}
+              {item.label}
+            </button>
+          ))}
+        </nav>
 
-        {/* ── Reading preferences ── */}
-        <TabsContent value="reading" className="space-y-6">
-          <section className="space-y-4">
-            <h2 className="text-base font-semibold text-foreground">Manga Viewer</h2>
-            <div className="space-y-1">
-              <Label>Default Viewing Mode</Label>
-              <Select
-                value={viewerStore.mode}
-                onValueChange={(v) => viewerStore.setMode(v as ViewerMode)}
-              >
-                <SelectTrigger className="w-48">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="vertical">Vertical Scroll</SelectItem>
-                  <SelectItem value="single">Single Page</SelectItem>
-                  <SelectItem value="double">Double Page</SelectItem>
-                </SelectContent>
-              </Select>
+        {/* Content panel */}
+        <div className="space-y-4">
+
+          {/* ── Profile ── */}
+          {activeTab === 'profile' && (
+            <div className="cute-card p-5 space-y-5">
+              <h2 className="font-display text-lg font-bold">Hồ sơ</h2>
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="displayName">Tên hiển thị</Label>
+                  <Input
+                    id="displayName"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    placeholder="Tên của bạn"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Email</Label>
+                  <Input value={user.email} disabled className="opacity-60" />
+                  <p className="text-xs text-muted-foreground">Email không thể thay đổi tại đây.</p>
+                </div>
+                <button
+                  onClick={handleSaveProfile}
+                  disabled={saving || !displayName.trim()}
+                  className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50 shadow-sm"
+                >
+                  {saving ? 'Đang lưu…' : (
+                    <><Check className="h-4 w-4" /> Lưu hồ sơ</>
+                  )}
+                </button>
+              </div>
             </div>
-          </section>
+          )}
 
-          <Separator />
-
-          <section className="space-y-4">
-            <h2 className="text-base font-semibold text-foreground">Novel Reader</h2>
-            <div className="space-y-1">
-              <Label>Default Theme</Label>
-              <Select
-                value={novelStore.theme}
-                onValueChange={(v) =>
-                  novelStore.setTheme(v as 'day' | 'night' | 'sepia')
-                }
-              >
-                <SelectTrigger className="w-48">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="day">Day</SelectItem>
-                  <SelectItem value="night">Night</SelectItem>
-                  <SelectItem value="sepia">Sepia</SelectItem>
-                </SelectContent>
-              </Select>
+          {/* ── Appearance ── */}
+          {activeTab === 'appearance' && (
+            <div className="cute-card p-5 space-y-5">
+              <h2 className="font-display text-lg font-bold">Giao diện</h2>
+              <div className="space-y-3">
+                <Label>Chủ đề màu sắc</Label>
+                <div className="grid grid-cols-3 gap-3">
+                  {THEME_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setTheme(opt.value)}
+                      className={cn(
+                        'relative flex flex-col items-center gap-2 rounded-2xl border-2 p-3 transition-all',
+                        theme === opt.value
+                          ? 'border-primary shadow-sm'
+                          : 'border-border hover:border-primary/40'
+                      )}
+                    >
+                      {/* Swatch */}
+                      <div
+                        className="h-10 w-full rounded-xl shadow-inner"
+                        style={{ background: opt.previewBg }}
+                      >
+                        <div
+                          className="h-3 w-3 rounded-full mt-1.5 ml-1.5"
+                          style={{ background: opt.previewAccent }}
+                        />
+                      </div>
+                      <span className="text-xs font-semibold">{opt.label}</span>
+                      {theme === opt.value && (
+                        <span className="absolute top-1.5 right-1.5 h-4 w-4 rounded-full bg-primary flex items-center justify-center">
+                          <Check className="h-2.5 w-2.5 text-primary-foreground" />
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
-            <div className="space-y-1">
-              <Label>Default Font</Label>
-              <Select
-                value={novelStore.fontFamily}
-                onValueChange={(v) =>
-                  novelStore.setFontFamily(v as 'serif' | 'sans' | 'mono')
-                }
-              >
-                <SelectTrigger className="w-48">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="serif">Serif</SelectItem>
-                  <SelectItem value="sans">Sans-serif</SelectItem>
-                  <SelectItem value="mono">Monospace</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </section>
-        </TabsContent>
+          )}
 
-        {/* ── Notifications ── */}
-        <TabsContent value="notifications" className="space-y-4">
-          <h2 className="text-base font-semibold text-foreground">Notification Preferences</h2>
-          <NotificationToggle label="New chapter from followed titles" defaultChecked />
-          <Separator />
-          <NotificationToggle label="Comment replies" defaultChecked />
-          <Separator />
-          <NotificationToggle label="System announcements" defaultChecked />
-        </TabsContent>
-      </Tabs>
+          {/* ── Reading ── */}
+          {activeTab === 'reading' && (
+            <div className="space-y-4">
+              <div className="cute-card p-5 space-y-4">
+                <h2 className="font-display text-lg font-bold">Trình đọc Manga</h2>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold">Chế độ xem mặc định</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Cách hiển thị trang khi đọc manga</p>
+                  </div>
+                  <Select
+                    value={viewerStore.mode}
+                    onValueChange={(v) => viewerStore.setMode(v as ViewerMode)}
+                  >
+                    <SelectTrigger className="w-44 h-8 text-sm rounded-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="vertical">Cuộn dọc</SelectItem>
+                      <SelectItem value="single">Trang đơn</SelectItem>
+                      <SelectItem value="double">Trang đôi</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="cute-card p-5 space-y-4">
+                <h2 className="font-display text-lg font-bold">Trình đọc Novel</h2>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold">Chủ đề mặc định</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Nền màu khi đọc tiểu thuyết</p>
+                  </div>
+                  <Select value={novelStore.theme} onValueChange={(v) => novelStore.setTheme(v as 'day' | 'night' | 'sepia')}>
+                    <SelectTrigger className="w-36 h-8 text-sm rounded-full"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="day">Sáng (Day)</SelectItem>
+                      <SelectItem value="night">Tối (Night)</SelectItem>
+                      <SelectItem value="sepia">Sepia</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center justify-between border-t border-border/60 pt-4">
+                  <div>
+                    <p className="text-sm font-semibold">Font chữ mặc định</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Kiểu chữ khi đọc tiểu thuyết</p>
+                  </div>
+                  <Select value={novelStore.fontFamily} onValueChange={(v) => novelStore.setFontFamily(v as 'serif' | 'sans' | 'mono')}>
+                    <SelectTrigger className="w-36 h-8 text-sm rounded-full"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="serif">Serif</SelectItem>
+                      <SelectItem value="sans">Sans-serif</SelectItem>
+                      <SelectItem value="mono">Monospace</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── Notifications ── */}
+          {activeTab === 'notifications' && (
+            <div className="cute-card p-5 space-y-1">
+              <h2 className="font-display text-lg font-bold mb-4">Thông báo</h2>
+              <NotifRow label="Chương mới từ truyện đang theo dõi" defaultChecked />
+              <NotifRow label="Có người trả lời bình luận của bạn"  defaultChecked />
+              <NotifRow label="Thông báo hệ thống"                   defaultChecked />
+              <NotifRow label="Email tóm tắt hàng tuần"              defaultChecked={false} />
+            </div>
+          )}
+
+          {/* ── Account ── */}
+          {activeTab === 'account' && (
+            <div className="cute-card p-5 space-y-5">
+              <h2 className="font-display text-lg font-bold">Đổi mật khẩu</h2>
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="currentPw">Mật khẩu hiện tại</Label>
+                  <Input id="currentPw" type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="newPw">Mật khẩu mới</Label>
+                  <Input id="newPw" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+                </div>
+                <button
+                  onClick={handleChangePassword}
+                  disabled={saving || !currentPassword || !newPassword}
+                  className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50 shadow-sm"
+                >
+                  {saving ? 'Đang lưu…' : (
+                    <><Lock className="h-4 w-4" /> Đổi mật khẩu</>
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
+
+        </div>
+      </div>
 
       <AvatarCropModal
         open={avatarModalOpen}
@@ -238,22 +307,14 @@ export function SettingsView() {
   )
 }
 
-function NotificationToggle({
-  label,
-  defaultChecked,
-}: {
-  label: string
-  defaultChecked?: boolean
-}) {
+/* ── Notification row ──────────────────────────────────────────────────────── */
+
+function NotifRow({ label, defaultChecked }: { label: string; defaultChecked?: boolean }) {
   const [checked, setChecked] = useState(defaultChecked ?? false)
   return (
-    <div className="flex items-center justify-between">
-      <Label className="cursor-pointer text-sm text-foreground">{label}</Label>
-      <Switch
-        checked={checked}
-        onCheckedChange={setChecked}
-        aria-label={label}
-      />
+    <div className="flex items-center justify-between py-3 border-b border-border/60 last:border-0">
+      <Label className="cursor-pointer text-sm font-medium text-foreground">{label}</Label>
+      <Switch checked={checked} onCheckedChange={setChecked} aria-label={label} />
     </div>
   )
 }

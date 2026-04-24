@@ -32,11 +32,14 @@ export default function NewGroupPage() {
   }
 
   return (
-    <div className="mx-auto max-w-md space-y-6">
-      <h1 className="text-2xl font-bold text-foreground">Tạo Nhóm Dịch</h1>
+    <div className="max-w-md space-y-4">
+      <div>
+        <h1 className="font-display text-2xl font-bold">Tạo Nhóm Dịch</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">Thêm nhóm mới để bắt đầu đăng truyện.</p>
+      </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border bg-card p-6">
-        <div className="space-y-1">
+      <form onSubmit={handleSubmit} className="cute-card p-5 space-y-4">
+        <div className="space-y-1.5">
           <Label htmlFor="group-name">Tên nhóm <span className="text-destructive">*</span></Label>
           <Input
             id="group-name"
@@ -49,25 +52,25 @@ export default function NewGroupPage() {
 
         {name.trim() && (
           <p className="text-xs text-muted-foreground">
-            Slug: <code className="rounded bg-muted px-1">{slug}</code>
+            Slug: <code className="rounded-md bg-muted px-1.5 py-0.5">{slug}</code>
           </p>
         )}
 
-        <div className="flex gap-2">
-          <Button type="button" variant="outline" onClick={() => router.back()}>
+        <div className="flex gap-2 pt-1">
+          <Button type="button" variant="outline" className="flex-1 rounded-full" onClick={() => router.back()}>
             Huỷ
           </Button>
-          <Button type="submit" disabled={!name.trim() || createMutation.isPending}>
+          <Button type="submit" className="flex-1 rounded-full" disabled={!name.trim() || createMutation.isPending}>
             {createMutation.isPending
-              ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Đang tạo…</>
+              ? <><Loader2 className="h-4 w-4 animate-spin" />Đang tạo…</>
               : 'Tạo nhóm'}
           </Button>
         </div>
       </form>
 
-      <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-4 text-sm text-muted-foreground">
-        <p className="font-medium text-foreground">Lưu ý</p>
-        <p className="mt-1">Bạn cần có nhóm dịch mới có thể đăng truyện. Sau khi tạo nhóm, bạn sẽ là quản trị viên và có thể đăng truyện ngay.</p>
+      <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 text-sm">
+        <p className="font-semibold text-foreground">Lưu ý</p>
+        <p className="mt-1 text-muted-foreground">Bạn cần có nhóm dịch mới có thể đăng truyện. Sau khi tạo, bạn sẽ là quản trị viên của nhóm.</p>
       </div>
     </div>
   )

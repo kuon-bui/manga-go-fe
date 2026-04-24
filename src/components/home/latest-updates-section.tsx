@@ -27,7 +27,7 @@ function ChapterItem({ manga }: { manga: Manga }) {
   return (
     <Link
       href={`/titles/${manga.slug}`}
-      className="flex items-center gap-3 p-2 rounded-xl hover:bg-secondary/60 transition-colors group"
+      className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-secondary/60 transition-colors group"
     >
       <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-muted">
         {manga.thumbnail ? (
@@ -39,19 +39,18 @@ function ChapterItem({ manga }: { manga: Manga }) {
         )}
       </div>
 
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold truncate group-hover:text-primary transition-colors">
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-semibold truncate group-hover:text-primary transition-colors leading-snug">
           {manga.title}
         </p>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          {latestCh ? `Ch. ${latestCh.number}` : 'New chapter'}
+        <p className="text-xs text-muted-foreground truncate mt-0.5">
+          {latestCh ? `Ch. ${latestCh.number}` : 'Chap mới'}
           {group ? ` · ${group}` : ''}
         </p>
+        <p className="text-[10px] text-muted-foreground/70 mt-0.5">
+          {timeAgo(manga.lastChapterAt)}
+        </p>
       </div>
-
-      <span className="shrink-0 text-xs text-muted-foreground self-start mt-0.5">
-        {timeAgo(manga.lastChapterAt)}
-      </span>
     </Link>
   )
 }
@@ -65,7 +64,7 @@ export function LatestUpdatesSection() {
       <div className="flex items-center justify-between">
         <h2 className="font-display text-xl flex items-center gap-2">
           <Zap className="h-5 w-5 text-primary" />
-          Chapter Mới
+          Chap Mới
         </h2>
         <Link
           href="/browse?sort=latest"
@@ -76,15 +75,14 @@ export function LatestUpdatesSection() {
       </div>
 
       {isLoading && (
-        <div className="space-y-2">
-          {Array.from({ length: 8 }).map((_, i) => (
+        <div className="grid grid-cols-2 gap-x-2 gap-y-1">
+          {Array.from({ length: 10 }).map((_, i) => (
             <div key={i} className="flex items-center gap-3 p-2">
               <Skeleton className="h-12 w-12 shrink-0 rounded-lg" />
-              <div className="flex-1 space-y-1.5">
+              <div className="flex-1 space-y-1.5 min-w-0">
                 <Skeleton className="h-3.5 w-4/5" />
                 <Skeleton className="h-3 w-2/3" />
               </div>
-              <Skeleton className="h-3 w-8 shrink-0" />
             </div>
           ))}
         </div>
@@ -98,12 +96,12 @@ export function LatestUpdatesSection() {
       )}
 
       {!isLoading && !isError && mangas.length > 0 && (
-        <ul className="space-y-1">
+        <ul className="grid grid-cols-2 gap-x-2 gap-y-1">
           {mangas.map((manga, i) => (
             <li
               key={manga.id}
-              className="animate-in fade-in duration-300"
-              style={{ animationDelay: `${i * 30}ms` }}
+              className="animate-in fade-in duration-300 min-w-0"
+              style={{ animationDelay: `${i * 20}ms` }}
             >
               <ChapterItem manga={manga} />
             </li>
