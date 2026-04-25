@@ -45,7 +45,11 @@ export function useComments(scope: CommentScope) {
       const res = await apiClient.get<PaginatedResponse<unknown>>('/comments', { params: Object.fromEntries(params) })
       return { ...res, data: (res.data as Array<Record<string, unknown>>).map(normalizeComment) }
     },
-    enabled: Boolean(scope),
+    enabled: (() => {
+      if (scope.type === 'comic')   return Boolean(scope.comicId)
+      if (scope.type === 'chapter') return Boolean(scope.chapterId)
+      return Boolean(scope.chapterId) && Boolean(scope.comicId)
+    })(),
   })
 }
 
