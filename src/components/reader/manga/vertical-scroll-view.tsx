@@ -51,6 +51,8 @@ export function VerticalScrollView({ pages, comicSlug, chapterSlug, chapterId, m
           src={src}
           index={i}
           total={pages.length}
+          chapterId={chapterId}
+          comicId={mangaId ?? ''}
           controlsVisible={controlsVisible}
           observeElement={observeElement}
           onLastVisible={i === pages.length - 1 ? handleLastPageVisible : undefined}
@@ -74,12 +76,14 @@ interface PageImageProps {
   src: string
   index: number
   total: number
+  chapterId: string
+  comicId: string
   controlsVisible: boolean
   observeElement: (_el: HTMLElement | null, _index: number, _total: number) => void
   onLastVisible?: () => void
 }
 
-function PageImage({ src, index, total, controlsVisible, observeElement, onLastVisible }: PageImageProps) {
+function PageImage({ src, index, total, chapterId, comicId, controlsVisible, observeElement, onLastVisible }: PageImageProps) {
   const ref = useRef<HTMLDivElement>(null)
   const [modalOpen, setModalOpen] = useState(false)
 
@@ -141,6 +145,8 @@ function PageImage({ src, index, total, controlsVisible, observeElement, onLastV
         onOpenChange={setModalOpen}
         imageSrc={src}
         pageIndex={index}
+        chapterId={chapterId}
+        comicId={comicId}
       />
     </>
   )
