@@ -122,7 +122,7 @@ export interface FileUploadResponse {
   size: number;
 }
 
-export interface ChapterImageUploadResponse extends FileUploadResponse {}
+export interface ChapterImageUploadResponse extends FileUploadResponse { }
 
 export interface CoverUploadResponse {
   url: string;
@@ -152,7 +152,7 @@ export interface UpdateGroupPayload {
 type RawComment = Record<string, unknown>;
 
 export function normalizeComment(raw: RawComment): Comment {
-  const user = (raw.user ?? {}) as { id?: string; name?: string };
+  const user = (raw.user ?? {}) as { id?: string; name?: string; };
   const author = (raw.author ?? {
     id: user.id ?? '',
     name: user.name ?? 'Unknown',
@@ -279,20 +279,20 @@ class ApiClient {
 
   // ─── Auth ────────────────────────────────────────────────────────────────────
 
-  login(email: string, password: string): Promise<{ user: User }> {
-    return this.post<{ user: User }>('/users/sign-in', { email, password });
+  login(email: string, password: string): Promise<{ user: User; }> {
+    return this.post<{ user: User; }>('/users/sign-in', { email, password });
   }
 
-  register(name: string, email: string, password: string): Promise<{ user: User }> {
-    return this.post<{ user: User }>('/users', { name, email, password });
+  register(name: string, email: string, password: string): Promise<{ user: User; }> {
+    return this.post<{ user: User; }>('/users', { name, email, password });
   }
 
-  forgotPassword(email: string): Promise<{ message: string }> {
-    return this.post<{ message: string }>('/users/request-reset-password', { email });
+  forgotPassword(email: string): Promise<{ message: string; }> {
+    return this.post<{ message: string; }>('/users/request-reset-password', { email });
   }
 
-  resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
-    return this.post<{ message: string }>('/users/reset-password', {
+  resetPassword(token: string, newPassword: string): Promise<{ message: string; }> {
+    return this.post<{ message: string; }>('/users/reset-password', {
       token,
       new_password: newPassword,
     });
@@ -310,8 +310,8 @@ class ApiClient {
     return this.getCurrentUserProfile().then((res) => res.user);
   }
 
-  getCurrentUserProfile(): Promise<{ user: User }> {
-    return this.get<{ user: User }>('/users/me');
+  getCurrentUserProfile(): Promise<{ user: User; }> {
+    return this.get<{ user: User; }>('/users/me');
   }
 
   getAllRoles(): Promise<Role[]> {
@@ -352,8 +352,8 @@ class ApiClient {
     return this.get<Manga>(`/comics/${slug}`);
   }
 
-  createComic(payload: CreateComicPayload): Promise<{ id: string; slug: string }> {
-    return this.post<{ id: string; slug: string }>('/comics', payload);
+  createComic(payload: CreateComicPayload): Promise<{ id: string; slug: string; }> {
+    return this.post<{ id: string; slug: string; }>('/comics', payload);
   }
 
   updateComic(slug: string, payload: UpdateComicPayload): Promise<Manga> {
@@ -404,8 +404,8 @@ class ApiClient {
     return this.get<Chapter>(`/comics/${comicSlug}/chapters/${chapterSlug}`);
   }
 
-  createChapter(comicSlug: string, payload: CreateChapterPayload): Promise<{ id: string; slug: string }> {
-    return this.post<{ id: string; slug: string }>(`/comics/${comicSlug}/chapters`, payload);
+  createChapter(comicSlug: string, payload: CreateChapterPayload): Promise<{ id: string; slug: string; }> {
+    return this.post<{ id: string; slug: string; }>(`/comics/${comicSlug}/chapters`, payload);
   }
 
   updateChapter(comicSlug: string, chapterSlug: string, payload: UpdateChapterPayload): Promise<void> {
@@ -415,7 +415,7 @@ class ApiClient {
   updateChapterPages(
     comicId: string,
     chapterId: string,
-    pages: Array<{ pageType: 'image'; imageUrl: string }>
+    pages: Array<{ pageType: 'image'; imageUrl: string; }>
   ): Promise<void> {
     return this.put<void>(`/comics/${comicId}/chapters/${chapterId}/pages`, { pages });
   }
@@ -503,7 +503,7 @@ class ApiClient {
       .then((res) => ({ ...res, data: res.data.map(normalizeComment) }));
   }
 
-  createComment(payload: { comicId?: string; chapterId?: string; content: string; pageIndex?: number | null; parentId?: string | null }): Promise<Comment> {
+  createComment(payload: { comicId?: string; chapterId?: string; content: string; pageIndex?: number | null; parentId?: string | null; }): Promise<Comment> {
     return this.post<RawComment>('/comments', payload).then(normalizeComment);
   }
 
@@ -525,7 +525,7 @@ class ApiClient {
 
   // ─── Files ───────────────────────────────────────────────────────────────────
 
-  async uploadFile(file: File): Promise<{ url: string; filename: string }> {
+  async uploadFile(file: File): Promise<{ url: string; filename: string; }> {
     const formData = new FormData();
     formData.append('file', file);
 
@@ -539,11 +539,11 @@ class ApiClient {
       throw new ApiClientError({ message: 'File upload failed', statusCode: response.status });
     }
 
-    const json = (await response.json()) as ApiEnvelope<{ url: string; filename: string }>;
-    const data: { url: string; filename: string } =
+    const json = (await response.json()) as ApiEnvelope<{ url: string; filename: string; }>;
+    const data: { url: string; filename: string; } =
       'data' in json && json.data !== undefined
         ? json.data
-        : (json as unknown as { url: string; filename: string });
+        : (json as unknown as { url: string; filename: string; });
     // url is a relative path (/files/content/…) — make it absolute
     if (data.url.startsWith('/')) {
       data.url = `${this.baseUrl}${data.url}`;
@@ -553,12 +553,33 @@ class ApiClient {
 
   async uploadChapterImage(
     file: File,
-    comicId: string
+    comicId: string,
+    chapterSlug: string,
+    pageIdx: number
   ): Promise<FileUploadResponse> {
+    const trimmedComicId = comicId.trim();
+    const normalizedComicIdInput = trimmedComicId.endsWith(',')
+      ? trimmedComicId.slice(0, -1).trim()
+      : trimmedComicId;
+
+    let normalizedComicId = normalizedComicIdInput;
+    if (normalizedComicIdInput.startsWith('[') && normalizedComicIdInput.endsWith(']')) {
+      try {
+        const parsedComicId = JSON.parse(normalizedComicIdInput) as unknown;
+        if (Array.isArray(parsedComicId) && typeof parsedComicId[0] === 'string') {
+          normalizedComicId = parsedComicId[0];
+        }
+      } catch {
+        // Keep the original value when comicId is not valid JSON.
+      }
+    }
+
     const formData = new FormData();
-    formData.append('file', file);
-    formData.append('type', 'chapter');
-    formData.append('comicId', comicId);
+    formData.set('file', file);
+    formData.set('type', 'chapter');
+    formData.set('comicId', normalizedComicId);
+    formData.set('chapterSlug', chapterSlug);
+    formData.set('pageIdx', String(pageIdx));
 
     const response = await fetch(`${this.baseUrl}/files/upload`, {
       method: 'POST',
@@ -612,8 +633,8 @@ class ApiClient {
     return data;
   }
 
-  getPresignedUrl(filename: string): Promise<{ url: string }> {
-    return this.get<{ url: string }>(`/files/presign/${encodeURIComponent(filename)}`);
+  getPresignedUrl(filename: string): Promise<{ url: string; }> {
+    return this.get<{ url: string; }>(`/files/presign/${encodeURIComponent(filename)}`);
   }
 
   updateComicThumbnail(comicId: string, thumbnail: string): Promise<Manga> {
