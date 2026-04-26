@@ -42,7 +42,9 @@ export function UploadChapterView({ titleSlug }: UploadChapterViewProps) {
   const comicId = manga.id
 
   async function handleSubmit() {
-    if (!chapterNumber.trim()) {
+    const normalizedChapterNumber = chapterNumber.trim()
+
+    if (!normalizedChapterNumber) {
       toast.error('Số chương là bắt buộc')
       return
     }
@@ -55,13 +57,17 @@ export function UploadChapterView({ titleSlug }: UploadChapterViewProps) {
       return
     }
 
+    const generatedChapterSlug = chapterSlug(normalizedChapterNumber)
+
     try {
       const chapterPages = isManga
         ? await Promise.all(
-          pages.map(async (file) => {
+          pages.map(async (file, pageIdx) => {
             const uploaded = await uploadImageMutation.mutateAsync({
               file,
               comicId,
+              chapterSlug: generatedChapterSlug,
+              pageIdx: pageIdx + 1, // pageIdx is 0-based, but we want to start from 1
             })
             return {
               pageType: 'image' as const,
@@ -80,9 +86,9 @@ export function UploadChapterView({ titleSlug }: UploadChapterViewProps) {
         {
           comicSlug,
           payload: {
-            slug: chapterSlug(chapterNumber),
-            number: chapterNumber,
-            title: chapterTitle.trim() || `Chapter ${chapterNumber}`,
+            slug: generatedChapterSlug,
+            number: normalizedChapterNumber,
+            title: chapterTitle.trim() || `Chapter ${normalizedChapterNumber}`,
             pages: chapterPages,
           },
         },
