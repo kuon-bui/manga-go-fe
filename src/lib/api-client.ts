@@ -17,6 +17,8 @@ import type {
   ChapterSummary,
   Comment,
   ReadingHistoryEntry,
+  FollowStatus,
+  FollowStatusResponse,
 } from '@/types';
 
 // ─── Envelope ────────────────────────────────────────────────────────────────
@@ -62,7 +64,7 @@ export interface CreateComicPayload {
   title: string;
   slug: string;
   alternativeTitles: string[];
-  type: 'manga' | 'novel';
+  type: 'manga' | 'manhwa' | 'manhua' | 'comic' | 'novel';
   description: string;
   authorNames: string[];
   artistNames?: string[];
@@ -78,7 +80,7 @@ export interface UpdateComicPayload {
   title?: string;
   slug?: string;
   alternativeTitles?: string[];
-  type?: 'manga' | 'novel';
+  type?: 'manga' | 'manhwa' | 'manhua' | 'comic' | 'novel';
   status?: string;
   description?: string;
   authorNames?: string[];
@@ -177,10 +179,6 @@ export function normalizeComment(raw: RawComment): Comment {
 
 interface RequestConfig extends RequestInit {
   params?: Record<string, string>;
-}
-
-interface FollowStatusResponse {
-  isFollowed: boolean;
 }
 
 class ApiClient {
@@ -372,12 +370,28 @@ class ApiClient {
     return this.get<FollowStatusResponse>(`/comics/${comicSlug}/follow-status`);
   }
 
-  followComic(comicSlug: string): Promise<void> {
-    return this.post<void>(`/comics/${comicSlug}/follow`);
+  followComic(comicSlug: string, followStatus: FollowStatus = 'reading'): Promise<void> {
+    return this.post<void>(`/comics/${comicSlug}/follow`, { followStatus });
   }
 
   unfollowComic(comicSlug: string): Promise<void> {
     return this.delete<void>(`/comics/${comicSlug}/follow`);
+  }
+
+  updateFollowStatus(comicSlug: string, followStatus: FollowStatus): Promise<void> {
+    return this.patch<void>(`/comics/${comicSlug}/follow-status`, { followStatus });
+  }
+
+  updateComicStatus(comicSlug: string, status: string): Promise<void> {
+    return this.patch<void>(`/comics/${comicSlug}/status`, { status });
+  }
+
+  getTrendingComics(limit = 10): Promise<PaginatedResponse<Manga>> {
+    return this.get<PaginatedResponse<Manga>>('/comics/trending', { params: { limit: String(limit) } });
+  }
+
+  getRecentChapterUpdates(params?: Record<string, string>): Promise<PaginatedResponse<ChapterSummary>> {
+    return this.get<PaginatedResponse<ChapterSummary>>('/chapters/recent-updates', { params });
   }
 
   getFollowedComics(params?: Record<string, string>): Promise<PaginatedResponse<{
@@ -640,6 +654,10 @@ class ApiClient {
 
   // ─── Notifications ───────────────────────────────────────────────────────────
 
+  getNotifications(params?: Record<string, string>): Promise<PaginatedResponse<Record<string, unknown>>> {
+    return this.get<PaginatedResponse<Record<string, unknown>>>('/notifications', { params });
+  }
+
   markNotificationRead(id: string): Promise<void> {
     return this.patch<void>(`/notifications/${id}/read`);
   }
@@ -650,6 +668,66 @@ class ApiClient {
 
   markAllNotificationsRead(): Promise<void> {
     return this.patch<void>('/notifications/read-all');
+  }
+
+  // ─── User config ─────────────────────────────────────────────────────────────
+
+  getUserConfig(): Promise<Record<string, unknown>> {
+    return this.get<Record<string, unknown>>('/users/me/config');
+  }
+
+  updateUserConfig(config: {
+    enableComicNewChapterNotifications?: boolean;
+    enableCommentReplyNotifications?: boolean;
+    enableEmailNotifications?: boolean;
+    enableMentionNotifications?: boolean;
+    enableSseNotifications?: boolean;
+    enableSystemAnnouncements?: boolean;
+    seenNotificationCenter?: boolean;
+  }): Promise<void> {
+    return this.patch<void>('/users/me/config', config);
+  }
+
+  // ─── Translation group extras ────────────────────────────────────────────────
+
+  getGroupMembers(slug: string): Promise<unknown[]> {
+    return this.get<unknown[]>(`/translation-groups/${slug}/members`);
+  }
+
+  async uploadGroupLogo(slug: string, file: File): Promise<{ url: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await fetch(`${this.baseUrl}/translation-groups/${slug}/logo`, {
+      method: 'PUT',
+      body: formData,
+      credentials: 'include',
+    });
+    if (!response.ok) {
+      throw new ApiClientError({ message: 'Logo upload failed', statusCode: response.status });
+    }
+    const json = (await response.json()) as ApiEnvelope<{ url: string }>;
+    return 'data' in json && json.data ? json.data : (json as unknown as { url: string });
+  }
+
+  // ─── Reading progress ────────────────────────────────────────────────────────
+
+  getReadingProgress(comicSlug: string, chapterSlug: string): Promise<{ scrollPercent: number }> {
+    return this.get<{ scrollPercent: number }>(`/comics/${comicSlug}/chapters/${chapterSlug}/reading-progress`);
+  }
+
+  updateReadingProgress(comicSlug: string, chapterSlug: string, scrollPercent: number): Promise<void> {
+    return this.patch<void>(`/comics/${comicSlug}/chapters/${chapterSlug}/reading-progress`, { scrollPercent });
+  }
+
+  // ─── Comment extras ──────────────────────────────────────────────────────────
+
+  getCommentReplies(id: string, params?: Record<string, string>): Promise<PaginatedResponse<Comment>> {
+    return this.get<PaginatedResponse<RawComment>>(`/comments/${id}/replies`, { params })
+      .then((res) => ({ ...res, data: res.data.map(normalizeComment) }));
+  }
+
+  reportComment(id: string, reason: 'SPAM' | 'OFFENSIVE' | 'HARASSMENT' | 'ADULT_CONTENT', details?: string): Promise<void> {
+    return this.post<void>(`/comments/${id}/report`, { reason, details });
   }
 }
 

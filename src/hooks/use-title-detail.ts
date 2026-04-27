@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { apiClient } from '@/lib/api-client'
 import { queryKeys } from '@/lib/query-keys'
-import type { Manga, ChapterSummary, FollowStatus, UserRating, PaginatedResponse } from '@/types'
+import type { Manga, ChapterSummary, FollowStatusResponse, FollowStatus, UserRating, PaginatedResponse } from '@/types'
 
 // ─── Detail ───────────────────────────────────────────────────────────────────
 
@@ -30,13 +30,14 @@ export function useChapterList(comicSlug: string) {
 // ─── Follow ───────────────────────────────────────────────────────────────────
 
 export function useFollowStatus(comicSlug: string) {
-  return useQuery<FollowStatus>({
+  return useQuery<FollowStatusResponse>({
     queryKey: queryKeys.follow.status(comicSlug),
     queryFn: async () => {
       const data = await apiClient.getComicFollowStatus(comicSlug)
       return {
         mangaId: comicSlug,
         isFollowed: data.isFollowed,
+        followStatus: data.followStatus,
       }
     },
     enabled: Boolean(comicSlug),
@@ -50,21 +51,19 @@ export function useFollow(comicSlug: string) {
     mutationFn: (isFollowed: boolean) =>
       isFollowed
         ? apiClient.unfollowComic(comicSlug)
-        : apiClient.followComic(comicSlug),
+        : apiClient.followComic(comicSlug, 'reading'),
 
     onMutate: async (isFollowed) => {
       await qc.cancelQueries({ queryKey: queryKeys.follow.status(comicSlug) })
-      const prev = qc.getQueryData<FollowStatus>(queryKeys.follow.status(comicSlug))
-      qc.setQueryData<FollowStatus>(queryKeys.follow.status(comicSlug), {
+      const prev = qc.getQueryData<FollowStatusResponse>(queryKeys.follow.status(comicSlug))
+      qc.setQueryData<FollowStatusResponse>(queryKeys.follow.status(comicSlug), {
         mangaId: comicSlug,
         isFollowed: !isFollowed,
       })
       return { prev }
     },
     onError: (_err, _vars, ctx) => {
-      if (ctx?.prev) {
-        qc.setQueryData(queryKeys.follow.status(comicSlug), ctx.prev)
-      }
+      if (ctx?.prev) qc.setQueryData(queryKeys.follow.status(comicSlug), ctx.prev)
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: queryKeys.follow.status(comicSlug) })
@@ -73,34 +72,58 @@ export function useFollow(comicSlug: string) {
   })
 }
 
+export function useChangeFollowStatus(comicSlug: string) {
+  const qc = useQueryClient()
+
+  return useMutation({
+    mutationFn: (status: FollowStatus) => apiClient.updateFollowStatus(comicSlug, status),
+    onMutate: async (status) => {
+      await qc.cancelQueries({ queryKey: queryKeys.follow.status(comicSlug) })
+      const prev = qc.getQueryData<FollowStatusResponse>(queryKeys.follow.status(comicSlug))
+      qc.setQueryData<FollowStatusResponse>(queryKeys.follow.status(comicSlug), {
+        mangaId: comicSlug,
+        isFollowed: true,
+        followStatus: status,
+      })
+      return { prev }
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prev) qc.setQueryData(queryKeys.follow.status(comicSlug), ctx.prev)
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.follow.status(comicSlug) })
+    },
+  })
+}
+
 // ─── Rating ───────────────────────────────────────────────────────────────────
-// No real API for rating yet — these remain backed by mock handlers.
 
 export function useUserRating(mangaId: string) {
   return useQuery<UserRating | null>({
     queryKey: queryKeys.rating.user(mangaId),
     queryFn: async () => {
-      const ratings = await apiClient.get<PaginatedResponse<{
-        id: string
-        score: number
-        comicId: string
-        createdAt: string
-        updatedAt: string
-      }>>(`/ratings/comics/${mangaId}`, {
-        params: { page: '1', limit: '10' },
-      })
+      try {
+        const rating = await apiClient.get<{
+          id: string
+          score: number
+          comicId: string
+          createdAt: string
+          updatedAt: string
+        } | null>(`/ratings/comics/${mangaId}`)
 
-      const first = ratings.data[0]
-      if (!first) return null
-
-      return {
-        mangaId,
-        score: first.score,
-        createdAt: first.createdAt,
-        updatedAt: first.updatedAt,
+        if (!rating) return null
+        return {
+          mangaId,
+          score: rating.score, // 1–5
+          createdAt: rating.createdAt,
+          updatedAt: rating.updatedAt,
+        }
+      } catch {
+        return null
       }
     },
     enabled: Boolean(mangaId),
+    retry: false,
   })
 }
 

@@ -35,9 +35,7 @@ export function useScrollProgress({
       saveTimerRef.current = setTimeout(() => {
         // Fire-and-forget — errors are silently swallowed
         apiClient
-          .patch(`/comics/${comicSlug}/chapters/${chapterSlug}/reading-progress`, {
-            scrollPercent: progress,
-          })
+          .updateReadingProgress(comicSlug, chapterSlug, progress)
           .catch(() => undefined)
       }, debounceMs)
     },

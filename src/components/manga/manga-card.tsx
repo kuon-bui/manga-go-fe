@@ -13,8 +13,11 @@ const STATUS_LABEL: Record<ContentStatus, string> = {
 }
 
 const TYPE_LABEL: Record<ContentType, string> = {
-  manga: 'Manga',
-  novel: 'Novel',
+  manga:  'Manga',
+  manhwa: 'Manhwa',
+  manhua: 'Manhua',
+  comic:  'Comic',
+  novel:  'Novel',
 }
 
 const STATUS_COLORS: Record<ContentStatus, string> = {

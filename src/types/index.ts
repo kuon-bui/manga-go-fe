@@ -41,9 +41,10 @@ export interface PaginatedResponse<T> {
 
 // ─── Content ─────────────────────────────────────────────────────────────────
 
-export type ContentType = 'manga' | 'novel';
+export type ContentType = 'manga' | 'manhwa' | 'manhua' | 'comic' | 'novel';
 export type ContentStatus = 'ongoing' | 'completed' | 'hiatus' | 'cancelled';
 export type ComicAgeRating = 'ALL' | 'T' | '16+' | '18+' | 'all' | 'adult';
+export type FollowStatus = 'reading' | 'planned' | 'completed' | 'dropped' | 'favorite';
 
 export interface Genre {
   id: string;
@@ -132,15 +133,16 @@ export interface Chapter extends ChapterSummary {
 
 export interface UserRating {
   mangaId: string;
-  score: number; // 1–10
+  score: number; // 1–5 (swagger: maximum 5, minimum 1)
   createdAt: string;
   updatedAt: string;
 }
 
-export interface FollowStatus {
+export interface FollowStatusResponse {
   mangaId?: string;
   isFollowed?: boolean;
   isFollowing?: boolean;
+  followStatus?: FollowStatus;
 }
 
 // ─── Library ─────────────────────────────────────────────────────────────────

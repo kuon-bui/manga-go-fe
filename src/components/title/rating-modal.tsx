@@ -83,13 +83,9 @@ export function RatingModal({ open, onOpenChange, mangaId, mangaTitle }: RatingM
 }
 
 function scoreLabel(score: number): string {
-  if (score <= 2) return 'Appalling'
-  if (score <= 3) return 'Horrible'
-  if (score <= 4) return 'Very Bad'
-  if (score <= 5) return 'Bad'
-  if (score <= 6) return 'Fine'
-  if (score <= 7) return 'Good'
-  if (score <= 8) return 'Very Good'
-  if (score <= 9) return 'Great'
-  return 'Masterpiece'
+  if (score === 1) return 'Tệ'
+  if (score === 2) return 'Bình thường'
+  if (score === 3) return 'Khá'
+  if (score === 4) return 'Tốt'
+  return 'Xuất sắc'
 }
