@@ -1,10 +1,10 @@
-'use client'
+'use client';
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { apiClient } from '@/lib/api-client'
-import type { CreateComicPayload, CreateChapterPayload, UpdateComicPayload } from '@/lib/api-client'
-import { queryKeys } from '@/lib/query-keys'
-import type { User } from '@/types/auth'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { apiClient } from '@/lib/api-client';
+import type { CreateComicPayload, CreateChapterPayload, UpdateComicPayload } from '@/lib/api-client';
+import { queryKeys } from '@/lib/query-keys';
+import type { User } from '@/types/auth';
 import type {
   Group,
   DashboardTitle,
@@ -12,26 +12,26 @@ import type {
   Author,
   Tag,
   Manga,
-} from '@/types'
+} from '@/types';
 
-type CurrentUserProfile = User
+type CurrentUserProfile = User;
 
 type GroupWithOwner = Group & {
-  ownerId?: string
-}
+  ownerId?: string;
+};
 
 function resolveCurrentGroup(groups: GroupWithOwner[], me: CurrentUserProfile | null | undefined): GroupWithOwner | null {
-  if (!me) return null
+  if (!me) return null;
 
   if (me.translationGroup?.slug) {
-    return groups.find((g) => g.slug === me.translationGroup?.slug) ?? null
+    return groups.find((g) => g.slug === me.translationGroup?.slug) ?? null;
   }
 
   if (me.translationGroupId) {
-    return groups.find((g) => g.id === me.translationGroupId) ?? null
+    return groups.find((g) => g.id === me.translationGroupId) ?? null;
   }
 
-  return groups.find((g) => g.ownerId === me.id) ?? null
+  return groups.find((g) => g.ownerId === me.id) ?? null;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -46,7 +46,7 @@ export function titleToSlug(title: string): string {
     .trim()
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
-    .slice(0, 80)
+    .slice(0, 80);
 }
 
 // ─── Authors ─────────────────────────────────────────────────────────────────
@@ -56,15 +56,15 @@ export function useAllAuthors() {
     queryKey: queryKeys.authors.all(),
     queryFn: () => apiClient.getAllAuthors(),
     staleTime: 10 * 60 * 1000,
-  })
+  });
 }
 
 export function useCreateAuthor() {
-  const qc = useQueryClient()
+  const qc = useQueryClient();
   return useMutation({
     mutationFn: (name: string) => apiClient.createAuthor(name),
     onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.authors.all() }),
-  })
+  });
 }
 
 // ─── Tags ─────────────────────────────────────────────────────────────────────
@@ -74,16 +74,16 @@ export function useAllTags() {
     queryKey: queryKeys.tags.all(),
     queryFn: () => apiClient.getAllTags(),
     staleTime: 10 * 60 * 1000,
-  })
+  });
 }
 
 export function useCreateTag() {
-  const qc = useQueryClient()
+  const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ name, slug }: { name: string; slug: string }) =>
+    mutationFn: ({ name, slug }: { name: string; slug: string; }) =>
       apiClient.createTag(name, slug),
     onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.tags.all() }),
-  })
+  });
 }
 
 // ─── Translation Groups ───────────────────────────────────────────────────────
@@ -92,21 +92,21 @@ export function useCurrentUserProfile() {
   return useQuery<CurrentUserProfile | null>({
     queryKey: queryKeys.auth.me(),
     queryFn: async () => {
-      const res = await apiClient.getCurrentUserProfile()
-      return res.user
+      const res = await apiClient.getCurrentUserProfile();
+      return res.user;
     },
     staleTime: 5 * 60 * 1000,
-  })
+  });
 }
 
 export function useMyGroups() {
-  const { data: me, isLoading: meLoading } = useCurrentUserProfile()
+  const { data: me, isLoading: meLoading } = useCurrentUserProfile();
 
   return useQuery<PaginatedResponse<Group>>({
     queryKey: [...queryKeys.dashboard.groups(), me?.translationGroupId ?? me?.translationGroup?.slug ?? 'none'],
     queryFn: async () => {
-      const groups = await apiClient.getTranslationGroups({ page: '1', limit: '200' })
-      const currentGroup = resolveCurrentGroup(groups.data as GroupWithOwner[], me)
+      const groups = await apiClient.getTranslationGroups({ page: '1', limit: '200' });
+      const currentGroup = resolveCurrentGroup(groups.data as GroupWithOwner[], me);
 
       if (!currentGroup) {
         return {
@@ -115,7 +115,7 @@ export function useMyGroups() {
           page: 1,
           pageSize: 0,
           hasMore: false,
-        }
+        };
       }
 
       return {
@@ -124,43 +124,43 @@ export function useMyGroups() {
         page: 1,
         pageSize: 1,
         hasMore: false,
-      }
+      };
     },
     enabled: !meLoading,
-  })
+  });
 }
 
 export function useCreateGroup() {
-  const qc = useQueryClient()
+  const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ name, slug }: { name: string; slug: string }) =>
+    mutationFn: ({ name, slug }: { name: string; slug: string; }) =>
       apiClient.createTranslationGroup(name, slug),
     onSettled: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.auth.me() })
-      qc.invalidateQueries({ queryKey: queryKeys.dashboard.groups() })
-      qc.invalidateQueries({ queryKey: queryKeys.dashboard.titles() })
+      qc.invalidateQueries({ queryKey: queryKeys.auth.me() });
+      qc.invalidateQueries({ queryKey: queryKeys.dashboard.groups() });
+      qc.invalidateQueries({ queryKey: queryKeys.dashboard.titles() });
     },
-  })
+  });
 }
 
 export function useDeleteGroup() {
-  const qc = useQueryClient()
+  const qc = useQueryClient();
   return useMutation({
     mutationFn: (slug: string) => apiClient.deleteTranslationGroup(slug),
     onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.dashboard.groups() }),
-  })
+  });
 }
 
 // ─── Titles ───────────────────────────────────────────────────────────────────
 
 export function useMyTitles() {
-  const { data: me, isLoading: meLoading } = useCurrentUserProfile()
+  const { data: me, isLoading: meLoading } = useCurrentUserProfile();
 
   return useQuery<PaginatedResponse<DashboardTitle>>({
     queryKey: [...queryKeys.dashboard.titles(), me?.translationGroupId ?? me?.translationGroup?.slug ?? 'none'],
     queryFn: async () => {
-      const groups = await apiClient.getTranslationGroups({ page: '1', limit: '200' })
-      const currentGroup = resolveCurrentGroup(groups.data as GroupWithOwner[], me)
+      const groups = await apiClient.getTranslationGroups({ page: '1', limit: '200' });
+      const currentGroup = resolveCurrentGroup(groups.data as GroupWithOwner[], me);
 
       if (!currentGroup?.slug) {
         return {
@@ -169,14 +169,14 @@ export function useMyTitles() {
           page: 1,
           pageSize: 0,
           hasMore: false,
-        }
+        };
       }
 
       const comics = await apiClient.getComics({
         page: '1',
         limit: '100',
         translationGroupSlug: currentGroup.slug,
-      })
+      });
 
       return {
         ...comics,
@@ -193,67 +193,67 @@ export function useMyTitles() {
             ? [{ id: comic.translationGroup.id, name: comic.translationGroup.name }]
             : [],
         })),
-      }
+      };
     },
     enabled: !meLoading,
-  })
+  });
 }
 
 export function useCreateTitle() {
-  const qc = useQueryClient()
+  const qc = useQueryClient();
   return useMutation({
     mutationFn: (payload: CreateComicPayload) =>
       apiClient.createComic(payload),
     onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.dashboard.titles() }),
-  })
+  });
 }
 
 export function usePublishComic() {
-  const qc = useQueryClient()
+  const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ slug, isPublished }: { slug: string; isPublished: boolean }) =>
+    mutationFn: ({ slug, isPublished }: { slug: string; isPublished: boolean; }) =>
       apiClient.publishComic(slug, isPublished),
     onSettled: (_d, _e, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.manga.detail(vars.slug) })
-      qc.invalidateQueries({ queryKey: queryKeys.dashboard.titles() })
+      qc.invalidateQueries({ queryKey: queryKeys.manga.detail(vars.slug) });
+      qc.invalidateQueries({ queryKey: queryKeys.dashboard.titles() });
     },
-  })
+  });
 }
 
 export function useDeleteComic() {
-  const qc = useQueryClient()
+  const qc = useQueryClient();
   return useMutation({
     mutationFn: (slug: string) => apiClient.deleteComic(slug),
     onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.dashboard.titles() }),
-  })
+  });
 }
 
 export function useUpdateComic() {
-  const qc = useQueryClient()
+  const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ slug, payload }: { slug: string; payload: UpdateComicPayload }) =>
+    mutationFn: ({ slug, payload }: { slug: string; payload: UpdateComicPayload; }) =>
       apiClient.updateComic(slug, payload),
     onSettled: (_d, _e, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.manga.detail(vars.slug) })
-      qc.invalidateQueries({ queryKey: queryKeys.dashboard.titles() })
+      qc.invalidateQueries({ queryKey: queryKeys.manga.detail(vars.slug) });
+      qc.invalidateQueries({ queryKey: queryKeys.dashboard.titles() });
     },
-  })
+  });
 }
 
 // ─── Chapters ─────────────────────────────────────────────────────────────────
 
 export function useUploadChapter() {
-  const qc = useQueryClient()
+  const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ comicSlug, payload }: { comicSlug: string; payload: CreateChapterPayload }) =>
+    mutationFn: ({ comicSlug, payload }: { comicSlug: string; payload: CreateChapterPayload; }) =>
       apiClient.createChapter(comicSlug, payload),
     onSettled: (_d, _e, vars) =>
       qc.invalidateQueries({ queryKey: queryKeys.manga.chapters(vars.comicSlug) }),
-  })
+  });
 }
 
 export function usePublishChapter() {
-  const qc = useQueryClient()
+  const qc = useQueryClient();
   return useMutation({
     mutationFn: ({
       comicSlug,
@@ -266,18 +266,18 @@ export function usePublishChapter() {
     }) => apiClient.publishChapter(comicSlug, chapterSlug, isPublished),
     onSettled: (_d, _e, vars) =>
       qc.invalidateQueries({ queryKey: queryKeys.manga.chapters(vars.comicSlug) }),
-  })
+  });
 }
 
 export function useDeleteChapter(comicSlug: string) {
-  const qc = useQueryClient()
+  const qc = useQueryClient();
   return useMutation({
     mutationFn: async (_chapterSlug: string) => {
-      throw new Error('API currently does not support deleting chapters')
+      throw new Error('API currently does not support deleting chapters');
     },
     onSettled: () =>
       qc.invalidateQueries({ queryKey: queryKeys.manga.chapters(comicSlug) }),
-  })
+  });
 }
 
 // ─── File Upload ─────────────────────────────────────────────────────────────
@@ -285,24 +285,33 @@ export function useDeleteChapter(comicSlug: string) {
 export function useUploadFile() {
   return useMutation({
     mutationFn: (file: File) => apiClient.uploadFile(file),
-  })
+  });
 }
 export function useUploadChapterImage() {
   return useMutation({
-    mutationFn: ({ file, comicId }: { file: File; comicId: string }) =>
-      apiClient.uploadChapterImage(file, comicId),
-  })
+    mutationFn: ({
+      file,
+      comicId,
+      chapterSlug,
+      pageIdx,
+    }: {
+      file: File;
+      comicId: string;
+      chapterSlug: string;
+      pageIdx: number;
+    }) => apiClient.uploadChapterImage(file, comicId, chapterSlug, pageIdx),
+  });
 }
 
 export function useUploadCover() {
   return useMutation({
-    mutationFn: ({ file, comicId }: { file: File; comicId: string }) =>
+    mutationFn: ({ file, comicId }: { file: File; comicId: string; }) =>
       apiClient.uploadCover(file, comicId),
-  })
+  });
 }
 
 export function useUpdateChapterPages() {
-  const qc = useQueryClient()
+  const qc = useQueryClient();
   return useMutation({
     mutationFn: ({
       comicId,
@@ -311,10 +320,10 @@ export function useUpdateChapterPages() {
     }: {
       comicId: string;
       chapterId: string;
-      pages: Array<{ pageType: 'image'; imageUrl: string }>;
+      pages: Array<{ pageType: 'image'; imageUrl: string; }>;
     }) => apiClient.updateChapterPages(comicId, chapterId, pages),
     onSettled: (_d, _e, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.manga.chapters(vars.comicId) })
+      qc.invalidateQueries({ queryKey: queryKeys.manga.chapters(vars.comicId) });
     },
-  })
+  });
 }
