@@ -4,15 +4,15 @@ import { useQuery } from '@tanstack/react-query'
 
 import { apiClient } from '@/lib/api-client'
 import { queryKeys } from '@/lib/query-keys'
-import type { Manga, Genre, PaginatedResponse, SearchFilters, BrowseFilters } from '@/types'
+import type { Manga, Genre, PaginatedResponse, SearchFilters, BrowseFilters, ChapterSummary } from '@/types'
 
 // ─── Home ─────────────────────────────────────────────────────────────────────
 
 export function useTrending() {
   return useQuery<PaginatedResponse<Manga>>({
     queryKey: queryKeys.home.trending(),
-    queryFn: () => apiClient.get<PaginatedResponse<Manga>>('/comics', { params: { limit: '10' } }),
-    staleTime: 5 * 60 * 1000, // 5 min
+    queryFn: () => apiClient.getTrendingComics(10),
+    staleTime: 5 * 60 * 1000,
   })
 }
 
@@ -36,13 +36,10 @@ export function useGenres() {
 }
 
 export function useLatestUpdates() {
-  return useQuery<PaginatedResponse<Manga>>({
+  return useQuery<PaginatedResponse<ChapterSummary>>({
     queryKey: queryKeys.home.latestUpdates(),
-    queryFn: () =>
-      apiClient.get<PaginatedResponse<Manga>>('/comics', {
-        params: { sortBy: 'lastChapterAt', order: 'desc', limit: '12', page: '1' },
-      }),
-    staleTime: 2 * 60 * 1000, // 2 min
+    queryFn: () => apiClient.getRecentChapterUpdates({ limit: '12', page: '1' }),
+    staleTime: 2 * 60 * 1000,
   })
 }
 

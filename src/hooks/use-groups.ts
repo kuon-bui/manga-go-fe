@@ -5,6 +5,25 @@ import { apiClient } from '@/lib/api-client'
 import { queryKeys } from '@/lib/query-keys'
 import type { UpdateGroupPayload } from '@/lib/api-client'
 
+export function useGroupMembers(slug: string) {
+  return useQuery({
+    queryKey: ['groups', slug, 'members'],
+    queryFn: () => apiClient.getGroupMembers(slug),
+    enabled: Boolean(slug),
+  })
+}
+
+export function useUploadGroupLogo(slug: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (file: File) => apiClient.uploadGroupLogo(slug, file),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.dashboard.group(slug) })
+      qc.invalidateQueries({ queryKey: ['groups', slug] })
+    },
+  })
+}
+
 export function useGroup(slug: string) {
   return useQuery({
     queryKey: ['groups', slug],

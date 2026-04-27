@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Edit2, Trash2, Users, BookOpen, ArrowRightLeft, Loader2 } from 'lucide-react'
+import { Edit2, Trash2, Users, BookOpen, ArrowRightLeft, Loader2, Upload } from 'lucide-react'
 import { toast } from 'sonner'
 import { useQuery } from '@tanstack/react-query'
 
@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { apiClient } from '@/lib/api-client'
 import { queryKeys } from '@/lib/query-keys'
-import { useUpdateGroup, useDeleteGroup } from '@/hooks/use-groups'
+import { useUpdateGroup, useDeleteGroup, useGroupMembers, useUploadGroupLogo } from '@/hooks/use-groups'
 import { useBrowse } from '@/hooks/use-manga'
 import type { Group } from '@/types'
 
@@ -77,9 +77,10 @@ export function GroupManagementView({ groupSlug }: GroupManagementViewProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-foreground">{group.name}</h1>
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <h1 className="font-display text-2xl font-bold">{group.name}</h1>
         <div className="flex gap-2">
+          <LogoUploadButton groupSlug={groupSlug} />
           <Button size="sm" variant="outline" onClick={startEdit}>
             <Edit2 className="mr-1.5 h-3.5 w-3.5" /> Sửa
           </Button>
@@ -137,6 +138,36 @@ export function GroupManagementView({ groupSlug }: GroupManagementViewProps) {
       {/* Group Members & Invites */}
       <GroupMembersSection groupSlug={groupSlug} />
     </div>
+  )
+}
+
+// ─── Logo upload button ───────────────────────────────────────────────────────
+
+function LogoUploadButton({ groupSlug }: { groupSlug: string }) {
+  const uploadMutation = useUploadGroupLogo(groupSlug)
+
+  function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    uploadMutation.mutate(file, {
+      onSuccess: () => toast.success('Đã cập nhật logo nhóm'),
+      onError: () => toast.error('Không thể upload logo'),
+    })
+    e.target.value = ''
+  }
+
+  return (
+    <label className="cursor-pointer">
+      <Button size="sm" variant="outline" asChild>
+        <span>
+          {uploadMutation.isPending
+            ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+            : <Upload className="mr-1.5 h-3.5 w-3.5" />}
+          Logo
+        </span>
+      </Button>
+      <input type="file" accept="image/*" className="hidden" onChange={handleFile} />
+    </label>
   )
 }
 
@@ -199,115 +230,64 @@ function TransferOwnershipSection({ groupSlug }: { groupSlug: string }) {
 
 // ─── Group Members ────────────────────────────────────────────────────────────
 
-function GroupMembersSection({ groupSlug: _groupSlug }: { groupSlug: string }) {
-  const [inviteLink, setInviteLink] = useState('')
-  const [generating, setGenerating] = useState(false)
+function GroupMembersSection({ groupSlug }: { groupSlug: string }) {
+  const { data: members, isLoading } = useGroupMembers(groupSlug)
 
-  // Mock members since the API doesn't exist yet
-  const [members, setMembers] = useState([
-    { id: '1', name: 'Admin User', role: 'admin' },
-    { id: '2', name: 'Translator 1', role: 'translator' }
-  ])
-
-  function handleGenerateInvite() {
-    setGenerating(true)
-    setTimeout(() => {
-      setInviteLink(`https://manga-go.me/invite/${Math.random().toString(36).substring(7)}`)
-      setGenerating(false)
-      toast.success('Đã tạo link mời mới')
-    }, 800)
-  }
-
-  function handleCopy() {
-    navigator.clipboard.writeText(inviteLink)
-    toast.success('Đã copy link mời!')
-  }
-
-  function handleRoleChange(id: string, newRole: string) {
-    setMembers((prev) => prev.map(m => m.id === id ? { ...m, role: newRole } : m))
-    toast.success('Đã cập nhật chức vụ thành viên!')
-  }
-
-  function handleKick(id: string) {
-    if (!confirm('Xoá thành viên này khỏi nhóm?')) return
-    setMembers((prev) => prev.filter(m => m.id !== id))
-    toast.success('Đã xoá thành viên')
-  }
+  const memberList = (members ?? []) as Array<{
+    id: string
+    name?: string
+    role?: string
+    user?: { id: string; name: string }
+  }>
 
   return (
-    <section className="rounded-xl border bg-card p-5 dark:border-border mt-6">
+    <section className="rounded-xl border bg-card p-5">
       <h2 className="mb-4 flex items-center gap-2 text-base font-semibold">
         <Users className="h-4 w-4 text-muted-foreground" />
         Thành viên nhóm
+        {!isLoading && (
+          <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+            {memberList.length}
+          </span>
+        )}
       </h2>
 
-      <div className="mb-6 space-y-2">
-        <Label>Link mời tham gia</Label>
-        <div className="flex gap-2">
-          <Input 
-            readOnly 
-            value={inviteLink} 
-            placeholder="Chưa có link mời nào được tạo..." 
-            className="flex-1 font-mono text-sm"
-          />
-          {inviteLink ? (
-            <Button variant="outline" onClick={handleCopy}>Copy</Button>
-          ) : (
-            <Button variant="outline" onClick={handleGenerateInvite} disabled={generating}>
-              {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Tạo Link'}
-            </Button>
-          )}
+      {isLoading ? (
+        <div className="space-y-2">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-12 w-full rounded-xl" />
+          ))}
         </div>
-      </div>
-
-      <div className="rounded-md border">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/50 text-muted-foreground border-b border-border">
-            <tr>
-              <th className="font-semibold px-4 py-3 text-left">Tên thành viên</th>
-              <th className="font-semibold px-4 py-3 text-left">Vai trò</th>
-              <th className="font-semibold px-4 py-3 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {members.length === 0 ? (
+      ) : memberList.length === 0 ? (
+        <p className="text-center py-6 text-sm text-muted-foreground">Chưa có thành viên nào.</p>
+      ) : (
+        <div className="rounded-xl border border-border/60 overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/50 border-b border-border/60">
               <tr>
-                <td colSpan={3} className="text-center py-4 text-muted-foreground">Không có thành viên nào.</td>
+                <th className="px-4 py-2.5 text-left text-xs font-bold uppercase tracking-wide text-muted-foreground">Thành viên</th>
+                <th className="px-4 py-2.5 text-left text-xs font-bold uppercase tracking-wide text-muted-foreground">Vai trò</th>
               </tr>
-            ) : (
-              members.map(member => (
-                <tr key={member.id} className="border-b last:border-0 border-border">
-                  <td className="px-4 py-3 font-medium">{member.name}</td>
-                  <td className="px-4 py-3">
-                    <select 
-                      className="bg-transparent text-sm cursor-pointer outline-none ring-0 p-1"
-                      value={member.role}
-                      onChange={(e) => handleRoleChange(member.id, e.target.value)}
-                      disabled={member.role === 'admin'}
-                    >
-                      <option value="admin">Admin</option>
-                      <option value="translator">Translator</option>
-                      <option value="editor">Editor</option>
-                      <option value="uploader">Uploader</option>
-                    </select>
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8 text-destructive hover:bg-destructive/10"
-                      onClick={() => handleKick(member.id)}
-                      disabled={member.role === 'admin'}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody className="divide-y divide-border/60">
+              {memberList.map((m) => {
+                const name = m.name ?? m.user?.name ?? `User #${m.id.slice(0, 6)}`
+                const role = m.role ?? 'member'
+                return (
+                  <tr key={m.id} className="hover:bg-secondary/40 transition-colors">
+                    <td className="px-4 py-3 font-medium">{name}</td>
+                    <td className="px-4 py-3">
+                      <span className="cute-pill bg-secondary text-secondary-foreground text-xs capitalize">
+                        {role}
+                      </span>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
     </section>
   )
 }

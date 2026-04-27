@@ -237,6 +237,36 @@ export function useToggleReaction(scope: CommentScope) {
   })
 }
 
+// ─── Report comment ───────────────────────────────────────────────────────────
+
+export function useReportComment() {
+  return useMutation({
+    mutationFn: ({
+      id,
+      reason,
+      details,
+    }: {
+      id: string
+      reason: 'SPAM' | 'OFFENSIVE' | 'HARASSMENT' | 'ADULT_CONTENT'
+      details?: string
+    }) => apiClient.reportComment(id, reason, details),
+  })
+}
+
+// ─── Comment replies ──────────────────────────────────────────────────────────
+
+export function useCommentReplies(commentId: string, enabled = false) {
+  return useQuery<PaginatedResponse<Comment>>({
+    queryKey: ['comments', 'replies', commentId],
+    queryFn: async () => {
+      const res = await apiClient.getCommentReplies(commentId)
+      return res
+    },
+    enabled: enabled && Boolean(commentId),
+    staleTime: 30_000,
+  })
+}
+
 // ─── Backwards compatibility ──────────────────────────────────────────────────
 
 export function useCommentsChapter(chapterId: string) {

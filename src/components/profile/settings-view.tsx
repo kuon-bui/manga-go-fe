@@ -13,11 +13,35 @@ import { Switch }   from '@/components/ui/switch'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { AvatarCropModal }   from '@/components/profile/avatar-crop-modal'
+import { useQuery, useMutation } from '@tanstack/react-query'
 import { useAuthStore }       from '@/stores/auth-store'
 import { useNovelReaderStore } from '@/stores/novel-reader-store'
 import { useMangaViewerStore, type ViewerMode } from '@/stores/manga-viewer-store'
 import { useThemeStore, THEME_OPTIONS } from '@/stores/theme-store'
+import { apiClient } from '@/lib/api-client'
 import { cn } from '@/lib/utils'
+
+type UserConfig = {
+  enableComicNewChapterNotifications?: boolean
+  enableCommentReplyNotifications?: boolean
+  enableEmailNotifications?: boolean
+  enableSseNotifications?: boolean
+  enableSystemAnnouncements?: boolean
+}
+
+function useUserConfig() {
+  return useQuery<UserConfig>({
+    queryKey: ['user-config'],
+    queryFn: () => apiClient.getUserConfig() as Promise<UserConfig>,
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
+function useUpdateUserConfig() {
+  return useMutation({
+    mutationFn: (config: Partial<UserConfig>) => apiClient.updateUserConfig(config),
+  })
+}
 
 type NavTab = 'profile' | 'appearance' | 'reading' | 'notifications' | 'account'
 
@@ -260,13 +284,7 @@ export function SettingsView() {
 
           {/* ── Notifications ── */}
           {activeTab === 'notifications' && (
-            <div className="cute-card p-5 space-y-1">
-              <h2 className="font-display text-lg font-bold mb-4">Thông báo</h2>
-              <NotifRow label="Chương mới từ truyện đang theo dõi" defaultChecked />
-              <NotifRow label="Có người trả lời bình luận của bạn"  defaultChecked />
-              <NotifRow label="Thông báo hệ thống"                   defaultChecked />
-              <NotifRow label="Email tóm tắt hàng tuần"              defaultChecked={false} />
-            </div>
+            <NotificationsTab />
           )}
 
           {/* ── Account ── */}
@@ -307,7 +325,55 @@ export function SettingsView() {
   )
 }
 
-/* ── Notification row ──────────────────────────────────────────────────────── */
+/* ── Notifications tab ─────────────────────────────────────────────────────── */
+
+function NotificationsTab() {
+  const { data: config, isLoading } = useUserConfig()
+  const updateMutation = useUpdateUserConfig()
+
+  function toggle(key: keyof UserConfig) {
+    const current = config?.[key] ?? true
+    updateMutation.mutate({ [key]: !current })
+  }
+
+  const rows: { label: string; key: keyof UserConfig }[] = [
+    { label: 'Chương mới từ truyện đang theo dõi', key: 'enableComicNewChapterNotifications' },
+    { label: 'Có người trả lời bình luận của bạn',  key: 'enableCommentReplyNotifications' },
+    { label: 'Thông báo hệ thống',                   key: 'enableSystemAnnouncements' },
+    { label: 'Thông báo real-time (SSE)',             key: 'enableSseNotifications' },
+    { label: 'Gửi thông báo qua email',               key: 'enableEmailNotifications' },
+  ]
+
+  return (
+    <div className="cute-card p-5 space-y-1">
+      <h2 className="font-display text-lg font-bold mb-4">Thông báo</h2>
+      {isLoading ? (
+        <div className="space-y-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="flex items-center justify-between py-3">
+              <div className="h-4 w-48 rounded bg-muted animate-pulse" />
+              <div className="h-5 w-9 rounded-full bg-muted animate-pulse" />
+            </div>
+          ))}
+        </div>
+      ) : (
+        rows.map(({ label, key }) => (
+          <div key={key} className="flex items-center justify-between py-3 border-b border-border/60 last:border-0">
+            <Label className="cursor-pointer text-sm font-medium text-foreground">{label}</Label>
+            <Switch
+              checked={config?.[key] ?? true}
+              onCheckedChange={() => toggle(key)}
+              disabled={updateMutation.isPending}
+              aria-label={label}
+            />
+          </div>
+        ))
+      )}
+    </div>
+  )
+}
+
+/* ── Notification row (legacy) ─────────────────────────────────────────────── */
 
 function NotifRow({ label, defaultChecked }: { label: string; defaultChecked?: boolean }) {
   const [checked, setChecked] = useState(defaultChecked ?? false)
