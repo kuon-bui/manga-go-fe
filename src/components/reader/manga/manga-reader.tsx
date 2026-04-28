@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 
 import dynamic from 'next/dynamic'
+import { KawaiiReader } from '@/components/reader/manga/kawaii-reader'
 
 const VerticalScrollView = dynamic(
   () => import('@/components/reader/manga/vertical-scroll-view').then((mod) => mod.VerticalScrollView),
@@ -30,7 +31,7 @@ interface MangaReaderProps {
 
 export function MangaReader({ comicSlug, chapterSlug }: MangaReaderProps) {
   const { data: chapter, isLoading } = useChapter(comicSlug, chapterSlug)
-  const { mode, currentPage, nextPage, prevPage, toggleSettings, toggleControls, reset } =
+  const { mode, uiMode, currentPage, nextPage, prevPage, toggleSettings, toggleControls, reset } =
     useMangaViewerStore()
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const createHistoryMutation = useCreateReadingHistory()
@@ -59,6 +60,12 @@ export function MangaReader({ comicSlug, chapterSlug }: MangaReaderProps) {
     )
   }
 
+  // ── Kawaii UI ───────────────────────────────────────────────────────────────
+  if (uiMode === 'kawaii') {
+    return <KawaiiReader chapter={chapter} />
+  }
+
+  // ── Classic UI ──────────────────────────────────────────────────────────────
   const handleContainerClick = (e: React.MouseEvent) => {
     if (
       (e.target as HTMLElement).closest(

@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils'
 
 export function TrendingSection() {
   const { data, isLoading } = useTrending()
-  const mangas = data?.data.slice(0, 7) ?? []
+  const mangas = data?.data?.slice(0, 7) ?? []
   const [current, setCurrent] = useState(0)
 
   useEffect(() => {
