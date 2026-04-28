@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import {
   ArrowLeft, Columns2, BookOpen, AlignJustify,
-  ChevronLeft, ChevronRight,
+  ChevronLeft, ChevronRight, Sparkles,
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -24,7 +24,7 @@ interface MangaControlsProps {
 }
 
 export function MangaControls({ chapter }: MangaControlsProps) {
-  const { mode, currentPage, controlsVisible, setMode, setCurrentPage } = useMangaViewerStore()
+  const { mode, currentPage, controlsVisible, setMode, setCurrentPage, setUiMode } = useMangaViewerStore()
   const totalPages = chapter.pages.length
 
   return (
@@ -68,6 +68,16 @@ export function MangaControls({ chapter }: MangaControlsProps) {
         {mode !== 'vertical' && chapter.mangaId && (
           <CommentsDrawer chapterId={chapter.id} />
         )}
+
+        {/* UI mode toggle */}
+        <button
+          onClick={() => setUiMode('kawaii')}
+          className="hidden sm:flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold bg-primary/10 text-primary hover:bg-primary/20 transition-colors shrink-0"
+          title="Chuyển sang Kawaii UI"
+        >
+          <Sparkles className="h-3.5 w-3.5" />
+          <span className="hidden md:inline">Kawaii</span>
+        </button>
 
         {/* Mode switcher */}
         <div className="flex shrink-0 items-center overflow-hidden rounded-full bg-muted p-1">
