@@ -188,7 +188,7 @@ export function useMyTitles() {
           type: comic.type,
           status: comic.status,
           chapterCount: comic.chapters?.length ?? comic.chapterCount ?? 0,
-          lastUploadedAt: comic.lastChapterAt,
+          lastpublishedAt: comic.lastChapterAt,
           groups: comic.translationGroup
             ? [{ id: comic.translationGroup.id, name: comic.translationGroup.name }]
             : [],
