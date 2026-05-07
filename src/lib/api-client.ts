@@ -19,6 +19,7 @@ import type {
   ReadingHistoryEntry,
   FollowStatus,
   FollowStatusResponse,
+  RecentUpdateChapter,
 } from '@/types';
 
 // ─── Envelope ────────────────────────────────────────────────────────────────
@@ -390,8 +391,8 @@ class ApiClient {
     return this.get<PaginatedResponse<Manga>>('/comics/trending', { params: { limit: String(limit) } });
   }
 
-  getRecentChapterUpdates(params?: Record<string, string>): Promise<PaginatedResponse<ChapterSummary>> {
-    return this.get<PaginatedResponse<ChapterSummary>>('/chapters/recent-updates', { params });
+  getRecentChapterUpdates(params?: Record<string, string>): Promise<PaginatedResponse<RecentUpdateChapter>> {
+    return this.get<PaginatedResponse<RecentUpdateChapter>>('/chapters/recent-updates', { params });
   }
 
   getFollowedComics(params?: Record<string, string>): Promise<PaginatedResponse<{
@@ -715,7 +716,7 @@ class ApiClient {
     return this.get<unknown[]>(`/translation-groups/${slug}/members`);
   }
 
-  async uploadGroupLogo(slug: string, file: File): Promise<{ url: string }> {
+  async uploadGroupLogo(slug: string, file: File): Promise<{ url: string; }> {
     const formData = new FormData();
     formData.append('file', file);
     const response = await fetch(`${this.baseUrl}/translation-groups/${slug}/logo`, {
@@ -726,14 +727,14 @@ class ApiClient {
     if (!response.ok) {
       throw new ApiClientError({ message: 'Logo upload failed', statusCode: response.status });
     }
-    const json = (await response.json()) as ApiEnvelope<{ url: string }>;
-    return 'data' in json && json.data ? json.data : (json as unknown as { url: string });
+    const json = (await response.json()) as ApiEnvelope<{ url: string; }>;
+    return 'data' in json && json.data ? json.data : (json as unknown as { url: string; });
   }
 
   // ─── Reading progress ────────────────────────────────────────────────────────
 
-  getReadingProgress(comicSlug: string, chapterSlug: string): Promise<{ scrollPercent: number }> {
-    return this.get<{ scrollPercent: number }>(`/comics/${comicSlug}/chapters/${chapterSlug}/reading-progress`);
+  getReadingProgress(comicSlug: string, chapterSlug: string): Promise<{ scrollPercent: number; }> {
+    return this.get<{ scrollPercent: number; }>(`/comics/${comicSlug}/chapters/${chapterSlug}/reading-progress`);
   }
 
   updateReadingProgress(comicSlug: string, chapterSlug: string, scrollPercent: number): Promise<void> {

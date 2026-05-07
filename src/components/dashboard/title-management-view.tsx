@@ -207,7 +207,7 @@ export function TitleManagementView({ titleSlug }: TitleManagementViewProps) {
                       {ch.title || <span className="italic opacity-50">Không tiêu đề</span>}
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm">
-                      {ch.uploadedAt && isValid(new Date(ch.uploadedAt)) ? format(new Date(ch.uploadedAt), 'dd/MM/yyyy HH:mm') : '—'}
+                      {ch.publishedAt && isValid(new Date(ch.publishedAt)) ? format(new Date(ch.publishedAt), 'dd/MM/yyyy HH:mm') : '—'}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">

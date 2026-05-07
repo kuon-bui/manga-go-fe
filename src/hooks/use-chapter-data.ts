@@ -1,10 +1,10 @@
-'use client'
+'use client';
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { apiClient } from '@/lib/api-client'
-import { queryKeys } from '@/lib/query-keys'
-import type { Chapter } from '@/types'
+import { apiClient } from '@/lib/api-client';
+import { queryKeys } from '@/lib/query-keys';
+import type { Chapter } from '@/types';
 
 // Shape returned by the backend before our transformation
 interface BackendPage {
@@ -34,25 +34,25 @@ export function useChapter(comicSlug: string, chapterSlug: string) {
     queryFn: async () => {
       const raw = await apiClient.get<BackendChapter>(
         `/comics/${comicSlug}/chapters/${chapterSlug}`
-      )
+      );
       // Transform backend shape → frontend Chapter type
       const sortedPages = (raw.pages ?? [])
         .slice()
-        .sort((a, b) => a.pageNumber - b.pageNumber)
+        .sort((a, b) => a.pageNumber - b.pageNumber);
       const imagePages = sortedPages
         .filter((p) => (p.pageType ?? 'image') === 'image' && Boolean(p.imageUrl))
-        .map((p) => p.imageUrl as string)
+        .map((p) => p.imageUrl as string);
       const textContent = sortedPages
         .filter((p) => p.pageType === 'text' && Boolean(p.content))
         .map((p) => p.content as string)
-        .join('\n\n')
+        .join('\n\n');
 
       return {
         id: raw.id,
         slug: raw.slug,
         number: raw.number,
         title: raw.title ?? null,
-        uploadedAt: raw.createdAt ?? '',
+        publishedAt: raw.createdAt ?? '',
         group: null,
         comicSlug,
         mangaId: raw.comicId, // backend UUID used for foreign keys e.g. reading-history
@@ -60,19 +60,19 @@ export function useChapter(comicSlug: string, chapterSlug: string) {
         content: textContent || null,
         prevChapter: null, // not provided by backend; navigate via chapter list
         nextChapter: null,
-      } satisfies Chapter
+      } satisfies Chapter;
     },
     enabled: Boolean(comicSlug) && Boolean(chapterSlug),
-  })
+  });
 }
 
 export function useMarkChapterRead(comicSlug: string, chapterSlug: string) {
-  const qc = useQueryClient()
+  const qc = useQueryClient();
   return useMutation({
     mutationFn: () =>
       apiClient.patch(`/comics/${comicSlug}/chapters/${chapterSlug}/mark-as-read`),
     onSettled: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.chapter.detail(comicSlug, chapterSlug) })
+      qc.invalidateQueries({ queryKey: queryKeys.chapter.detail(comicSlug, chapterSlug) });
     },
-  })
+  });
 }

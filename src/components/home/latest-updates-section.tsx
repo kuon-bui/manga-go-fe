@@ -5,7 +5,7 @@ import { ChevronRight, BookOpen, Zap } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SafeImage as Image } from '@/components/ui/safe-image'
 import { useLatestUpdates } from '@/hooks/use-manga'
-import type { ChapterSummary } from '@/types'
+import type { ChapterSummary, Manga } from '@/types'
 
 function timeAgo(dateStr: string | null | undefined): string {
   if (!dateStr) return ''
@@ -20,17 +20,16 @@ function timeAgo(dateStr: string | null | undefined): string {
   return new Date(dateStr).toLocaleDateString('vi-VN', { month: 'short', day: 'numeric' })
 }
 
-function ChapterItem({ chapter }: { chapter: ChapterSummary }) {
-  const group = chapter.group?.name ?? ''
+function ChapterItem({ chapter, title }: { chapter: ChapterSummary, title: Manga }) {
+  const group = chapter?.group?.name ?? ''
   // chapter may have comicSlug from backend; fall back to a hash link
-  const comicSlug = (chapter as ChapterSummary & { comicSlug?: string }).comicSlug
-  const href = comicSlug ? `/titles/${comicSlug}` : '#'
-  const thumb = (chapter as ChapterSummary & { thumbnail?: string }).thumbnail ?? null
-  const comicTitle = (chapter as ChapterSummary & { comicTitle?: string }).comicTitle ?? `Ch. ${chapter.number}`
+  const comicSlug = title?.slug
+  const thumb = title?.thumbnail ?? null
+  const comicTitle = title?.title ?? `Ch. ${chapter.number}`
 
   return (
     <Link
-      href={href}
+      href={comicSlug ? `/titles/${comicSlug}` : '#'}
       className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-secondary/60 transition-colors group"
     >
       <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-muted">
@@ -51,7 +50,7 @@ function ChapterItem({ chapter }: { chapter: ChapterSummary }) {
           Ch. {chapter.number}{group ? ` · ${group}` : ''}
         </p>
         <p className="text-[10px] text-muted-foreground/70 mt-0.5">
-          {timeAgo(chapter.uploadedAt)}
+          {timeAgo(chapter.publishedAt)}
         </p>
       </div>
     </Link>
@@ -102,11 +101,11 @@ export function LatestUpdatesSection() {
         <ul className="grid grid-cols-2 gap-x-2 gap-y-1">
           {chapters.map((ch, i) => (
             <li
-              key={ch.id}
+              key={ch.chapter.id}
               className="animate-in fade-in duration-300 min-w-0"
               style={{ animationDelay: `${i * 20}ms` }}
             >
-              <ChapterItem chapter={ch} />
+              <ChapterItem chapter={ch.chapter} title={ch.title} />
             </li>
           ))}
         </ul>
