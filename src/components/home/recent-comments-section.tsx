@@ -22,7 +22,7 @@ function useRecentComments() {
   return useQuery<PaginatedResponse<Comment>>({
     queryKey: ['comments', 'global-recent'],
     queryFn: async () => {
-      const res = await apiClient.get<PaginatedResponse<unknown>>('/comments', {
+      const res = await apiClient.get<PaginatedResponse<unknown>>('/comments/new', {
         params: { limit: '8', order: 'desc' },
       })
       return {
