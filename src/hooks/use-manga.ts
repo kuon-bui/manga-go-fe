@@ -1,10 +1,17 @@
-'use client'
+'use client';
 
-import { useQuery } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query';
 
-import { apiClient } from '@/lib/api-client'
-import { queryKeys } from '@/lib/query-keys'
-import type { Manga, Genre, PaginatedResponse, SearchFilters, BrowseFilters, ChapterSummary } from '@/types'
+import { apiClient } from '@/lib/api-client';
+import { queryKeys } from '@/lib/query-keys';
+import type {
+  Manga,
+  Genre,
+  PaginatedResponse,
+  SearchFilters,
+  BrowseFilters,
+  RecentUpdateChapter,
+} from '@/types';
 
 // ─── Home ─────────────────────────────────────────────────────────────────────
 
@@ -13,7 +20,7 @@ export function useTrending() {
     queryKey: queryKeys.home.trending(),
     queryFn: () => apiClient.getTrendingComics(10),
     staleTime: 5 * 60 * 1000,
-  })
+  });
 }
 
 export function useRecentlyUpdated() {
@@ -24,7 +31,7 @@ export function useRecentlyUpdated() {
         params: { page: '1', limit: '20' },
       }),
     staleTime: 2 * 60 * 1000, // 2 min
-  })
+  });
 }
 
 export function useGenres() {
@@ -32,15 +39,15 @@ export function useGenres() {
     queryKey: queryKeys.genres.all(),
     queryFn: () => apiClient.get<Genre[]>('/genres/all'),
     staleTime: 60 * 60 * 1000, // 1 hour — genres rarely change
-  })
+  });
 }
 
 export function useLatestUpdates() {
-  return useQuery<PaginatedResponse<ChapterSummary>>({
+  return useQuery<PaginatedResponse<RecentUpdateChapter>>({
     queryKey: queryKeys.home.latestUpdates(),
     queryFn: () => apiClient.getRecentChapterUpdates({ limit: '12', page: '1' }),
     staleTime: 2 * 60 * 1000,
-  })
+  });
 }
 
 export function useRecentlyAdded() {
@@ -51,7 +58,7 @@ export function useRecentlyAdded() {
         params: { sortBy: 'createdAt', order: 'desc', limit: '12', page: '1' },
       }),
     staleTime: 2 * 60 * 1000, // 2 min
-  })
+  });
 }
 
 export function useCompleted() {
@@ -62,28 +69,28 @@ export function useCompleted() {
         params: { status: 'completed', limit: '12', page: '1' },
       }),
     staleTime: 5 * 60 * 1000, // 5 min — completed titles don't change often
-  })
+  });
 }
 
 // ─── Search ───────────────────────────────────────────────────────────────────
 
 export function useSearch(filters: SearchFilters) {
-  const params = buildParams(filters as unknown as Record<string, unknown>)
+  const params = buildParams(filters as unknown as Record<string, unknown>);
   return useQuery<PaginatedResponse<Manga>>({
     queryKey: queryKeys.search.results(filters.query ?? '', filters as unknown as Record<string, unknown>),
     queryFn: () => apiClient.get<PaginatedResponse<Manga>>('/comics', { params }),
     enabled: Object.keys(filters).length > 0,
-  })
+  });
 }
 
 // ─── Browse ───────────────────────────────────────────────────────────────────
 
 export function useBrowse(filters: BrowseFilters) {
-  const params = buildParams(filters as unknown as Record<string, unknown>)
+  const params = buildParams(filters as unknown as Record<string, unknown>);
   return useQuery<PaginatedResponse<Manga>>({
     queryKey: queryKeys.browse.results(filters as unknown as Record<string, unknown>),
     queryFn: () => apiClient.get<PaginatedResponse<Manga>>('/comics', { params }),
-  })
+  });
 }
 
 // ─── Detail ───────────────────────────────────────────────────────────────────
@@ -93,26 +100,26 @@ export function useManga(slug: string) {
     queryKey: queryKeys.manga.detail(slug),
     queryFn: () => apiClient.get<Manga>(`/comics/${slug}`),
     enabled: Boolean(slug),
-  })
+  });
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function buildParams(obj: Record<string, unknown>): Record<string, string> {
-  const out: Record<string, string> = {}
-  
+  const out: Record<string, string> = {};
+
   // Specific mappings for SearchFilters / API parameters
-  if (obj.query) out.search = String(obj.query)
-  if (Array.isArray(obj.genres) && obj.genres.length > 0) out.genreSlugs = obj.genres.join(',')
-  if (Array.isArray(obj.tags) && obj.tags.length > 0) out.tagSlugs = obj.tags.join(',')
-  
+  if (obj.query) out.search = String(obj.query);
+  if (Array.isArray(obj.genres) && obj.genres.length > 0) out.genreSlugs = obj.genres.join(',');
+  if (Array.isArray(obj.tags) && obj.tags.length > 0) out.tagSlugs = obj.tags.join(',');
+
   for (const [k, v] of Object.entries(obj)) {
-    if (v === undefined || v === null || k === 'query' || k === 'genres' || k === 'tags') continue
+    if (v === undefined || v === null || k === 'query' || k === 'genres' || k === 'tags') continue;
     if (Array.isArray(v)) {
-      if (v.length > 0) out[k] = v.join(',')
+      if (v.length > 0) out[k] = v.join(',');
     } else {
-      out[k] = String(v)
+      out[k] = String(v);
     }
   }
-  return out
+  return out;
 }

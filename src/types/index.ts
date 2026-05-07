@@ -78,10 +78,17 @@ export interface ChapterSummary {
   slug: string;
   number: string;       // backend stores as string (supports "1", "1.5", "EX1")
   title: string | null;
-  uploadedAt: string;
+  publishedAt: string;
   group: TranslatorGroup | null;
   volume?: string | null; // volume grouping (null → "Toàn tập")
+  isRead?: boolean;
 }
+
+export interface RecentUpdateChapter {
+  title: Manga;
+  chapter: ChapterSummary;
+}
+
 
 export interface Manga {
   id: string;
@@ -125,8 +132,8 @@ export interface Chapter extends ChapterSummary {
   mangaId: string;
   pages: string[];      // image URLs for manga; empty for novel
   content: string | null; // HTML content for novel; null for manga
-  prevChapter: { slug: string; number: string } | null;
-  nextChapter: { slug: string; number: string } | null;
+  prevChapter: { slug: string; number: string; } | null;
+  nextChapter: { slug: string; number: string; } | null;
 }
 
 // ─── Rating & Follow ──────────────────────────────────────────────────────────
@@ -265,7 +272,7 @@ export interface DashboardTitle {
   type: ContentType;
   status: ContentStatus;
   chapterCount: number;
-  lastUploadedAt: string | null;
+  lastpublishedAt: string | null;
   groups: Pick<Group, 'id' | 'name'>[];
 }
 

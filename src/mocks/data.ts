@@ -19,7 +19,7 @@ import type {
   GroupMember,
   DashboardTitle,
   TranslatorGroup,
-} from '@/types'
+} from '@/types';
 
 // ─── Users ────────────────────────────────────────────────────────────────────
 
@@ -31,7 +31,7 @@ export const MOCK_USER: User = {
   bio: 'Just here to read manga.',
   role: 'member',
   createdAt: '2025-01-01T00:00:00Z',
-}
+};
 
 export const MOCK_ADMIN_USER: User = {
   id: 'user-admin',
@@ -41,12 +41,12 @@ export const MOCK_ADMIN_USER: User = {
   bio: 'Translation group admin.',
   role: 'group_admin',
   createdAt: '2024-06-01T00:00:00Z',
-}
+};
 
 // Server sets tokens as HTTP-only cookies — response only carries user
 export const MOCK_AUTH_RESPONSE: AuthResponse = {
   user: MOCK_USER,
-}
+};
 
 // ─── Genres ───────────────────────────────────────────────────────────────────
 
@@ -61,7 +61,7 @@ export const MOCK_GENRES: Genre[] = [
   { id: 'g-8', name: 'Sci-Fi', slug: 'sci-fi' },
   { id: 'g-9', name: 'Slice of Life', slug: 'slice-of-life' },
   { id: 'g-10', name: 'Sports', slug: 'sports' },
-]
+];
 
 // ─── Translator Groups ────────────────────────────────────────────────────────
 
@@ -69,7 +69,7 @@ const MOCK_TRANSLATOR_GROUP: TranslatorGroup = {
   id: 'tg-1',
   name: 'Scans United',
   logoUrl: 'https://api.dicebear.com/9.x/initials/svg?seed=SU',
-}
+};
 
 // ─── Chapter Summaries ────────────────────────────────────────────────────────
 
@@ -79,9 +79,9 @@ function makeChapterSummaries(comicSlug: string, count: number): ChapterSummary[
     slug: `chapter-${i + 1}`,
     number: String(i + 1), // backend stores chapter number as string
     title: i === 0 ? 'Prologue' : null,
-    uploadedAt: new Date(Date.now() - (count - i) * 86_400_000).toISOString(),
+    publishedAt: new Date(Date.now() - (count - i) * 86_400_000).toISOString(),
     group: MOCK_TRANSLATOR_GROUP,
-  })).reverse() // latest first
+  })).reverse(); // latest first
 }
 
 // ─── Authors & Tags ───────────────────────────────────────────────────────────
@@ -95,7 +95,7 @@ const AUTHORS: Record<string, Author> = {
   park: { id: 'author-6', name: 'Park Dongsu' },
   kim: { id: 'author-7', name: 'Kim Mirae' },
   aoyama: { id: 'author-8', name: 'Aoyama Yuki' },
-}
+};
 
 const TAGS: Record<string, Tag> = {
   samurai: { id: 'tag-1', name: 'Samurai', slug: 'samurai' },
@@ -110,7 +110,7 @@ const TAGS: Record<string, Tag> = {
   fighting: { id: 'tag-10', name: 'Fighting', slug: 'fighting' },
   supernatural: { id: 'tag-11', name: 'Supernatural', slug: 'supernatural' },
   spirits: { id: 'tag-12', name: 'Spirits', slug: 'spirits' },
-}
+};
 
 // ─── Manga ────────────────────────────────────────────────────────────────────
 
@@ -283,7 +283,7 @@ export const MOCK_MANGA_LIST: Manga[] = [
     createdAt: '2024-03-01T00:00:00Z',
     updatedAt: new Date(Date.now() - 86_400_000 * 0.5).toISOString(),
   },
-]
+];
 
 // ─── Chapters ─────────────────────────────────────────────────────────────────
 
@@ -294,7 +294,7 @@ export const MOCK_CHAPTER_SUMMARIES: Record<string, ChapterSummary[]> = {
   'chronicles-of-the-void-walker': makeChapterSummaries('chronicles-of-the-void-walker', 210),
   'iron-cage': makeChapterSummaries('iron-cage', 75),
   'phantom-blooms': makeChapterSummaries('phantom-blooms', 18),
-}
+};
 
 export const MOCK_CHAPTERS: Record<string, Chapter> = {
   'steel-shadow/chapter-1': {
@@ -304,7 +304,7 @@ export const MOCK_CHAPTERS: Record<string, Chapter> = {
     mangaId: 'manga-1',
     number: '1', // string — matches backend model
     title: 'Prologue',
-    uploadedAt: '2022-03-15T00:00:00Z',
+    publishedAt: '2022-03-15T00:00:00Z',
     group: MOCK_TRANSLATOR_GROUP,
     pages: Array.from({ length: 22 }, (_, i) =>
       `https://picsum.photos/seed/steelshadowch1p${i + 1}/800/1200`
@@ -320,7 +320,7 @@ export const MOCK_CHAPTERS: Record<string, Chapter> = {
     mangaId: 'manga-1',
     number: '58',
     title: 'The Final Stand',
-    uploadedAt: new Date(Date.now() - 86_400_000).toISOString(),
+    publishedAt: new Date(Date.now() - 86_400_000).toISOString(),
     group: MOCK_TRANSLATOR_GROUP,
     pages: Array.from({ length: 30 }, (_, i) =>
       `https://picsum.photos/seed/steelshadowch58p${i + 1}/800/1200`
@@ -336,7 +336,7 @@ export const MOCK_CHAPTERS: Record<string, Chapter> = {
     mangaId: 'novel-1',
     number: '1',
     title: 'Awakening',
-    uploadedAt: '2023-05-20T00:00:00Z',
+    publishedAt: '2023-05-20T00:00:00Z',
     group: MOCK_TRANSLATOR_GROUP,
     pages: [],
     content: `<h2>Chapter 1 — Awakening</h2>
@@ -351,7 +351,7 @@ export const MOCK_CHAPTERS: Record<string, Chapter> = {
     prevChapter: null,
     nextChapter: { slug: 'chapter-2', number: '2' },
   },
-}
+};
 
 // ─── Library ──────────────────────────────────────────────────────────────────
 
@@ -377,7 +377,7 @@ export const MOCK_LIBRARY: LibraryEntry[] = [
     lastReadAt: new Date(Date.now() - 86_400_000).toISOString(),
     addedAt: '2025-02-20T00:00:00Z',
   },
-]
+];
 
 // ─── Comments ─────────────────────────────────────────────────────────────────
 
@@ -433,7 +433,7 @@ export const MOCK_COMMENTS: Record<string, Comment[]> = {
       updatedAt: new Date(Date.now() - 14_400_000).toISOString(),
     },
   ],
-}
+};
 
 // ─── Notifications ────────────────────────────────────────────────────────────
 
@@ -465,7 +465,7 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
     link: '/titles/starfall-academy/read/chapter-32',
     createdAt: new Date(Date.now() - 2 * 86_400_000).toISOString(),
   },
-]
+];
 
 // ─── Groups ───────────────────────────────────────────────────────────────────
 
@@ -480,7 +480,7 @@ export const MOCK_GROUPS: Group[] = [
     titleCount: 3,
     createdAt: '2023-01-15T00:00:00Z',
   },
-]
+];
 
 export const MOCK_GROUP_MEMBERS: GroupMember[] = [
   {
@@ -499,7 +499,7 @@ export const MOCK_GROUP_MEMBERS: GroupMember[] = [
     role: 'member',
     joinedAt: '2023-03-10T00:00:00Z',
   },
-]
+];
 
 export const MOCK_DASHBOARD_TITLES: DashboardTitle[] = [
   {
@@ -510,7 +510,7 @@ export const MOCK_DASHBOARD_TITLES: DashboardTitle[] = [
     type: 'manga',
     status: 'ongoing',
     chapterCount: 58,
-    lastUploadedAt: new Date(Date.now() - 86_400_000).toISOString(),
+    lastpublishedAt: new Date(Date.now() - 86_400_000).toISOString(),
     groups: [{ id: 'group-1', name: 'Scans United' }],
   },
   {
@@ -521,7 +521,7 @@ export const MOCK_DASHBOARD_TITLES: DashboardTitle[] = [
     type: 'manga',
     status: 'ongoing',
     chapterCount: 32,
-    lastUploadedAt: new Date(Date.now() - 2 * 86_400_000).toISOString(),
+    lastpublishedAt: new Date(Date.now() - 2 * 86_400_000).toISOString(),
     groups: [{ id: 'group-1', name: 'Scans United' }],
   },
-]
+];

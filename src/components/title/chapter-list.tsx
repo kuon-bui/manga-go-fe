@@ -124,7 +124,7 @@ export function ChapterList({
                   isLast={item.isLast}
                   contentType={contentType}
                   comicSlug={comicSlug}
-                  isRead={item.chapter.id === lastReadChapterId}
+                  isRead={item.chapter.isRead}
                 />
               )}
             </div>
@@ -168,10 +168,10 @@ function ChapterRow({
   comicSlug: string
   isRead?: boolean
 }) {
-  const uploadDate = new Date(chapter.uploadedAt)
+  const uploadDate = new Date(chapter.publishedAt)
   const isRecent   = Date.now() - uploadDate.getTime() < 1000 * 60 * 60 * 24 * 3
   const readerPath = contentType === 'novel' ? 'novel' : 'manga'
-
+  console.log(isRead)
   return (
     <Link
       href={`/read/${readerPath}/${comicSlug}/${chapter.slug}`}
