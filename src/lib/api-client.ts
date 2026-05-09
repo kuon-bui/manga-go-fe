@@ -692,6 +692,14 @@ class ApiClient {
     return this.patch<void>('/notifications/read-all');
   }
 
+  deleteNotification(id: string): Promise<void> {
+    return this.delete<void>(`/notifications/${id}`);
+  }
+
+  deleteAllNotifications(): Promise<void> {
+    return this.delete<void>('/notifications');
+  }
+
   // ─── User config ─────────────────────────────────────────────────────────────
 
   getUserConfig(): Promise<Record<string, unknown>> {
