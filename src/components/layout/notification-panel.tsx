@@ -1,18 +1,21 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type RefCallback } from 'react'
 import Link from 'next/link'
-import { BookOpen, MessageSquare, Bell, CheckCheck, AlertCircle, RefreshCw } from 'lucide-react'
+import { BookOpen, MessageSquare, Bell, CheckCheck, AlertCircle, RefreshCw, Trash2, X } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
 import {
+  NOTIFICATION_DELETE_ANIMATION_MS,
   useNotifications,
   useMarkNotificationRead,
   useMarkNotificationSeen,
   useMarkAllRead,
+  useDeleteNotification,
+  useDeleteAllNotifications,
 } from '@/hooks/use-notifications'
 import type { Notification, NotificationType } from '@/types'
 
@@ -28,19 +31,89 @@ const TYPE_LABELS: Record<NotificationType, string> = {
   system: 'Hệ thống',
 }
 
+const EMPTY_NOTIFICATIONS: Notification[] = []
+
 interface NotificationPanelProps {
+  isOpen: boolean
   onClose: () => void
 }
 
-export function NotificationPanel({ onClose }: NotificationPanelProps) {
+export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
   const { data, isLoading, isError, refetch } = useNotifications()
   const markRead = useMarkNotificationRead()
   const markSeen = useMarkNotificationSeen()
   const markAll = useMarkAllRead()
+  const deleteNotification = useDeleteNotification()
+  const deleteAllNotifications = useDeleteAllNotifications()
+  const [exitingIds, setExitingIds] = useState<string[]>([])
+  const deleteTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
+  const rowRefs = useRef<Map<string, HTMLDivElement>>(new Map())
+  const previousRowTopsRef = useRef<Map<string, number>>(new Map())
+  const rowAnimationTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
 
-  const notifications = data?.data ?? []
+  const notifications = data?.data ?? EMPTY_NOTIFICATIONS
   const unreadNotifications = notifications.filter((n) => !n.isRead)
   const unreadCount = unreadNotifications.length
+
+  useEffect(() => {
+    const deleteTimers = deleteTimersRef.current
+    const rowAnimationTimers = rowAnimationTimersRef.current
+
+    return () => {
+      deleteTimers.forEach((timerId) => clearTimeout(timerId))
+      deleteTimers.clear()
+      rowAnimationTimers.forEach((timerId) => clearTimeout(timerId))
+      rowAnimationTimers.clear()
+    }
+  }, [])
+
+  useLayoutEffect(() => {
+    const nextRowTops = new Map<string, number>()
+
+    notifications.forEach((notification) => {
+      const row = rowRefs.current.get(notification.id)
+
+      if (!row) return
+
+      const nextTop = row.getBoundingClientRect().top
+      nextRowTops.set(notification.id, nextTop)
+
+      const previousTop = previousRowTopsRef.current.get(notification.id)
+
+      if (previousTop === undefined) return
+
+      const deltaY = previousTop - nextTop
+
+      if (Math.abs(deltaY) < 1) return
+
+      const existingTimer = rowAnimationTimersRef.current.get(notification.id)
+      if (existingTimer) {
+        clearTimeout(existingTimer)
+      }
+
+      row.style.transition = 'none'
+      row.style.transform = `translateY(${deltaY}px)`
+      row.style.willChange = 'transform'
+
+      requestAnimationFrame(() => {
+        row.style.transition = `transform ${NOTIFICATION_DELETE_ANIMATION_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`
+        row.style.transform = 'translateY(0)'
+      })
+
+      const timerId = setTimeout(() => {
+        if (rowRefs.current.get(notification.id) !== row) return
+
+        row.style.transition = ''
+        row.style.transform = ''
+        row.style.willChange = ''
+        rowAnimationTimersRef.current.delete(notification.id)
+      }, NOTIFICATION_DELETE_ANIMATION_MS)
+
+      rowAnimationTimersRef.current.set(notification.id, timerId)
+    })
+
+    previousRowTopsRef.current = nextRowTops
+  }, [notifications])
 
   // Mark all as "seen" when panel opens (different from "read")
   useEffect(() => {
@@ -57,11 +130,98 @@ export function NotificationPanel({ onClose }: NotificationPanelProps) {
 
   function handleClick(n: Notification) {
     if (!n.isRead) markRead.mutate(n.id)
-    onClose()
+  }
+
+  function queueDeleteNotification(id: string) {
+    if (exitingIds.length > 0 || deleteNotification.isPending || deleteAllNotifications.isPending) {
+      return
+    }
+
+    setExitingIds([id])
+
+    deleteNotification.mutate(id, {
+      onError: () => {
+        const timerId = deleteTimersRef.current.get(id)
+
+        if (timerId) {
+          clearTimeout(timerId)
+          deleteTimersRef.current.delete(id)
+        }
+
+        setExitingIds([])
+      },
+    })
+
+    const timerId = setTimeout(() => {
+      deleteTimersRef.current.delete(id)
+
+      setExitingIds([])
+    }, NOTIFICATION_DELETE_ANIMATION_MS)
+
+    deleteTimersRef.current.set(id, timerId)
+  }
+
+  function queueDeleteAllNotifications() {
+    if (
+      notifications.length === 0 ||
+      exitingIds.length > 0 ||
+      deleteNotification.isPending ||
+      deleteAllNotifications.isPending
+    ) {
+      return
+    }
+
+    const ids = notifications.map((notification) => notification.id)
+
+    setExitingIds(ids)
+
+    deleteAllNotifications.mutate(undefined, {
+      onError: () => {
+        const timerId = deleteTimersRef.current.get('all')
+
+        if (timerId) {
+          clearTimeout(timerId)
+          deleteTimersRef.current.delete('all')
+        }
+
+        setExitingIds([])
+      },
+    })
+
+    const timerId = setTimeout(() => {
+      deleteTimersRef.current.delete('all')
+
+      setExitingIds((current) => current.filter((id) => !ids.includes(id)))
+    }, NOTIFICATION_DELETE_ANIMATION_MS)
+
+    deleteTimersRef.current.set('all', timerId)
+  }
+
+  function setRowRef(id: string, node: HTMLDivElement | null) {
+    if (node) {
+      rowRefs.current.set(id, node)
+      return
+    }
+
+    rowRefs.current.delete(id)
+    previousRowTopsRef.current.delete(id)
+
+    const timerId = rowAnimationTimersRef.current.get(id)
+    if (timerId) {
+      clearTimeout(timerId)
+      rowAnimationTimersRef.current.delete(id)
+    }
   }
 
   return (
-    <div className="absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-xl border bg-popover shadow-xl dark:border-border animate-in fade-in slide-in-from-top-2 duration-150">
+    <div
+      className={cn(
+        'absolute right-0 top-full z-50 mt-2 w-[min(32rem,calc(100vw-1rem))] overflow-hidden rounded-xl border bg-popover shadow-xl dark:border-border duration-150 sm:w-[30rem]',
+        isOpen
+          ? 'animate-in fade-in slide-in-from-top-2'
+          : 'pointer-events-none animate-out fade-out slide-out-to-top-2'
+      )}
+    >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b dark:border-border">
         <div className="flex items-center gap-2">
@@ -74,22 +234,37 @@ export function NotificationPanel({ onClose }: NotificationPanelProps) {
           )}
         </div>
 
-        {unreadCount > 0 && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-auto gap-1 p-0 text-xs text-primary hover:text-primary/80"
-            onClick={() => markAll.mutate()}
-            disabled={markAll.isPending}
-          >
-            <CheckCheck className="h-3.5 w-3.5" />
-            Đánh dấu tất cả
-          </Button>
-        )}
+        <div className="flex items-center gap-3">
+          {unreadCount > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-auto gap-1 p-0 text-xs text-primary hover:text-primary/80"
+              onClick={() => markAll.mutate()}
+              disabled={markAll.isPending || deleteAllNotifications.isPending || exitingIds.length > 0}
+            >
+              <CheckCheck className="h-3.5 w-3.5" />
+              Đánh dấu tất cả
+            </Button>
+          )}
+
+          {notifications.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-auto gap-1 p-0 text-xs text-destructive hover:text-destructive/80"
+              onClick={queueDeleteAllNotifications}
+              disabled={deleteAllNotifications.isPending || markAll.isPending || exitingIds.length > 0}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Xóa tất cả
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* List */}
-      <div className="max-h-[420px] overflow-y-auto">
+      <div className="max-h-[520px] overflow-y-auto">
         {/* Loading */}
         {isLoading && (
           <div className="space-y-0 divide-y dark:divide-border">
@@ -134,7 +309,17 @@ export function NotificationPanel({ onClose }: NotificationPanelProps) {
         {!isLoading && !isError && notifications.length > 0 && (
           <div className="divide-y dark:divide-border">
             {notifications.map((n) => (
-              <NotificationRow key={n.id} notification={n} onClick={() => handleClick(n)} />
+              <NotificationRow
+                key={n.id}
+                notification={n}
+                rowRef={(node) => setRowRef(n.id, node)}
+                isDeleting={
+                  exitingIds.includes(n.id) ||
+                  (deleteNotification.isPending && deleteNotification.variables === n.id)
+                }
+                onClick={() => handleClick(n)}
+                onDelete={() => queueDeleteNotification(n.id)}
+              />
             ))}
           </div>
         )}
@@ -165,10 +350,16 @@ export function NotificationPanel({ onClose }: NotificationPanelProps) {
 
 function NotificationRow({
   notification: n,
+  rowRef,
+  isDeleting,
   onClick,
+  onDelete,
 }: {
   notification: Notification
+  rowRef: RefCallback<HTMLDivElement>
+  isDeleting: boolean
   onClick: () => void
+  onDelete: () => void
 }) {
   const commonContent = (
     <>
@@ -199,21 +390,53 @@ function NotificationRow({
   )
 
   const rowClass = cn(
-    'flex cursor-pointer gap-3 px-4 py-3 transition-colors',
+    'relative flex items-start gap-2 px-4 py-3 transition-colors duration-200',
+    isDeleting && 'pointer-events-none animate-out fade-out-0 slide-out-to-left-6 zoom-out-95',
     !n.isRead ? 'bg-primary/5 hover:bg-primary/10' : 'hover:bg-accent/60'
+  )
+
+  const contentClass = 'flex min-w-0 flex-1 gap-3 pr-8 text-left'
+
+  const deleteButton = (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      className="absolute right-3 top-3 h-5 w-5 shrink-0 rounded-full text-muted-foreground/70 hover:text-destructive"
+      onClick={(event) => {
+        event.preventDefault()
+        event.stopPropagation()
+        onDelete()
+      }}
+      disabled={isDeleting}
+      aria-label="Xóa thông báo"
+    >
+      <X className="h-3.5 w-3.5" />
+    </Button>
   )
 
   if (n.link) {
     return (
-      <a href={n.link} onClick={onClick} className={rowClass}>
-        {commonContent}
-      </a>
+      <div ref={rowRef} className={rowClass}>
+        <a href={n.link} onClick={onClick} className={contentClass}>
+          {commonContent}
+        </a>
+        {deleteButton}
+      </div>
     )
   }
 
   return (
-    <div onClick={onClick} className={rowClass} role="button" tabIndex={0}>
-      {commonContent}
+    <div ref={rowRef} className={rowClass}>
+      <Button
+        type="button"
+        variant="ghost"
+        className="h-auto min-w-0 flex-1 justify-start p-0 text-left hover:bg-transparent"
+        onClick={onClick}
+      >
+        <div className={contentClass}>{commonContent}</div>
+      </Button>
+      {deleteButton}
     </div>
   )
 }
