@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
 import {
@@ -25,11 +25,20 @@ interface RatingModalProps {
 export function RatingModal({ open, onOpenChange, mangaId, mangaTitle }: RatingModalProps) {
   const { data: existingRating } = useUserRating(mangaId)
   const submitMutation = useSubmitRating(mangaId)
+  const existingScore = normalizeScore(existingRating?.score)
 
-  const [score, setScore] = useState<number>(existingRating?.score ?? 0)
+  const [score, setScore] = useState<number | null>(null)
 
-  // Sync score when existing rating loads
-  const displayScore = score === 0 && existingRating ? existingRating.score : score
+  useEffect(() => {
+    if (!open) return
+    setScore(null)
+  }, [open, mangaId])
+
+  const displayScore = score ?? existingScore
+
+  function handleScoreChange(nextScore: number) {
+    setScore(normalizeScore(Math.ceil(nextScore / 2)))
+  }
 
   function handleSubmit() {
     if (displayScore === 0) return
@@ -54,9 +63,9 @@ export function RatingModal({ open, onOpenChange, mangaId, mangaTitle }: RatingM
 
         <div className="flex flex-col items-center gap-4 py-4">
           <StarRating
-            value={displayScore}
-            onChange={setScore}
-            showValue
+            value={displayScore > 0 ? displayScore * 2 : 0}
+            onChange={handleScoreChange}
+            showValue={false}
             className="scale-125"
           />
           <p className="text-xs text-muted-foreground">
@@ -88,4 +97,9 @@ function scoreLabel(score: number): string {
   if (score === 3) return 'Khá'
   if (score === 4) return 'Tốt'
   return 'Xuất sắc'
+}
+
+function normalizeScore(score: number | null | undefined): number {
+  if (typeof score !== 'number' || !Number.isFinite(score)) return 0
+  return Math.min(5, Math.max(1, Math.round(score)))
 }
