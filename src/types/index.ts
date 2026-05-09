@@ -309,7 +309,7 @@ export type CreateTitlePayload = CreateTitleFormData;
 
 // ─── Notifications ────────────────────────────────────────────────────────────
 
-export type NotificationType = 'new_chapter' | 'comment_reply' | 'system';
+export type NotificationType = 'new_notification' | 'new_chapter' | 'comment_reply' | 'system';
 
 export interface Notification {
   id: string;

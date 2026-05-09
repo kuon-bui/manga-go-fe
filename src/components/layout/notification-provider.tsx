@@ -1,14 +1,18 @@
 'use client'
 
-import { useNotificationPolling, useNotificationStream } from '@/hooks/use-notifications'
+import {
+  useInitializeNotifications,
+  useNotificationStream,
+} from '@/hooks/use-notifications'
 
 /**
- * Mounts the notification polling (60s) and SSE (real-time) hooks.
- * Place this component once inside the authenticated app layout.
+ * Mounts one-time notification bootstrap and SSE syncing.
  * It renders nothing — purely side-effect driven.
  */
 export function NotificationProvider() {
-  useNotificationPolling()
-  useNotificationStream()
+  const isInitialized = useInitializeNotifications()
+
+  useNotificationStream(isInitialized)
+
   return null
 }

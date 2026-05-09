@@ -1,9 +1,9 @@
 'use client';
 
-import { useNotificationPolling } from '@/hooks/use-notifications';
+import { useInitializeNotifications } from '@/hooks/use-notifications';
 
-/** Mounts the notification polling side-effect; renders nothing. */
+/** Mounts the one-time notification bootstrap side-effect; renders nothing. */
 export function NotificationPollingProvider() {
-  useNotificationPolling();
+  useInitializeNotifications();
   return null;
 }
