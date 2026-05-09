@@ -1,13 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import { SafeImage as Image } from '@/components/ui/safe-image'
 import Link from 'next/link'
-import { BookOpen, Heart, Star, Pencil, ChevronDown, Check } from 'lucide-react'
+import { BookOpen, Heart, Pencil, ChevronDown, Check } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
+import { StarRating } from '@/components/ui/star-rating'
 import { useAuthStore } from '@/stores/auth-store'
-import { useFollowStatus, useFollow, useChangeFollowStatus, useUserRating } from '@/hooks/use-title-detail'
+import { useFollowStatus, useFollow, useChangeFollowStatus, useAverageRating, useSubmitRating } from '@/hooks/use-title-detail'
 import { cn } from '@/lib/utils'
 import type { Manga, ContentStatus, ContentType, FollowStatus } from '@/types'
 
@@ -56,21 +58,22 @@ const FOLLOW_STATUS_OPTIONS: { value: FollowStatus; label: string; emoji: string
 
 interface TitleHeroProps {
   manga: Manga
-  onRateClick: () => void
 }
 
 /* ── Component ────────────────────────────────────────────────────────────── */
 
-export function TitleHero({ manga, onRateClick }: TitleHeroProps) {
+export function TitleHero({ manga }: TitleHeroProps) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const user            = useAuthStore((s) => s.user)
 
   const { data: followStatus } = useFollowStatus(manga.slug ?? manga.id)
   const followMutation         = useFollow(manga.slug ?? manga.id)
   const changeStatusMutation   = useChangeFollowStatus(manga.slug ?? manga.id)
-  const { data: userRating }   = useUserRating(manga.slug ?? manga.id)
+  const { data: averageRating } = useAverageRating(manga.slug ?? manga.id)
+  const submitRatingMutation   = useSubmitRating(manga.slug ?? manga.id)
 
   const [statusOpen, setStatusOpen] = useState(false)
+  const [submittedScore, setSubmittedScore] = useState<number | null>(null)
 
   const isFollowing   = followStatus?.isFollowed ?? followStatus?.isFollowing ?? false
   const currentStatus = followStatus?.followStatus
@@ -93,10 +96,36 @@ export function TitleHero({ manga, onRateClick }: TitleHeroProps) {
 
   const authorNames = manga.authors.map((a) => a.name).join(', ') || 'Không rõ'
 
-  // Rating: 5 stars (score 1–5 per swagger)
-  const ratingScore = userRating?.score ?? 0
-  const globalScore = manga.rating ?? 0
-  const filledStars = userRating ? Math.round(ratingScore) : Math.round(globalScore)
+  useEffect(() => {
+    setSubmittedScore(null)
+  }, [manga.id, manga.slug])
+
+  const averageScore = typeof averageRating?.average === 'number'
+    ? averageRating.average
+    : typeof manga.rating === 'number'
+      ? manga.rating
+      : 0
+  const ratingCount = typeof averageRating?.count === 'number'
+    ? averageRating.count
+    : manga.ratingCount ?? 0
+  const displayStarScore = submittedScore ?? averageScore
+  const displayStarValue = Math.max(0, Math.min(10, displayStarScore * 2))
+  const canRate = isAuthenticated && !submitRatingMutation.isPending
+
+  function handleRatingChange(nextValue: number) {
+    if (!isAuthenticated || submitRatingMutation.isPending) return
+
+    const score = Math.max(1, Math.min(5, Math.ceil(nextValue / 2)))
+    submitRatingMutation.mutate(score, {
+      onSuccess: () => {
+        setSubmittedScore(score)
+        toast.success('Rating submitted!')
+      },
+      onError: () => {
+        toast.error('Failed to submit rating. Please try again.')
+      },
+    })
+  }
 
   return (
     <div className="grid sm:grid-cols-[160px_1fr] gap-5">
@@ -166,21 +195,26 @@ export function TitleHero({ manga, onRateClick }: TitleHeroProps) {
         </div>
 
         {/* Rating stars */}
-        <button
-          onClick={isAuthenticated ? onRateClick : undefined}
-          className={cn('flex items-center gap-1 w-fit', isAuthenticated ? 'cursor-pointer group' : 'cursor-default')}
+        <div
+          className="flex items-center gap-2 w-fit"
           aria-label={isAuthenticated ? 'Đánh giá truyện' : undefined}
-          title={isAuthenticated ? 'Nhấn để đánh giá' : `Điểm: ${globalScore.toFixed(1)}/5`}
+          title={isAuthenticated ? 'Nhấn vào sao để đánh giá' : `Điểm: ${averageScore.toFixed(1)}/5`}
         >
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Star key={i} className={cn('h-4 w-4 transition-colors',
-              i < filledStars ? 'fill-warning text-warning' : 'fill-transparent text-border group-hover:text-warning/60')} />
-          ))}
+          <StarRating
+            value={displayStarValue}
+            onChange={canRate ? handleRatingChange : undefined}
+            readOnly={!canRate}
+            showValue={false}
+            className={cn(
+              'transition-opacity',
+              submitRatingMutation.isPending && 'pointer-events-none opacity-70'
+            )}
+          />
           <span className="ml-1 text-xs font-semibold text-muted-foreground">
-            {globalScore > 0 ? globalScore.toFixed(1) : '—'}
-            {manga.ratingCount ? ` (${manga.ratingCount.toLocaleString('vi-VN')})` : ''}
+            {averageScore > 0 ? averageScore.toFixed(1) : '—'}
+            {ratingCount > 0 ? ` (${ratingCount.toLocaleString('vi-VN')})` : ''}
           </span>
-        </button>
+        </div>
 
         {/* Meta */}
         {(manga.chapterCount !== undefined || manga.followCount !== undefined) && (
