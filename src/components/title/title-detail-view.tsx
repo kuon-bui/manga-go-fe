@@ -8,7 +8,6 @@ import { TitleSynopsis }        from '@/components/title/title-synopsis'
 import { ChapterList }          from '@/components/title/chapter-list'
 import { TitleSidebar }         from '@/components/title/title-sidebar'
 import { TitleRecommendations } from '@/components/title/title-recommendations'
-import { RatingModal }          from '@/components/title/rating-modal'
 import { CommentSection }       from '@/components/comments/comment-section'
 import { Skeleton }             from '@/components/ui/skeleton'
 import { cn }                   from '@/lib/utils'
@@ -22,7 +21,6 @@ interface TitleDetailViewProps {
 }
 
 export function TitleDetailView({ id }: TitleDetailViewProps) {
-  const [ratingOpen,   setRatingOpen]   = useState(false)
   const [chaptersOpen, setChaptersOpen] = useState(true)
   const [commentsOpen, setCommentsOpen] = useState(false)
 
@@ -80,7 +78,7 @@ export function TitleDetailView({ id }: TitleDetailViewProps) {
 
           {/* Info card */}
           <section className="cute-card p-5 space-y-5">
-            <TitleHero manga={manga} onRateClick={() => setRatingOpen(true)} />
+            <TitleHero manga={manga} />
             <div className="h-px bg-border/60" />
             <TitleSynopsis text={manga.description ?? ''} />
           </section>
@@ -150,14 +148,6 @@ export function TitleDetailView({ id }: TitleDetailViewProps) {
       <div className="lg:hidden">
         <TitleSidebar manga={manga} />
       </div>
-
-      {/* Rating modal */}
-      <RatingModal
-        open={ratingOpen}
-        onOpenChange={setRatingOpen}
-        mangaId={manga.slug ?? id}
-        mangaTitle={manga.title}
-      />
     </div>
   )
 }

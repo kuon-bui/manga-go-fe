@@ -36,6 +36,7 @@ export const queryKeys = {
   },
   rating: {
     user: (mangaId: string) => ['rating', 'user', mangaId] as const,
+    average: (mangaId: string) => ['rating', 'average', mangaId] as const,
   },
   comments: {
     list: (chapterId: string) => ['comments', chapterId] as const,
