@@ -22,31 +22,52 @@ interface RoleDeleteDialogProps {
   onOpenChange: (_open: boolean) => void;
   role: RoleAccessSummary;
   onDelete: (_expectedVersion: string) => Promise<unknown>;
+  onRefreshRole?: (_roleId: string) => Promise<RoleAccessSummary>;
 }
 
-export function RoleDeleteDialog({ open, onOpenChange, role, onDelete }: RoleDeleteDialogProps) {
+export function RoleDeleteDialog({
+  open,
+  onOpenChange,
+  role,
+  onDelete,
+  onRefreshRole,
+}: RoleDeleteDialogProps) {
   const [confirmation, setConfirmation] = useState('');
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const assigned = role.assignedUserCount > 0;
+  const [currentRole, setCurrentRole] = useState(role);
+  const assigned = currentRole.assignedUserCount > 0;
 
   useEffect(() => {
     setConfirmation('');
     setError(null);
-  }, [open, role.id]);
+    setCurrentRole(role);
+  }, [open, role]);
 
   async function handleDelete(): Promise<void> {
     setDeleting(true);
     setError(null);
     try {
-      await onDelete(role.authorizationVersion);
+      await onDelete(currentRole.authorizationVersion);
       onOpenChange(false);
     } catch (cause: unknown) {
-      setError(
+      const message =
         cause instanceof ApiClientError
           ? authorizationErrorMessage(cause.code, cause.message)
-          : 'Không thể xóa role. Kiểm tra kết nối rồi thử lại.'
-      );
+          : 'Không thể xóa role. Kiểm tra kết nối rồi thử lại.';
+      if (
+        cause instanceof ApiClientError &&
+        cause.code === 'AUTHORIZATION_STATE_CHANGED' &&
+        onRefreshRole
+      ) {
+        try {
+          setCurrentRole(await onRefreshRole(role.id));
+        } catch {
+          setError(`${message} Không thể tải trạng thái role mới nhất.`);
+          return;
+        }
+      }
+      setError(message);
     } finally {
       setDeleting(false);
     }
@@ -56,14 +77,15 @@ export function RoleDeleteDialog({ open, onOpenChange, role, onDelete }: RoleDel
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Xóa role {role.name}</DialogTitle>
+          <DialogTitle>Xóa role {currentRole.name}</DialogTitle>
           <DialogDescription>
             Thao tác này xóa metadata và toàn bộ quyền của role. Nhật ký thay đổi vẫn được giữ lại.
           </DialogDescription>
         </DialogHeader>
         {assigned ? (
           <p role="alert" className="rounded-xl bg-destructive/10 p-3 text-sm text-destructive">
-            Role đang được gán cho {role.assignedUserCount} người dùng. Hãy gỡ role khỏi user trước.
+            Role đang được gán cho {currentRole.assignedUserCount} người dùng. Hãy gỡ role khỏi user
+            trước.
           </p>
         ) : null}
         <div className="space-y-2">
@@ -76,9 +98,10 @@ export function RoleDeleteDialog({ open, onOpenChange, role, onDelete }: RoleDel
           />
         </div>
         {error ? (
-          <p role="alert" className="text-sm text-destructive">
-            {error}
-          </p>
+          <div role="alert" className="space-y-1 text-sm text-destructive">
+            <p>{error}</p>
+            <p>Role hiện tại: {currentRole.name}</p>
+          </div>
         ) : null}
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
@@ -87,7 +110,7 @@ export function RoleDeleteDialog({ open, onOpenChange, role, onDelete }: RoleDel
           <Button
             type="button"
             variant="destructive"
-            disabled={assigned || confirmation !== role.name || deleting}
+            disabled={assigned || confirmation !== currentRole.name || deleting}
             onClick={() => void handleDelete()}
           >
             {deleting ? 'Đang xóa…' : 'Xác nhận xóa'}

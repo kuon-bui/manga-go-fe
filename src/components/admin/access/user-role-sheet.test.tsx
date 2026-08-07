@@ -93,13 +93,21 @@ describe('UserRoleSheet', () => {
 
   it('keeps the draft open and maps a 409 conflict', async () => {
     const user = userEvent.setup();
-    const onSave = vi.fn().mockRejectedValue(
-      new ApiClientError({
-        message: 'state changed',
-        statusCode: 409,
-        code: 'AUTHORIZATION_STATE_CHANGED',
-      })
-    );
+    const refreshedUser = {
+      ...userWith(['admin']),
+      authorizationVersion: 'g2:u3',
+    };
+    const onSave = vi
+      .fn()
+      .mockRejectedValueOnce(
+        new ApiClientError({
+          message: 'state changed',
+          statusCode: 409,
+          code: 'AUTHORIZATION_STATE_CHANGED',
+        })
+      )
+      .mockResolvedValueOnce(undefined);
+    const onRefreshUser = vi.fn().mockResolvedValue(refreshedUser);
     renderWithQuery(
       <UserRoleSheet
         open
@@ -107,6 +115,7 @@ describe('UserRoleSheet', () => {
         user={userWith(['reader'])}
         roles={roles}
         onSave={onSave}
+        onRefreshUser={onRefreshUser}
       />
     );
 
@@ -116,5 +125,12 @@ describe('UserRoleSheet', () => {
 
     expect(await screen.findByText(/Dữ liệu phân quyền đã thay đổi/)).toBeInTheDocument();
     expect(screen.getByRole('checkbox', { name: 'Moderator' })).toBeChecked();
+    expect(onRefreshUser).toHaveBeenCalledWith('user-1');
+    expect(screen.getByText('Role hiện tại trên hệ thống')).toBeInTheDocument();
+    expect(screen.getByText('Draft của bạn')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Thử lại' }));
+    await user.click(screen.getByRole('button', { name: 'Xác nhận lưu' }));
+    expect(onSave).toHaveBeenLastCalledWith(['moderator', 'reader'], 'g2:u3');
   });
 });

@@ -1,7 +1,5 @@
 import type { User } from '@/types/auth';
 import type {
-  AssignRolePermissionsPayload,
-  AssignUserRolesPayload,
   AdminUserSummary,
   AuthorizationAuditFilters,
   AuthorizationAuditLog,
@@ -14,7 +12,6 @@ import type {
   ReplaceUserRolesPayload,
   Role,
   RoleAccessSummary,
-  RoleDetail,
   UpdateRolePayload,
 } from '@/types/rbac';
 import type {
@@ -331,10 +328,6 @@ class ApiClient {
     return this.get<{ user: User }>('/users/me');
   }
 
-  getAllRoles(): Promise<Role[]> {
-    return this.get<Role[]>('/roles/all');
-  }
-
   getMyAuthorization(): Promise<AuthorizationProfile> {
     return this.get<AuthorizationProfile>('/users/me/authorization');
   }
@@ -399,24 +392,8 @@ class ApiClient {
     });
   }
 
-  getRoleById(roleId: string): Promise<RoleDetail> {
-    return this.get<RoleDetail>(`/roles/${roleId}`);
-  }
-
   getAllPermissions(): Promise<PermissionDefinition[]> {
     return this.get<PermissionDefinition[]>('/permissions');
-  }
-
-  assignPermissionsToRole(roleId: string, payload: AssignRolePermissionsPayload): Promise<void> {
-    return this.post<void>(`/roles/${roleId}/permissions`, payload);
-  }
-
-  assignRolesToUser(userId: string, payload: AssignUserRolesPayload): Promise<void> {
-    return this.post<void>(`/users/${userId}/roles`, payload);
-  }
-
-  getUserRoles(userId: string): Promise<Role[]> {
-    return this.get<Role[]>(`/users/${userId}/roles`);
   }
 
   // ─── Comics ──────────────────────────────────────────────────────────────────

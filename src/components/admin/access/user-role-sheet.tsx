@@ -33,17 +33,35 @@ interface UserRoleSheetProps {
   user: AdminUserSummary | null;
   roles: RoleAccessSummary[];
   onSave: (_roleIds: string[], _expectedVersion: string) => Promise<unknown>;
+  onRefreshUser?: (_userId: string) => Promise<AdminUserSummary>;
 }
 
-export function UserRoleSheet({ open, onOpenChange, user, roles, onSave }: UserRoleSheetProps) {
+interface UserRoleConflict {
+  beforeRoleNames: string[];
+  currentRoleNames: string[];
+}
+
+export function UserRoleSheet({
+  open,
+  onOpenChange,
+  user,
+  roles,
+  onSave,
+  onRefreshUser,
+}: UserRoleSheetProps) {
   const [draftRoleIds, setDraftRoleIds] = useState<Set<string>>(new Set());
+  const [expectedVersion, setExpectedVersion] = useState('');
+  const [conflict, setConflict] = useState<UserRoleConflict | null>(null);
   const [confirmationOpen, setConfirmationOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setDraftRoleIds(new Set(user?.roles.map((role) => role.id) ?? []));
+    setExpectedVersion(user?.authorizationVersion ?? '');
+    setConflict(null);
     setError(null);
+    setConflict(null);
     setConfirmationOpen(false);
   }, [user]);
 
@@ -81,14 +99,33 @@ export function UserRoleSheet({ open, onOpenChange, user, roles, onSave }: UserR
     setSaving(true);
     setError(null);
     try {
-      await onSave([...draftRoleIds].sort(), user.authorizationVersion);
+      await onSave([...draftRoleIds].sort(), expectedVersion);
       setConfirmationOpen(false);
+      setConflict(null);
       onOpenChange(false);
     } catch (cause: unknown) {
       const message =
         cause instanceof ApiClientError
           ? authorizationErrorMessage(cause.code, cause.message)
           : 'Không thể lưu role. Kiểm tra kết nối rồi thử lại.';
+      if (
+        cause instanceof ApiClientError &&
+        cause.code === 'AUTHORIZATION_STATE_CHANGED' &&
+        onRefreshUser
+      ) {
+        try {
+          const current = await onRefreshUser(user.id);
+          setExpectedVersion(current.authorizationVersion);
+          setConflict({
+            beforeRoleNames: user.roles.map((role) => role.name).sort(),
+            currentRoleNames: current.roles.map((role) => role.name).sort(),
+          });
+        } catch {
+          setError(`${message} Không thể tải trạng thái mới nhất.`);
+          setConfirmationOpen(false);
+          return;
+        }
+      }
       setError(message);
       setConfirmationOpen(false);
     } finally {
@@ -171,6 +208,21 @@ export function UserRoleSheet({ open, onOpenChange, user, roles, onSave }: UserR
                 </Button>
               </div>
             ) : null}
+
+            {conflict ? (
+              <div className="space-y-2 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
+                <p className="font-semibold">So sánh sau xung đột</p>
+                <ConflictRoles title="Role trước lần lưu" values={conflict.beforeRoleNames} />
+                <ConflictRoles
+                  title="Role hiện tại trên hệ thống"
+                  values={conflict.currentRoleNames}
+                />
+                <ConflictRoles
+                  title="Draft của bạn"
+                  values={selectedRoles.map((role) => role.name).sort()}
+                />
+              </div>
+            ) : null}
           </div>
 
           <SheetFooter>
@@ -239,6 +291,15 @@ function ChangeList({ title, values }: { title: string; values: string[] }) {
     <div>
       <p className="font-semibold">{title}</p>
       <p className="text-muted-foreground">{values.length ? values.join(', ') : 'Không có'}</p>
+    </div>
+  );
+}
+
+function ConflictRoles({ title, values }: { title: string; values: string[] }) {
+  return (
+    <div>
+      <p className="font-medium">{title}</p>
+      <p className="text-muted-foreground">{values.length ? values.join(', ') : 'Không có role'}</p>
     </div>
   );
 }

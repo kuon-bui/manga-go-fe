@@ -67,12 +67,6 @@ export const queryKeys = {
   browse: {
     results: (filters: Record<string, unknown>) => ['browse', filters] as const,
   },
-  rbac: {
-    roles: () => ['rbac', 'roles'] as const,
-    roleDetail: (roleId: string) => ['rbac', 'roles', roleId] as const,
-    permissions: () => ['rbac', 'permissions'] as const,
-    userRoles: (userId: string) => ['rbac', 'user', userId, 'roles'] as const,
-  },
   authorization: {
     all: () => ['authorization'] as const,
     me: () => ['authorization', 'me'] as const,

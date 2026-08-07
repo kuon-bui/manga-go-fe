@@ -101,25 +101,3 @@ export interface UpdateRolePayload {
   name: string;
   description?: string | null;
 }
-
-// Temporary compatibility aliases for non-authorization screens that are
-// migrated in the following feature checkpoints.
-export interface PermissionEntity {
-  id: string;
-  name: string;
-  description?: string | null;
-  createdAt?: string | null;
-  updatedAt?: string | null;
-}
-
-export type AssignRolePermissionsPayload = ReplaceRolePermissionsPayload;
-export type AssignUserRolesPayload = ReplaceUserRolesPayload;
-
-export interface UserRolesResponse {
-  userId?: string;
-  roles: Role[];
-}
-
-export interface RoleDetail extends Role {
-  permissions: PermissionEntity[];
-}

@@ -2,45 +2,64 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { usePathname, useRouter } from 'next/navigation';
+import { useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 
 import { recoverAuthorizationAfterForbidden } from '@/lib/authorization-access';
 import { ApiClientError, apiClient } from '@/lib/api-client';
 import { queryKeys } from '@/lib/query-keys';
 import { useAuthStore } from '@/stores/auth-store';
-import type { AuthorizationUserFilters, CreateRolePayload, UpdateRolePayload } from '@/types/rbac';
-import type { AuthorizationAuditFilters } from '@/types/rbac';
+import type {
+  AuthorizationAuditFilters,
+  AuthorizationUserFilters,
+  CreateRolePayload,
+  UpdateRolePayload,
+} from '@/types/rbac';
 
 export function useAuthorizationAuditLogs(filters: AuthorizationAuditFilters) {
-  return useQuery({
+  const query = useQuery({
     queryKey: queryKeys.authorization.audit({ ...filters }),
     queryFn: () => apiClient.getAuthorizationAuditLogs(filters),
     placeholderData: (previous) => previous,
   });
+  useForbiddenQueryRecovery(
+    query.error,
+    `audit-logs:${JSON.stringify(filters)}:${query.errorUpdatedAt}`
+  );
+  return query;
 }
 
 export function useAuthorizationUsers(filters: AuthorizationUserFilters) {
-  return useQuery({
+  const query = useQuery({
     queryKey: queryKeys.authorization.users({ ...filters }),
     queryFn: () => apiClient.getAuthorizationUsers(filters),
     placeholderData: (previous) => previous,
   });
+  useForbiddenQueryRecovery(
+    query.error,
+    `authorization-users:${JSON.stringify(filters)}:${query.errorUpdatedAt}`
+  );
+  return query;
 }
 
 export function useAuthorizationRoles() {
-  return useQuery({
+  const query = useQuery({
     queryKey: queryKeys.authorization.roles(),
     queryFn: () => apiClient.getAuthorizationRoles(),
     staleTime: 30_000,
   });
+  useForbiddenQueryRecovery(query.error, `authorization-roles:${query.errorUpdatedAt}`);
+  return query;
 }
 
 export function usePermissionCatalog() {
-  return useQuery({
+  const query = useQuery({
     queryKey: queryKeys.authorization.catalog(),
     queryFn: () => apiClient.getAllPermissions(),
     staleTime: 5 * 60_000,
   });
+  useForbiddenQueryRecovery(query.error, `permission-catalog:${query.errorUpdatedAt}`);
+  return query;
 }
 
 interface ReplaceUserRolesVariables {
@@ -163,16 +182,27 @@ function useForbiddenRecovery(): (_error: unknown, _attemptKey: string) => void 
   const router = useRouter();
   const pathname = usePathname();
 
-  return (error, attemptKey) => {
-    if (!(error instanceof ApiClientError) || error.statusCode !== 403) return;
-    void recoverAuthorizationAfterForbidden({
-      attemptKey,
-      queryClient,
-      currentPath: pathname,
-      navigate: (path) => router.replace(path),
-      notify: (message) => toast.warning(message),
-    });
-  };
+  return useCallback(
+    (error, attemptKey) => {
+      if (!(error instanceof ApiClientError) || error.statusCode !== 403) return;
+      void recoverAuthorizationAfterForbidden({
+        attemptKey,
+        queryClient,
+        currentPath: pathname,
+        navigate: (path) => router.replace(path),
+        notify: (message) => toast.warning(message),
+      });
+    },
+    [pathname, queryClient, router]
+  );
+}
+
+function useForbiddenQueryRecovery(error: unknown, attemptKey: string): void {
+  const recoverForbidden = useForbiddenRecovery();
+
+  useEffect(() => {
+    recoverForbidden(error, attemptKey);
+  }, [attemptKey, error, recoverForbidden]);
 }
 
 async function invalidateRoleQueries(

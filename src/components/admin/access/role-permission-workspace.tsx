@@ -22,7 +22,7 @@ import {
 import { authorizationErrorMessage } from '@/lib/authorization-errors';
 import { ApiClientError } from '@/lib/api-client';
 import { cn } from '@/lib/utils';
-import type { CreateRolePayload } from '@/types/rbac';
+import type { CreateRolePayload, RoleAccessSummary } from '@/types/rbac';
 
 export function RolePermissionWorkspace() {
   const rolesQuery = useAuthorizationRoles();
@@ -39,6 +39,8 @@ export function RolePermissionWorkspace() {
   const [creating, setCreating] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [conflictRole, setConflictRole] = useState<RoleAccessSummary | null>(null);
+  const [retryVersion, setRetryVersion] = useState<string | null>(null);
   const preserveDraft = useRef(false);
 
   const roles = useMemo(() => rolesQuery.data ?? [], [rolesQuery.data]);
@@ -68,12 +70,16 @@ export function RolePermissionWorkspace() {
     setDraftDescription(selectedRole.description);
     setDraftPermissions(new Set(selectedRole.permissions));
     setSaveError(null);
+    setConflictRole(null);
+    setRetryVersion(null);
   }, [selectedRole]);
 
   function selectRole(roleId: string): void {
     if (roleId === selectedRole?.id) return;
     if (dirty && !window.confirm('Bỏ các thay đổi chưa lưu của role hiện tại?')) return;
     preserveDraft.current = false;
+    setConflictRole(null);
+    setRetryVersion(null);
     setSelectedRoleId(roleId);
   }
 
@@ -92,7 +98,7 @@ export function RolePermissionWorkspace() {
     preserveDraft.current = true;
     setSaveError(null);
     const permissionSnapshot = [...draftPermissions].sort();
-    let version = selectedRole.authorizationVersion;
+    let version = retryVersion ?? selectedRole.authorizationVersion;
     try {
       if (metadataDirty) {
         const updated = await updateRole.mutateAsync({
@@ -110,14 +116,28 @@ export function RolePermissionWorkspace() {
         });
       }
       preserveDraft.current = false;
+      setConflictRole(null);
+      setRetryVersion(null);
       await rolesQuery.refetch();
       toast.success('Đã lưu role và quyền');
     } catch (cause: unknown) {
-      setSaveError(
+      const message =
         cause instanceof ApiClientError
           ? authorizationErrorMessage(cause.code, cause.message)
-          : 'Không thể lưu đầy đủ thay đổi. Draft quyền vẫn được giữ để bạn thử lại.'
-      );
+          : 'Không thể lưu đầy đủ thay đổi. Draft quyền vẫn được giữ để bạn thử lại.';
+      if (cause instanceof ApiClientError && cause.code === 'AUTHORIZATION_STATE_CHANGED') {
+        try {
+          const refreshed = await rolesQuery.refetch();
+          const current = refreshed.data?.find((role) => role.id === selectedRole.id);
+          if (!current) throw new Error('Role không còn tồn tại.');
+          setConflictRole(current);
+          setRetryVersion(current.authorizationVersion);
+        } catch {
+          setSaveError(`${message} Không thể tải trạng thái role mới nhất.`);
+          return;
+        }
+      }
+      setSaveError(message);
     }
   }
 
@@ -262,6 +282,22 @@ export function RolePermissionWorkspace() {
         {saveError ? (
           <div role="alert" className="rounded-xl bg-destructive/10 p-3 text-sm text-destructive">
             <p>{saveError}</p>
+            {conflictRole ? (
+              <div className="mt-3 grid gap-3 text-foreground sm:grid-cols-2">
+                <RoleConflictSnapshot
+                  title="Trạng thái role hiện tại"
+                  name={conflictRole.name}
+                  description={conflictRole.description}
+                  permissions={conflictRole.permissions}
+                />
+                <RoleConflictSnapshot
+                  title="Draft của bạn"
+                  name={draftName}
+                  description={draftDescription}
+                  permissions={[...draftPermissions]}
+                />
+              </div>
+            ) : null}
             <Button
               type="button"
               size="sm"
@@ -269,7 +305,7 @@ export function RolePermissionWorkspace() {
               className="mt-2"
               onClick={() => void saveRole()}
             >
-              Thử lại
+              {conflictRole ? 'Xác nhận lại và thử lại' : 'Thử lại'}
             </Button>
           </div>
         ) : null}
@@ -292,7 +328,36 @@ export function RolePermissionWorkspace() {
         onOpenChange={setDeleteOpen}
         role={selectedRole}
         onDelete={confirmDelete}
+        onRefreshRole={async (roleId) => {
+          const refreshed = await rolesQuery.refetch();
+          const current = refreshed.data?.find((role) => role.id === roleId);
+          if (!current) throw new Error('Không tìm thấy trạng thái role mới nhất.');
+          return current;
+        }}
       />
     </div>
+  );
+}
+
+function RoleConflictSnapshot({
+  title,
+  name,
+  description,
+  permissions,
+}: {
+  title: string;
+  name: string;
+  description: string | null;
+  permissions: string[];
+}) {
+  return (
+    <section className="rounded-lg border bg-background/80 p-3">
+      <h3 className="font-semibold">{title}</h3>
+      <p className="mt-1">{name}</p>
+      <p className="text-xs text-muted-foreground">{description || 'Không có mô tả'}</p>
+      <p className="mt-2 break-words text-xs">
+        {permissions.length ? [...permissions].sort().join(', ') : 'Không có quyền'}
+      </p>
+    </section>
   );
 }

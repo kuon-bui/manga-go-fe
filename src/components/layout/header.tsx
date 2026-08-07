@@ -22,11 +22,11 @@ import { AuthorizationGate } from '@/components/auth/authorization-gate';
 import { ADMIN_ENTRY_PERMISSIONS } from '@/components/admin/access/access-tabs';
 
 const NAV_LINKS = [
-  { href: '/',          label: 'Home' },
-  { href: '/browse',    label: 'Browse' },
+  { href: '/', label: 'Home' },
+  { href: '/browse', label: 'Browse' },
   { href: '/dashboard', label: 'Dashboard' },
-  { href: '/library',   label: 'Library' },
-  { href: '/settings',  label: 'Settings' },
+  { href: '/library', label: 'Library' },
+  { href: '/settings', label: 'Settings' },
 ] as const;
 
 function SearchBar() {
@@ -56,7 +56,10 @@ function SearchBar() {
   }, []);
 
   return (
-    <form onSubmit={handleSubmit} className="hidden sm:flex items-center gap-2 bg-input/60 rounded-full px-3 py-1.5 w-52">
+    <form
+      onSubmit={handleSubmit}
+      className="hidden sm:flex items-center gap-2 bg-input/60 rounded-full px-3 py-1.5 w-52"
+    >
       <Search className="h-4 w-4 text-muted-foreground shrink-0" />
       <input
         ref={inputRef}
@@ -136,9 +139,11 @@ export function Header() {
     <>
       <header className="sticky top-0 z-40 hidden md:block backdrop-blur-md bg-card/70 border-b border-border">
         <div className="mx-auto max-w-7xl px-4 md:px-6 h-16 flex items-center gap-6">
-
           {/* Logo */}
-          <Link href="/" className="flex shrink-0 items-center gap-2 font-display font-bold text-lg">
+          <Link
+            href="/"
+            className="flex shrink-0 items-center gap-2 font-display font-bold text-lg"
+          >
             <span className="text-2xl animate-float select-none">🌸</span>
             <span
               className="bg-gradient-to-r from-primary to-accent-foreground bg-clip-text text-transparent"
@@ -152,7 +157,9 @@ export function Header() {
           <nav className="hidden md:flex items-center gap-1 flex-1" aria-label="Main navigation">
             {NAV_LINKS.map(({ href, label }) => {
               const isActive =
-                href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(href + '/');
+                href === '/'
+                  ? pathname === '/'
+                  : pathname === href || pathname.startsWith(href + '/');
               return (
                 <Link
                   key={href}

@@ -1,9 +1,7 @@
 'use client';
 
-import { useQueryClient } from '@tanstack/react-query';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useMemo } from 'react';
-import { toast } from 'sonner';
+import { Suspense, useMemo } from 'react';
 
 import { AccessPagination } from '@/components/admin/access/access-pagination';
 import { ACCESS_TAB_PERMISSIONS } from '@/components/admin/access/access-tabs';
@@ -12,8 +10,6 @@ import { AuditLogTable } from '@/components/admin/access/audit-log-table';
 import { AuthorizationGate } from '@/components/auth/authorization-gate';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuthorizationAuditLogs } from '@/hooks/use-admin-authorization';
-import { recoverAuthorizationAfterForbidden } from '@/lib/authorization-access';
-import { ApiClientError } from '@/lib/api-client';
 import type { AuthorizationAuditFilters } from '@/types/rbac';
 
 const PAGE_LIMIT = 20;
@@ -32,23 +28,8 @@ function AuditPageContent() {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const queryClient = useQueryClient();
-  const serializedSearch = searchParams.toString();
   const filters = useMemo(() => auditFiltersFromSearchParams(searchParams), [searchParams]);
   const auditQuery = useAuthorizationAuditLogs(filters);
-
-  useEffect(() => {
-    if (!(auditQuery.error instanceof ApiClientError) || auditQuery.error.statusCode !== 403)
-      return;
-
-    void recoverAuthorizationAfterForbidden({
-      attemptKey: `audit-logs:${serializedSearch}`,
-      queryClient,
-      currentPath: pathname,
-      navigate: (path) => router.replace(path),
-      notify: (message) => toast.warning(message),
-    });
-  }, [auditQuery.error, pathname, queryClient, router, serializedSearch]);
 
   function updateFilters(next: AuthorizationAuditFilters): void {
     const params = new URLSearchParams();

@@ -12,11 +12,7 @@ interface PermissionGateProps {
 }
 
 /** Keeps legacy product semantics while using current profile role names. */
-export function PermissionGate({
-  children,
-  fallback = null,
-  permission,
-}: PermissionGateProps) {
+export function PermissionGate({ children, fallback = null, permission }: PermissionGateProps) {
   return usePermission(permission) ? <>{children}</> : <>{fallback}</>;
 }
 

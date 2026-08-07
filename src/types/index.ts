@@ -11,11 +11,6 @@ export type {
 
 export type {
   Role,
-  RoleDetail,
-  PermissionEntity,
-  AssignRolePermissionsPayload,
-  AssignUserRolesPayload,
-  UserRolesResponse,
   PermissionDefinition,
   RoleAccessSummary,
   AuthorizationProfile,

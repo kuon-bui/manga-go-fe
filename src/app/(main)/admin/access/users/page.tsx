@@ -98,6 +98,12 @@ export default function AdminAccessUsersPage() {
           }}
           user={selectedUser}
           roles={rolesQuery.data ?? []}
+          onRefreshUser={async (userId) => {
+            const refreshed = await usersQuery.refetch();
+            const current = refreshed.data?.data.find((entry) => entry.id === userId);
+            if (!current) throw new Error('Không tìm thấy trạng thái user mới nhất.');
+            return current;
+          }}
           onSave={async (roleIds, expectedVersion) => {
             if (!selectedUser) return;
             await replaceRoles.mutateAsync({

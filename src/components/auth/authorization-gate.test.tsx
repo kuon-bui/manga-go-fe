@@ -44,7 +44,11 @@ describe('AuthorizationGate', () => {
 
   it('renders a loading shape without flashing the denied fallback', () => {
     renderGate(
-      <AuthorizationGate allOf={['role:manage']} loading={<p>Đang tải quyền</p>} fallback={<p>Từ chối</p>}>
+      <AuthorizationGate
+        allOf={['role:manage']}
+        loading={<p>Đang tải quyền</p>}
+        fallback={<p>Từ chối</p>}
+      >
         <p>Cho phép</p>
       </AuthorizationGate>,
       () => new Promise<AuthorizationProfile>(() => {})

@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { PermissionMatrix } from '@/components/admin/access/permission-matrix';
 import { RoleDeleteDialog } from '@/components/admin/access/role-delete-dialog';
+import { ApiClientError } from '@/lib/api-client';
 import { renderWithQuery } from '@/test/render';
 import type { PermissionDefinition, RoleAccessSummary } from '@/types/rbac';
 
@@ -67,5 +68,43 @@ describe('RoleDeleteDialog', () => {
 
     expect(screen.getByText(/đang được gán cho 2 người dùng/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Xác nhận xóa' })).toBeDisabled();
+  });
+
+  it('refetches stale role state and requires confirmation with the fresh version', async () => {
+    const user = userEvent.setup();
+    const currentRole = { ...role, name: 'translator-v2', authorizationVersion: 'g2' };
+    const onDelete = vi
+      .fn()
+      .mockRejectedValueOnce(
+        new ApiClientError({
+          message: 'state changed',
+          statusCode: 409,
+          code: 'AUTHORIZATION_STATE_CHANGED',
+        })
+      )
+      .mockResolvedValueOnce(undefined);
+    const onRefreshRole = vi.fn().mockResolvedValue(currentRole);
+    renderWithQuery(
+      <RoleDeleteDialog
+        open
+        onOpenChange={vi.fn()}
+        role={role}
+        onDelete={onDelete}
+        onRefreshRole={onRefreshRole}
+      />
+    );
+
+    await user.type(screen.getByLabelText('Nhập tên role để xác nhận'), 'translator');
+    await user.click(screen.getByRole('button', { name: 'Xác nhận xóa' }));
+
+    expect(await screen.findByText(/Dữ liệu phân quyền đã thay đổi/)).toBeInTheDocument();
+    expect(onRefreshRole).toHaveBeenCalledWith('translator');
+    expect(screen.getByText('Role hiện tại: translator-v2')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Xác nhận xóa' })).toBeDisabled();
+
+    await user.clear(screen.getByLabelText('Nhập tên role để xác nhận'));
+    await user.type(screen.getByLabelText('Nhập tên role để xác nhận'), 'translator-v2');
+    await user.click(screen.getByRole('button', { name: 'Xác nhận xóa' }));
+    expect(onDelete).toHaveBeenLastCalledWith('g2');
   });
 });

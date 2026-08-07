@@ -24,7 +24,10 @@ export async function recoverAuthorizationAfterForbidden({
   if (recoveryAttempts.has(attemptKey)) return false;
   recoveryAttempts.add(attemptKey);
 
-  await queryClient.invalidateQueries({ queryKey: queryKeys.authorization.me() });
+  await queryClient.invalidateQueries({
+    queryKey: queryKeys.authorization.me(),
+    refetchType: 'none',
+  });
   const profile = await queryClient.fetchQuery({
     queryKey: queryKeys.authorization.me(),
     queryFn: () => apiClient.getMyAuthorization(),
