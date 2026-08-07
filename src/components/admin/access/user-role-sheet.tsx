@@ -33,12 +33,16 @@ interface UserRoleSheetProps {
   user: AdminUserSummary | null;
   roles: RoleAccessSummary[];
   onSave: (_roleIds: string[], _expectedVersion: string) => Promise<unknown>;
-  onRefreshUser?: (_userId: string) => Promise<AdminUserSummary>;
+  onRefreshState?: (_userId: string) => Promise<UserRoleRefreshState>;
 }
 
 interface UserRoleConflict {
-  beforeRoleNames: string[];
-  currentRoleNames: string[];
+  currentUser: AdminUserSummary;
+}
+
+interface UserRoleRefreshState {
+  user: AdminUserSummary;
+  roles: RoleAccessSummary[];
 }
 
 export function UserRoleSheet({
@@ -47,9 +51,10 @@ export function UserRoleSheet({
   user,
   roles,
   onSave,
-  onRefreshUser,
+  onRefreshState,
 }: UserRoleSheetProps) {
   const [draftRoleIds, setDraftRoleIds] = useState<Set<string>>(new Set());
+  const [availableRoles, setAvailableRoles] = useState<RoleAccessSummary[]>(roles);
   const [expectedVersion, setExpectedVersion] = useState('');
   const [conflict, setConflict] = useState<UserRoleConflict | null>(null);
   const [confirmationOpen, setConfirmationOpen] = useState(false);
@@ -61,21 +66,28 @@ export function UserRoleSheet({
     setExpectedVersion(user?.authorizationVersion ?? '');
     setConflict(null);
     setError(null);
-    setConflict(null);
     setConfirmationOpen(false);
   }, [user]);
 
-  const originalRoleIds = useMemo(() => new Set(user?.roles.map((role) => role.id) ?? []), [user]);
-  const selectedRoles = roles.filter((role) => draftRoleIds.has(role.id));
-  const originalRoles = roles.filter((role) => originalRoleIds.has(role.id));
+  useEffect(() => {
+    if (!conflict) setAvailableRoles(roles);
+  }, [conflict, roles]);
+
+  const baselineUser = conflict?.currentUser ?? user;
+  const baselineRoleIds = useMemo(
+    () => new Set(baselineUser?.roles.map((role) => role.id) ?? []),
+    [baselineUser]
+  );
+  const selectedRoles = availableRoles.filter((role) => draftRoleIds.has(role.id));
+  const baselineRoles = availableRoles.filter((role) => baselineRoleIds.has(role.id));
   const draftPermissions = unionPermissions(selectedRoles);
-  const originalPermissions = unionPermissions(originalRoles);
-  const permissionDiff = diffPermissions(originalPermissions, draftPermissions);
+  const baselinePermissions = unionPermissions(baselineRoles);
+  const permissionDiff = diffPermissions(baselinePermissions, draftPermissions);
   const addedRoles = selectedRoles
-    .filter((role) => !originalRoleIds.has(role.id))
+    .filter((role) => !baselineRoleIds.has(role.id))
     .map((role) => role.name)
     .sort();
-  const removedRoles = originalRoles
+  const removedRoles = baselineRoles
     .filter((role) => !draftRoleIds.has(role.id))
     .map((role) => role.name)
     .sort();
@@ -111,15 +123,13 @@ export function UserRoleSheet({
       if (
         cause instanceof ApiClientError &&
         cause.code === 'AUTHORIZATION_STATE_CHANGED' &&
-        onRefreshUser
+        onRefreshState
       ) {
         try {
-          const current = await onRefreshUser(user.id);
-          setExpectedVersion(current.authorizationVersion);
-          setConflict({
-            beforeRoleNames: user.roles.map((role) => role.name).sort(),
-            currentRoleNames: current.roles.map((role) => role.name).sort(),
-          });
+          const current = await onRefreshState(user.id);
+          setExpectedVersion(current.user.authorizationVersion);
+          setAvailableRoles(current.roles);
+          setConflict({ currentUser: current.user });
         } catch {
           setError(`${message} Không thể tải trạng thái mới nhất.`);
           setConfirmationOpen(false);
@@ -145,7 +155,7 @@ export function UserRoleSheet({
           <div className="my-6 space-y-6">
             <fieldset className="space-y-3">
               <legend className="mb-2 text-sm font-semibold">Role được gán</legend>
-              {roles.map((role) => {
+              {availableRoles.map((role) => {
                 const id = `user-role-${role.id}`;
                 return (
                   <div key={role.id} className="flex items-start gap-3 rounded-xl border p-3">
@@ -212,10 +222,13 @@ export function UserRoleSheet({
             {conflict ? (
               <div className="space-y-2 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
                 <p className="font-semibold">So sánh sau xung đột</p>
-                <ConflictRoles title="Role trước lần lưu" values={conflict.beforeRoleNames} />
+                <ConflictRoles
+                  title="Role trước lần lưu"
+                  values={user?.roles.map((role) => role.name).sort() ?? []}
+                />
                 <ConflictRoles
                   title="Role hiện tại trên hệ thống"
-                  values={conflict.currentRoleNames}
+                  values={conflict.currentUser.roles.map((role) => role.name).sort()}
                 />
                 <ConflictRoles
                   title="Draft của bạn"
@@ -304,4 +317,4 @@ function ConflictRoles({ title, values }: { title: string; values: string[] }) {
   );
 }
 
-export type { UserRoleSheetProps };
+export type { UserRoleRefreshState, UserRoleSheetProps };

@@ -10,6 +10,14 @@ import { RoleDeleteDialog } from '@/components/admin/access/role-delete-dialog';
 import { RoleEditorDialog } from '@/components/admin/access/role-editor-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   useAuthorizationRoles,
@@ -38,6 +46,7 @@ export function RolePermissionWorkspace() {
   const [editorOpen, setEditorOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [saveConfirmationOpen, setSaveConfirmationOpen] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [conflictRole, setConflictRole] = useState<RoleAccessSummary | null>(null);
   const [retryVersion, setRetryVersion] = useState<string | null>(null);
@@ -59,6 +68,14 @@ export function RolePermissionWorkspace() {
     );
   }, [draftPermissions, selectedRole]);
   const dirty = metadataDirty || permissionDirty;
+  const confirmationBaseline = conflictRole ?? selectedRole;
+  const permissionAdded = [...draftPermissions]
+    .filter((permission) => !confirmationBaseline?.permissions.includes(permission))
+    .sort();
+  const permissionRemoved = (confirmationBaseline?.permissions ?? [])
+    .filter((permission) => !draftPermissions.has(permission))
+    .sort();
+  const changesManagement = [...permissionAdded, ...permissionRemoved].includes('role:manage');
 
   useEffect(() => {
     if (!selectedRoleId && roles[0]) setSelectedRoleId(roles[0].id);
@@ -139,6 +156,11 @@ export function RolePermissionWorkspace() {
       }
       setSaveError(message);
     }
+  }
+
+  function confirmSaveRole(): void {
+    setSaveConfirmationOpen(false);
+    void saveRole();
   }
 
   async function submitEditor(payload: CreateRolePayload): Promise<void> {
@@ -272,7 +294,7 @@ export function RolePermissionWorkspace() {
             <Button
               type="button"
               disabled={!dirty || updateRole.isPending || replacePermissions.isPending}
-              onClick={() => void saveRole()}
+              onClick={() => setSaveConfirmationOpen(true)}
             >
               <Save aria-hidden="true" /> Lưu thay đổi
             </Button>
@@ -303,7 +325,7 @@ export function RolePermissionWorkspace() {
               size="sm"
               variant="outline"
               className="mt-2"
-              onClick={() => void saveRole()}
+              onClick={() => setSaveConfirmationOpen(true)}
             >
               {conflictRole ? 'Xác nhận lại và thử lại' : 'Thử lại'}
             </Button>
@@ -335,6 +357,70 @@ export function RolePermissionWorkspace() {
           return current;
         }}
       />
+      <Dialog open={saveConfirmationOpen} onOpenChange={setSaveConfirmationOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {changesManagement ? 'Xác nhận thay đổi quyền quản trị' : 'Xác nhận lưu role'}
+            </DialogTitle>
+            <DialogDescription>
+              {changesManagement
+                ? 'Thay đổi này thêm hoặc gỡ quyền role:manage. Hãy kiểm tra kỹ trước khi lưu.'
+                : 'Kiểm tra metadata và quyền thay đổi trước khi lưu.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-80 space-y-3 overflow-y-auto text-sm">
+            <RoleSaveChange
+              title="Tên role"
+              before={confirmationBaseline?.name ?? ''}
+              after={draftName.trim()}
+            />
+            <RoleSaveChange
+              title="Mô tả"
+              before={confirmationBaseline?.description || 'Không có mô tả'}
+              after={draftDescription || 'Không có mô tả'}
+            />
+            <RoleSaveList title="Quyền thêm" values={permissionAdded} />
+            <RoleSaveList title="Quyền gỡ" values={permissionRemoved} />
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setSaveConfirmationOpen(false)}>
+              Hủy
+            </Button>
+            <Button type="button" onClick={confirmSaveRole}>
+              Xác nhận lưu role
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function RoleSaveChange({
+  title,
+  before,
+  after,
+}: {
+  title: string;
+  before: string;
+  after: string;
+}) {
+  return (
+    <div>
+      <p className="font-semibold">{title}</p>
+      <p className="text-muted-foreground">
+        {before === after ? 'Không thay đổi' : `${before} → ${after}`}
+      </p>
+    </div>
+  );
+}
+
+function RoleSaveList({ title, values }: { title: string; values: string[] }) {
+  return (
+    <div>
+      <p className="font-semibold">{title}</p>
+      <p className="text-muted-foreground">{values.length ? values.join(', ') : 'Không có'}</p>
     </div>
   );
 }

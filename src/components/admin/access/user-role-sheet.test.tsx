@@ -107,7 +107,7 @@ describe('UserRoleSheet', () => {
         })
       )
       .mockResolvedValueOnce(undefined);
-    const onRefreshUser = vi.fn().mockResolvedValue(refreshedUser);
+    const onRefreshState = vi.fn().mockResolvedValue({ user: refreshedUser, roles });
     renderWithQuery(
       <UserRoleSheet
         open
@@ -115,7 +115,7 @@ describe('UserRoleSheet', () => {
         user={userWith(['reader'])}
         roles={roles}
         onSave={onSave}
-        onRefreshUser={onRefreshUser}
+        onRefreshState={onRefreshState}
       />
     );
 
@@ -125,11 +125,13 @@ describe('UserRoleSheet', () => {
 
     expect(await screen.findByText(/Dữ liệu phân quyền đã thay đổi/)).toBeInTheDocument();
     expect(screen.getByRole('checkbox', { name: 'Moderator' })).toBeChecked();
-    expect(onRefreshUser).toHaveBeenCalledWith('user-1');
+    expect(onRefreshState).toHaveBeenCalledWith('user-1');
     expect(screen.getByText('Role hiện tại trên hệ thống')).toBeInTheDocument();
     expect(screen.getByText('Draft của bạn')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Thử lại' }));
+    expect(screen.getByText('Xác nhận thay đổi quyền quản trị')).toBeInTheDocument();
+    expect(screen.getAllByText('Administrator').length).toBeGreaterThan(0);
     await user.click(screen.getByRole('button', { name: 'Xác nhận lưu' }));
     expect(onSave).toHaveBeenLastCalledWith(['moderator', 'reader'], 'g2:u3');
   });

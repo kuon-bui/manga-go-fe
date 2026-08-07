@@ -741,6 +741,8 @@ paths:
           description: Forbidden
           schema:
             $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+      security:
+      - AccessToken: []
       summary: List authorization audit logs
       tags:
       - Authorization
@@ -3274,6 +3276,10 @@ paths:
           description: Unauthorized
           schema:
             $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
       security:
       - AccessToken: []
       summary: Create role
@@ -3290,6 +3296,10 @@ paths:
         name: id
         required: true
         type: string
+      - description: Current global authorization version (for example g12)
+        in: header
+        name: If-Match
+        type: string
       produces:
       - application/json
       responses:
@@ -3303,6 +3313,10 @@ paths:
             $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
         "401":
           description: Unauthorized
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+        "403":
+          description: Forbidden
           schema:
             $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
         "404":
@@ -3368,6 +3382,10 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/manga-go_internal_pkg_request_role.UpdateRoleRequest'
+      - description: Current global authorization version (for example g12)
+        in: header
+        name: If-Match
+        type: string
       produces:
       - application/json
       responses:
@@ -3381,6 +3399,10 @@ paths:
             $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
         "401":
           description: Unauthorized
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+        "403":
+          description: Forbidden
           schema:
             $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
         "404":
@@ -3414,6 +3436,10 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/manga-go_internal_pkg_request_role.AssignPermissionRequest'
+      - description: Current global authorization version (for example g12)
+        in: header
+        name: If-Match
+        type: string
       produces:
       - application/json
       responses:
@@ -3431,6 +3457,14 @@ paths:
             $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
         "403":
           description: Forbidden
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+        "409":
+          description: AUTHORIZATION_STATE_CHANGED, SELF_MANAGE_REQUIRED, or LAST_ROLE_MANAGER
           schema:
             $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
       security:
@@ -3455,6 +3489,10 @@ paths:
         name: permissionName
         required: true
         type: string
+      - description: Current global authorization version (for example g12)
+        in: header
+        name: If-Match
+        type: string
       produces:
       - application/json
       responses:
@@ -3472,6 +3510,14 @@ paths:
             $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
         "403":
           description: Forbidden
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+        "409":
+          description: AUTHORIZATION_STATE_CHANGED, SELF_MANAGE_REQUIRED, or LAST_ROLE_MANAGER
           schema:
             $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
       security:
@@ -3945,6 +3991,8 @@ paths:
           description: Forbidden
           schema:
             $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+      security:
+      - AccessToken: []
       summary: List users for authorization administration
       tags:
       - User
@@ -4018,6 +4066,38 @@ paths:
       summary: Update user profile
       tags:
       - User
+  /users/{id}/authorization:
+    get:
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+      security:
+      - AccessToken: []
+      summary: Get a user authorization snapshot
+      tags:
+      - User
   /users/{id}/roles:
     get:
       consumes:
@@ -4065,6 +4145,10 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/manga-go_internal_pkg_request_user.AssignRoleRequest'
+      - description: Current authorization version (for example g12:u4)
+        in: header
+        name: If-Match
+        type: string
       produces:
       - application/json
       responses:
@@ -4078,6 +4162,18 @@ paths:
             $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
         "401":
           description: Unauthorized
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+        "409":
+          description: AUTHORIZATION_STATE_CHANGED, SELF_MANAGE_REQUIRED, or LAST_ROLE_MANAGER
           schema:
             $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
       security:
@@ -4101,6 +4197,10 @@ paths:
         name: roleId
         required: true
         type: string
+      - description: Current authorization version (for example g12:u4)
+        in: header
+        name: If-Match
+        type: string
       produces:
       - application/json
       responses:
@@ -4114,6 +4214,18 @@ paths:
             $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
         "401":
           description: Unauthorized
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+        "409":
+          description: AUTHORIZATION_STATE_CHANGED, SELF_MANAGE_REQUIRED, or LAST_ROLE_MANAGER
           schema:
             $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
       security:
@@ -4180,6 +4292,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+      security:
+      - AccessToken: []
       summary: Get the current user's effective authorization profile
       tags:
       - User

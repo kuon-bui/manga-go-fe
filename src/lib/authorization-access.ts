@@ -24,19 +24,24 @@ export async function recoverAuthorizationAfterForbidden({
   if (recoveryAttempts.has(attemptKey)) return false;
   recoveryAttempts.add(attemptKey);
 
-  await queryClient.invalidateQueries({
-    queryKey: queryKeys.authorization.me(),
-    refetchType: 'none',
-  });
-  const profile = await queryClient.fetchQuery({
-    queryKey: queryKeys.authorization.me(),
-    queryFn: () => apiClient.getMyAuthorization(),
-    staleTime: 0,
-  });
-  const destination = firstAllowedAccessPath(profile) ?? '/';
-  if (destination === '/' || !currentPath.startsWith(destination)) navigate(destination);
-  notify('Quyền truy cập của bạn đã thay đổi. Hồ sơ phân quyền đã được tải lại.');
-  return true;
+  try {
+    await queryClient.invalidateQueries({
+      queryKey: queryKeys.authorization.me(),
+      refetchType: 'none',
+    });
+    const profile = await queryClient.fetchQuery({
+      queryKey: queryKeys.authorization.me(),
+      queryFn: () => apiClient.getMyAuthorization(),
+      staleTime: 0,
+    });
+    const destination = firstAllowedAccessPath(profile) ?? '/';
+    if (destination === '/' || !currentPath.startsWith(destination)) navigate(destination);
+    notify('Quyền truy cập của bạn đã thay đổi. Hồ sơ phân quyền đã được tải lại.');
+    return true;
+  } catch (error: unknown) {
+    recoveryAttempts.delete(attemptKey);
+    throw error;
+  }
 }
 
 export function resetAuthorizationRecoveryAttempts(): void {

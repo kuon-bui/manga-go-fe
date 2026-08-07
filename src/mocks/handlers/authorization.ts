@@ -23,6 +23,13 @@ export const authorizationHandlers = [
     HttpResponse.json(envelope(MOCK_AUTHORIZATION_PROFILE))
   ),
 
+  http.get('*/users/:userId/authorization', ({ params }) => {
+    const user = MOCK_AUTHORIZATION_USERS.find((item) => item.id === params.userId);
+    return user
+      ? HttpResponse.json(envelope(user))
+      : HttpResponse.json({ message: 'User not found' }, { status: 404 });
+  }),
+
   http.get('*/users', ({ request }) => {
     const url = new URL(request.url);
     const search = url.searchParams.get('search')?.toLocaleLowerCase() ?? '';

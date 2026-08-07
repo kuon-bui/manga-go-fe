@@ -49,4 +49,30 @@ describe('recoverAuthorizationAfterForbidden', () => {
     expect(notify).toHaveBeenCalledTimes(1);
     expect(forbiddenQuery).not.toHaveBeenCalled();
   });
+
+  it('allows a retry after profile recovery fails', async () => {
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const getProfile = vi
+      .spyOn(apiClient, 'getMyAuthorization')
+      .mockRejectedValueOnce(new Error('network unavailable'))
+      .mockResolvedValueOnce({
+        userId: 'user-1',
+        roles: [],
+        permissions: ['user:read'],
+        version: 'g2:u1',
+      });
+    const options = {
+      attemptKey: 'retryable-users-query',
+      queryClient,
+      currentPath: '/admin/access/users',
+      navigate: vi.fn<(_path: string) => void>(),
+      notify: vi.fn<(_message: string) => void>(),
+    };
+
+    await expect(recoverAuthorizationAfterForbidden(options)).rejects.toThrow(
+      'network unavailable'
+    );
+    await expect(recoverAuthorizationAfterForbidden(options)).resolves.toBe(true);
+    expect(getProfile).toHaveBeenCalledTimes(2);
+  });
 });

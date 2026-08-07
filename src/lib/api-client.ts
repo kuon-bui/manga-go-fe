@@ -340,6 +340,10 @@ class ApiClient {
     });
   }
 
+  getAuthorizationUser(userId: string): Promise<AdminUserSummary> {
+    return this.get<AdminUserSummary>(`/users/${userId}/authorization`);
+  }
+
   getAuthorizationRoles(): Promise<RoleAccessSummary[]> {
     return this.get<RoleAccessSummary[]>('/roles/all');
   }

@@ -1165,7 +1165,7 @@ The table shows name, email, role badges, and an explicit “Chưa có role” s
 
 Use the existing Radix `Sheet`: full width on mobile and `sm:max-w-lg` on desktop. Maintain `Set<string>` draft role IDs. Compute effective permission union from selected `RoleAccessSummary.permissions`. Save opens a confirmation dialog showing sorted added/removed roles and permissions; changes involving `role:manage` use the stronger warning copy.
 
-Map `409` codes through `authorization-errors.ts`, keep the sheet and draft open, and provide Retry for network/`5xx` failures. For `AUTHORIZATION_STATE_CHANGED`, refetch the selected user, show the before/current/draft difference, and require a new confirmation rather than automatically replaying the stale mutation.
+Map `409` codes through `authorization-errors.ts`, keep the sheet and draft open, and provide Retry for network/`5xx` failures. For `AUTHORIZATION_STATE_CHANGED`, refetch the selected user by ID through `GET /users/:id/authorization` together with the role summaries, show the before/current/draft difference, and require a new confirmation rather than automatically replaying the stale mutation. Do not depend on the current paginated filters because the concurrent change can move the user out of that result set.
 
 - [ ] **Step 6: Run focused tests**
 

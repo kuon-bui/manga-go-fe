@@ -9,6 +9,7 @@ import type { PermissionDefinition, RoleAccessSummary } from '@/types/rbac';
 
 const mocks = vi.hoisted(() => ({
   replacePermissions: vi.fn(),
+  updateRole: vi.fn(),
   refetchRoles: vi.fn(),
   success: vi.fn(),
 }));
@@ -36,6 +37,7 @@ const catalog: PermissionDefinition[] = [
     grants: ['create', 'update', 'publish'],
     contexts: ['any'],
   },
+  { name: 'role:manage', object: 'role', action: 'manage', grants: ['manage'], contexts: ['any'] },
 ];
 
 vi.mock('sonner', () => ({ toast: { success: mocks.success } }));
@@ -54,7 +56,7 @@ vi.mock('@/hooks/use-admin-authorization', () => ({
     refetch: vi.fn(),
   }),
   useCreateAuthorizationRole: () => ({ mutateAsync: vi.fn(), isPending: false }),
-  useUpdateAuthorizationRole: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useUpdateAuthorizationRole: () => ({ mutateAsync: mocks.updateRole, isPending: false }),
   useReplaceRolePermissions: () => ({
     mutateAsync: mocks.replacePermissions,
     isPending: false,
@@ -62,11 +64,41 @@ vi.mock('@/hooks/use-admin-authorization', () => ({
   useDeleteAuthorizationRole: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }));
 
-describe('RolePermissionWorkspace stale-state recovery', () => {
+describe('RolePermissionWorkspace save confirmation and stale-state recovery', () => {
   beforeEach(() => {
     mocks.replacePermissions.mockReset();
+    mocks.updateRole.mockReset();
     mocks.refetchRoles.mockReset();
     mocks.success.mockReset();
+  });
+
+  it('shows sorted metadata and permission changes before saving', async () => {
+    const user = userEvent.setup();
+    mocks.replacePermissions.mockResolvedValue(currentRole);
+    mocks.updateRole.mockResolvedValue({
+      ...role,
+      name: 'Reviewer',
+      description: 'Kiểm duyệt nội dung',
+      authorizationVersion: 'g2',
+    });
+    renderWithQuery(<RolePermissionWorkspace />);
+
+    await user.click(screen.getByRole('button', { name: 'Metadata' }));
+    await user.clear(screen.getByLabelText('Tên role'));
+    await user.type(screen.getByLabelText('Tên role'), 'Reviewer');
+    await user.type(screen.getByLabelText('Mô tả'), 'Kiểm duyệt nội dung');
+    await user.click(screen.getByRole('button', { name: 'Lưu metadata' }));
+    await user.click(screen.getByRole('checkbox', { name: 'Role · Quản lý' }));
+    await user.click(screen.getByRole('button', { name: 'Lưu thay đổi' }));
+
+    expect(mocks.replacePermissions).not.toHaveBeenCalled();
+    expect(screen.getByText('Xác nhận thay đổi quyền quản trị')).toBeInTheDocument();
+    expect(screen.getByText('Translator → Reviewer')).toBeInTheDocument();
+    expect(screen.getByText('Không có mô tả → Kiểm duyệt nội dung')).toBeInTheDocument();
+    expect(screen.getByText('role:manage')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Xác nhận lưu role' }));
+    await waitFor(() => expect(mocks.replacePermissions).toHaveBeenCalledTimes(1));
   });
 
   it('shows current versus draft state and retries with the refreshed version', async () => {
@@ -85,6 +117,8 @@ describe('RolePermissionWorkspace stale-state recovery', () => {
 
     await user.click(screen.getByRole('checkbox', { name: 'Truyện · Ghi' }));
     await user.click(screen.getByRole('button', { name: 'Lưu thay đổi' }));
+    expect(mocks.replacePermissions).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('button', { name: 'Xác nhận lưu role' }));
 
     expect(await screen.findByText('Trạng thái role hiện tại')).toBeInTheDocument();
     expect(screen.getByText('Draft của bạn')).toBeInTheDocument();
@@ -93,6 +127,8 @@ describe('RolePermissionWorkspace stale-state recovery', () => {
     );
 
     await user.click(screen.getByRole('button', { name: 'Xác nhận lại và thử lại' }));
+    expect(mocks.replacePermissions).toHaveBeenCalledTimes(1);
+    await user.click(screen.getByRole('button', { name: 'Xác nhận lưu role' }));
     await waitFor(() =>
       expect(mocks.replacePermissions).toHaveBeenLastCalledWith(
         expect.objectContaining({ expectedVersion: 'g2' })

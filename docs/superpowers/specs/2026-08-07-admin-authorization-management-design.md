@@ -140,7 +140,11 @@ Versioned keys prevent a request that began before invalidation from repopulatin
 - `GET /users?page=<n>&limit=<n>&search=<text>&role_id=<uuid>`
   - Requires `user:read`.
   - Searches case-insensitively by name or email.
+  - Rejects page sizes above 100.
   - Returns a paginated user summary with roles embedded to avoid N+1 requests.
+- `GET /users/:id/authorization`
+  - Requires `user:read`.
+  - Returns one user snapshot independently of the current list filters so stale-state recovery cannot lose the target user.
 - `GET /roles/all`
   - Requires `role:manage`.
   - Returns role metadata, permission names, and `assignedUserCount`, allowing the user panel to preview effective permissions without per-role requests.

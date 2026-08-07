@@ -72,7 +72,12 @@ describe('RoleDeleteDialog', () => {
 
   it('refetches stale role state and requires confirmation with the fresh version', async () => {
     const user = userEvent.setup();
-    const currentRole = { ...role, name: 'translator-v2', authorizationVersion: 'g2' };
+    const currentRole = {
+      ...role,
+      description: 'Đã cập nhật bởi admin khác',
+      permissions: ['comic:read', 'role:manage'],
+      authorizationVersion: 'g2',
+    };
     const onDelete = vi
       .fn()
       .mockRejectedValueOnce(
@@ -99,11 +104,12 @@ describe('RoleDeleteDialog', () => {
 
     expect(await screen.findByText(/Dữ liệu phân quyền đã thay đổi/)).toBeInTheDocument();
     expect(onRefreshRole).toHaveBeenCalledWith('translator');
-    expect(screen.getByText('Role hiện tại: translator-v2')).toBeInTheDocument();
+    expect(screen.getByLabelText('Nhập tên role để xác nhận')).toHaveValue('');
+    expect(screen.getByText('Đã cập nhật bởi admin khác')).toBeInTheDocument();
+    expect(screen.getByText('comic:read, role:manage')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Xác nhận xóa' })).toBeDisabled();
 
-    await user.clear(screen.getByLabelText('Nhập tên role để xác nhận'));
-    await user.type(screen.getByLabelText('Nhập tên role để xác nhận'), 'translator-v2');
+    await user.type(screen.getByLabelText('Nhập tên role để xác nhận'), 'translator');
     await user.click(screen.getByRole('button', { name: 'Xác nhận xóa' }));
     expect(onDelete).toHaveBeenLastCalledWith('g2');
   });

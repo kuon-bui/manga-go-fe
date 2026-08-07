@@ -191,6 +191,8 @@ function useForbiddenRecovery(): (_error: unknown, _attemptKey: string) => void 
         currentPath: pathname,
         navigate: (path) => router.replace(path),
         notify: (message) => toast.warning(message),
+      }).catch(() => {
+        toast.error('Không thể tải lại hồ sơ phân quyền. Vui lòng thử lại.');
       });
     },
     [pathname, queryClient, router]

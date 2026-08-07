@@ -36,12 +36,14 @@ export function RoleDeleteDialog({
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentRole, setCurrentRole] = useState(role);
+  const [conflict, setConflict] = useState(false);
   const assigned = currentRole.assignedUserCount > 0;
 
   useEffect(() => {
     setConfirmation('');
     setError(null);
     setCurrentRole(role);
+    setConflict(false);
   }, [open, role]);
 
   async function handleDelete(): Promise<void> {
@@ -61,7 +63,10 @@ export function RoleDeleteDialog({
         onRefreshRole
       ) {
         try {
-          setCurrentRole(await onRefreshRole(role.id));
+          const refreshed = await onRefreshRole(role.id);
+          setCurrentRole(refreshed);
+          setConfirmation('');
+          setConflict(true);
         } catch {
           setError(`${message} Không thể tải trạng thái role mới nhất.`);
           return;
@@ -100,7 +105,21 @@ export function RoleDeleteDialog({
         {error ? (
           <div role="alert" className="space-y-1 text-sm text-destructive">
             <p>{error}</p>
-            <p>Role hiện tại: {currentRole.name}</p>
+            {conflict ? (
+              <div className="rounded-lg border bg-background p-3 text-foreground">
+                <p className="font-semibold">Trạng thái role hiện tại</p>
+                <p>{currentRole.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  {currentRole.description || 'Không có mô tả'}
+                </p>
+                <p className="mt-2 text-xs">
+                  {currentRole.permissions.length
+                    ? [...currentRole.permissions].sort().join(', ')
+                    : 'Không có quyền'}
+                </p>
+                <p className="mt-1 text-xs">Đang gán cho {currentRole.assignedUserCount} user</p>
+              </div>
+            ) : null}
           </div>
         ) : null}
         <DialogFooter>

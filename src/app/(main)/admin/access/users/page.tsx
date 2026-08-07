@@ -1,5 +1,6 @@
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 
 import { AccessPagination } from '@/components/admin/access/access-pagination';
@@ -15,11 +16,14 @@ import {
   useReplaceUserRoles,
 } from '@/hooks/use-admin-authorization';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
+import { apiClient } from '@/lib/api-client';
+import { queryKeys } from '@/lib/query-keys';
 import type { AdminUserSummary } from '@/types/rbac';
 
 const PAGE_LIMIT = 20;
 
 export default function AdminAccessUsersPage() {
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [roleId, setRoleId] = useState('');
   const [page, setPage] = useState(1);
@@ -98,11 +102,20 @@ export default function AdminAccessUsersPage() {
           }}
           user={selectedUser}
           roles={rolesQuery.data ?? []}
-          onRefreshUser={async (userId) => {
-            const refreshed = await usersQuery.refetch();
-            const current = refreshed.data?.data.find((entry) => entry.id === userId);
-            if (!current) throw new Error('Không tìm thấy trạng thái user mới nhất.');
-            return current;
+          onRefreshState={async (userId) => {
+            const [user, roles] = await Promise.all([
+              queryClient.fetchQuery({
+                queryKey: queryKeys.authorization.user(userId),
+                queryFn: () => apiClient.getAuthorizationUser(userId),
+                staleTime: 0,
+              }),
+              queryClient.fetchQuery({
+                queryKey: queryKeys.authorization.roles(),
+                queryFn: () => apiClient.getAuthorizationRoles(),
+                staleTime: 0,
+              }),
+            ]);
+            return { user, roles };
           }}
           onSave={async (roleIds, expectedVersion) => {
             if (!selectedUser) return;
