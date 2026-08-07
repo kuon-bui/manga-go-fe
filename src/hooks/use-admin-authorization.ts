@@ -9,6 +9,15 @@ import { ApiClientError, apiClient } from '@/lib/api-client';
 import { queryKeys } from '@/lib/query-keys';
 import { useAuthStore } from '@/stores/auth-store';
 import type { AuthorizationUserFilters, CreateRolePayload, UpdateRolePayload } from '@/types/rbac';
+import type { AuthorizationAuditFilters } from '@/types/rbac';
+
+export function useAuthorizationAuditLogs(filters: AuthorizationAuditFilters) {
+  return useQuery({
+    queryKey: queryKeys.authorization.audit({ ...filters }),
+    queryFn: () => apiClient.getAuthorizationAuditLogs(filters),
+    placeholderData: (previous) => previous,
+  });
+}
 
 export function useAuthorizationUsers(filters: AuthorizationUserFilters) {
   return useQuery({
