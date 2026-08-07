@@ -57,6 +57,7 @@ export function UserRoleSheet({
   const [availableRoles, setAvailableRoles] = useState<RoleAccessSummary[]>(roles);
   const [expectedVersion, setExpectedVersion] = useState('');
   const [conflict, setConflict] = useState<UserRoleConflict | null>(null);
+  const [missingDraftRoleIds, setMissingDraftRoleIds] = useState<string[]>([]);
   const [confirmationOpen, setConfirmationOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -65,6 +66,7 @@ export function UserRoleSheet({
     setDraftRoleIds(new Set(user?.roles.map((role) => role.id) ?? []));
     setExpectedVersion(user?.authorizationVersion ?? '');
     setConflict(null);
+    setMissingDraftRoleIds([]);
     setError(null);
     setConfirmationOpen(false);
   }, [user]);
@@ -127,9 +129,19 @@ export function UserRoleSheet({
       ) {
         try {
           const current = await onRefreshState(user.id);
+          const availableRoleIds = new Set(current.roles.map((role) => role.id));
+          const missingRoleIds = [...draftRoleIds]
+            .filter((roleId) => !availableRoleIds.has(roleId))
+            .sort();
           setExpectedVersion(current.user.authorizationVersion);
           setAvailableRoles(current.roles);
           setConflict({ currentUser: current.user });
+          setMissingDraftRoleIds(missingRoleIds);
+          if (missingRoleIds.length > 0) {
+            setDraftRoleIds(
+              new Set([...draftRoleIds].filter((roleId) => availableRoleIds.has(roleId)))
+            );
+          }
         } catch {
           setError(`${message} Không thể tải trạng thái mới nhất.`);
           setConfirmationOpen(false);
@@ -208,14 +220,16 @@ export function UserRoleSheet({
                 className="space-y-2 rounded-xl bg-destructive/10 p-3 text-sm text-destructive"
               >
                 <p>{error}</p>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setConfirmationOpen(true)}
-                >
-                  Thử lại
-                </Button>
+                {dirty ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setConfirmationOpen(true)}
+                  >
+                    Thử lại
+                  </Button>
+                ) : null}
               </div>
             ) : null}
 
@@ -234,6 +248,12 @@ export function UserRoleSheet({
                   title="Draft của bạn"
                   values={selectedRoles.map((role) => role.name).sort()}
                 />
+                {missingDraftRoleIds.length > 0 ? (
+                  <p className="rounded-lg bg-amber-500/15 p-2 text-amber-900 dark:text-amber-100">
+                    {missingDraftRoleIds.length} role trong draft không còn tồn tại và đã được bỏ
+                    khỏi draft: {missingDraftRoleIds.join(', ')}
+                  </p>
+                ) : null}
               </div>
             ) : null}
           </div>

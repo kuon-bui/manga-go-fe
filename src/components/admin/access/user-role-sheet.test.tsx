@@ -135,4 +135,36 @@ describe('UserRoleSheet', () => {
     await user.click(screen.getByRole('button', { name: 'Xác nhận lưu' }));
     expect(onSave).toHaveBeenLastCalledWith(['moderator', 'reader'], 'g2:u3');
   });
+
+  it('prunes a draft role that was concurrently deleted after stale recovery', async () => {
+    const user = userEvent.setup();
+    const onSave = vi.fn().mockRejectedValue(
+      new ApiClientError({
+        message: 'state changed',
+        statusCode: 409,
+        code: 'AUTHORIZATION_STATE_CHANGED',
+      })
+    );
+    renderWithQuery(
+      <UserRoleSheet
+        open
+        onOpenChange={vi.fn()}
+        user={userWith(['reader'])}
+        roles={roles}
+        onSave={onSave}
+        onRefreshState={vi.fn().mockResolvedValue({
+          user: { ...userWith(['reader']), authorizationVersion: 'g2:u1' },
+          roles: roles.filter((role) => role.id !== 'moderator'),
+        })}
+      />
+    );
+
+    await user.click(screen.getByRole('checkbox', { name: 'Moderator' }));
+    await user.click(screen.getByRole('button', { name: 'Lưu role' }));
+    await user.click(screen.getByRole('button', { name: 'Xác nhận lưu' }));
+
+    expect(await screen.findByText(/1 role trong draft không còn tồn tại/)).toBeInTheDocument();
+    expect(screen.queryByRole('checkbox', { name: 'Moderator' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Thử lại' })).not.toBeInTheDocument();
+  });
 });

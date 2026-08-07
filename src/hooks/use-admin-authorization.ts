@@ -71,7 +71,7 @@ interface ReplaceUserRolesVariables {
 export function useReplaceUserRoles() {
   const queryClient = useQueryClient();
   const currentUserId = useAuthStore((state) => state.user?.id);
-  const recoverForbidden = useForbiddenRecovery();
+  const recoverForbidden = useAuthorizationForbiddenRecovery();
 
   return useMutation({
     mutationFn: ({ userId, roleIds, expectedVersion }: ReplaceUserRolesVariables) =>
@@ -102,7 +102,7 @@ interface ReplaceRolePermissionsVariables {
 
 export function useReplaceRolePermissions() {
   const queryClient = useQueryClient();
-  const recoverForbidden = useForbiddenRecovery();
+  const recoverForbidden = useAuthorizationForbiddenRecovery();
 
   return useMutation({
     mutationFn: ({ roleId, permissions, expectedVersion }: ReplaceRolePermissionsVariables) =>
@@ -121,7 +121,7 @@ export function useReplaceRolePermissions() {
 
 export function useCreateAuthorizationRole() {
   const queryClient = useQueryClient();
-  const recoverForbidden = useForbiddenRecovery();
+  const recoverForbidden = useAuthorizationForbiddenRecovery();
 
   return useMutation({
     mutationFn: (payload: CreateRolePayload) => apiClient.createRole(payload),
@@ -142,7 +142,7 @@ interface UpdateRoleVariables {
 
 export function useUpdateAuthorizationRole() {
   const queryClient = useQueryClient();
-  const recoverForbidden = useForbiddenRecovery();
+  const recoverForbidden = useAuthorizationForbiddenRecovery();
 
   return useMutation({
     mutationFn: ({ roleId, payload, expectedVersion }: UpdateRoleVariables) =>
@@ -163,7 +163,7 @@ interface DeleteRoleVariables {
 
 export function useDeleteAuthorizationRole() {
   const queryClient = useQueryClient();
-  const recoverForbidden = useForbiddenRecovery();
+  const recoverForbidden = useAuthorizationForbiddenRecovery();
 
   return useMutation({
     mutationFn: ({ roleId, expectedVersion }: DeleteRoleVariables) =>
@@ -177,7 +177,10 @@ export function useDeleteAuthorizationRole() {
   });
 }
 
-function useForbiddenRecovery(): (_error: unknown, _attemptKey: string) => void {
+export function useAuthorizationForbiddenRecovery(): (
+  _error: unknown,
+  _attemptKey: string
+) => void {
   const queryClient = useQueryClient();
   const router = useRouter();
   const pathname = usePathname();
@@ -200,7 +203,7 @@ function useForbiddenRecovery(): (_error: unknown, _attemptKey: string) => void 
 }
 
 function useForbiddenQueryRecovery(error: unknown, attemptKey: string): void {
-  const recoverForbidden = useForbiddenRecovery();
+  const recoverForbidden = useAuthorizationForbiddenRecovery();
 
   useEffect(() => {
     recoverForbidden(error, attemptKey);

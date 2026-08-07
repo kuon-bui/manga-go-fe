@@ -12,7 +12,9 @@ interface RecoverAuthorizationOptions {
   notify: (_message: string) => void;
 }
 
-const recoveryAttempts = new Set<string>();
+const RECOVERY_ATTEMPT_TTL_MS = 60_000;
+const MAX_RECOVERY_ATTEMPTS = 200;
+const recoveryAttempts = new Map<string, number>();
 
 export async function recoverAuthorizationAfterForbidden({
   attemptKey,
@@ -21,8 +23,14 @@ export async function recoverAuthorizationAfterForbidden({
   navigate,
   notify,
 }: RecoverAuthorizationOptions): Promise<boolean> {
+  const now = Date.now();
+  pruneAuthorizationRecoveryAttempts(now);
   if (recoveryAttempts.has(attemptKey)) return false;
-  recoveryAttempts.add(attemptKey);
+  if (recoveryAttempts.size >= MAX_RECOVERY_ATTEMPTS) {
+    const oldest = recoveryAttempts.keys().next().value;
+    if (oldest !== undefined) recoveryAttempts.delete(oldest);
+  }
+  recoveryAttempts.set(attemptKey, now + RECOVERY_ATTEMPT_TTL_MS);
 
   try {
     await queryClient.invalidateQueries({
@@ -46,6 +54,12 @@ export async function recoverAuthorizationAfterForbidden({
 
 export function resetAuthorizationRecoveryAttempts(): void {
   recoveryAttempts.clear();
+}
+
+function pruneAuthorizationRecoveryAttempts(now: number): void {
+  for (const [key, expiresAt] of recoveryAttempts) {
+    if (expiresAt <= now) recoveryAttempts.delete(key);
+  }
 }
 
 export type { RecoverAuthorizationOptions };

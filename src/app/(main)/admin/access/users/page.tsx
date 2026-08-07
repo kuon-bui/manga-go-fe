@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
   useAuthorizationRoles,
+  useAuthorizationForbiddenRecovery,
   useAuthorizationUsers,
   useReplaceUserRoles,
 } from '@/hooks/use-admin-authorization';
@@ -33,6 +34,7 @@ export default function AdminAccessUsersPage() {
   const usersQuery = useAuthorizationUsers(filters);
   const rolesQuery = useAuthorizationRoles();
   const replaceRoles = useReplaceUserRoles();
+  const recoverForbidden = useAuthorizationForbiddenRecovery();
 
   function clearFilters(): void {
     setSearch('');
@@ -103,19 +105,27 @@ export default function AdminAccessUsersPage() {
           user={selectedUser}
           roles={rolesQuery.data ?? []}
           onRefreshState={async (userId) => {
-            const [user, roles] = await Promise.all([
-              queryClient.fetchQuery({
-                queryKey: queryKeys.authorization.user(userId),
-                queryFn: () => apiClient.getAuthorizationUser(userId),
-                staleTime: 0,
-              }),
-              queryClient.fetchQuery({
-                queryKey: queryKeys.authorization.roles(),
-                queryFn: () => apiClient.getAuthorizationRoles(),
-                staleTime: 0,
-              }),
-            ]);
-            return { user, roles };
+            try {
+              const [user, roles] = await Promise.all([
+                queryClient.fetchQuery({
+                  queryKey: queryKeys.authorization.user(userId),
+                  queryFn: () => apiClient.getAuthorizationUser(userId),
+                  staleTime: 0,
+                }),
+                queryClient.fetchQuery({
+                  queryKey: queryKeys.authorization.roles(),
+                  queryFn: () => apiClient.getAuthorizationRoles(),
+                  staleTime: 0,
+                }),
+              ]);
+              return { user, roles };
+            } catch (error: unknown) {
+              recoverForbidden(
+                error,
+                `authorization-user:${userId}:${selectedUser?.authorizationVersion ?? 'unknown'}`
+              );
+              throw error;
+            }
           }}
           onSave={async (roleIds, expectedVersion) => {
             if (!selectedUser) return;

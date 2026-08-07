@@ -1,9 +1,12 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useAuthorizationUsers } from '@/hooks/use-admin-authorization';
+import {
+  useAuthorizationForbiddenRecovery,
+  useAuthorizationUsers,
+} from '@/hooks/use-admin-authorization';
 import { resetAuthorizationRecoveryAttempts } from '@/lib/authorization-access';
 import { ApiClientError, apiClient } from '@/lib/api-client';
 
@@ -43,6 +46,34 @@ describe('admin authorization queries', () => {
       wrapper: ({ children }: { children: ReactNode }) => (
         <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
       ),
+    });
+
+    await waitFor(() => expect(getProfile).toHaveBeenCalledTimes(1));
+    expect(navigation.replace).toHaveBeenCalledWith('/admin/access/audit');
+    expect(notifications.warning).toHaveBeenCalledTimes(1);
+  });
+
+  it('reroutes when an on-demand target-user refresh returns 403', async () => {
+    const getProfile = vi.spyOn(apiClient, 'getMyAuthorization').mockResolvedValue({
+      userId: 'user-1',
+      roles: [],
+      permissions: ['audit_log:read'],
+      version: 'g3:u1',
+    });
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    const { result } = renderHook(() => useAuthorizationForbiddenRecovery(), {
+      wrapper: ({ children }: { children: ReactNode }) => (
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      ),
+    });
+
+    act(() => {
+      result.current(
+        new ApiClientError({ message: 'user:read revoked', statusCode: 403 }),
+        'authorization-user:user-2:g2:u4'
+      );
     });
 
     await waitFor(() => expect(getProfile).toHaveBeenCalledTimes(1));
