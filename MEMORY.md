@@ -1,4 +1,5 @@
 # System Memory & Context 🧠
+
 <!--
 AGENTS: Update this file after every major milestone, structural change, or resolved bug.
 DO NOT delete historical context if it is still relevant. Compress older completed items.
@@ -10,10 +11,19 @@ DO NOT delete historical context if it is still relevant. Compress older complet
 **Goal:** Build the Home page, MangaCard, Search, Browse, Library — with premium animations inspired by Komikku analysis.
 
 **Next Steps:**
+
 1. Continue Phase 2: Advanced Search, Browse, Library pages need audit/polish
 2. Phase 3: Title detail page, StarRating, chapter list, comments
 3. Phase 4: Novel reader, manga reader full audit
 4. Phases 5–6: Dashboard, notifications, settings
+
+### Admin authorization rollout (2026-08-07)
+
+- Admin authorization lives under `/admin/access/users`, `/admin/access/roles`, and `/admin/access/audit`; the visible tabs and copied deep links are gated by backend permission names, never by `admin`/`superadmin` role names.
+- `GET /users/me/authorization` is the frontend source for role names and effective permissions. TanStack Query owns this server state with a 30-second stale window, visible-document refresh every 60 seconds, focus refresh, and immediate refresh/re-routing after a `403`.
+- Casbin remains authoritative for user-role and role-permission relationships. PostgreSQL stores role descriptions, immutable audit events, and durable global/per-user revisions; Redis caches version-addressed self-authorization profiles for exactly 10 minutes.
+- Users may have zero or multiple roles. Role metadata, role permissions, role deletion, and user-role replacement use optimistic `If-Match` versions and preserve drafts for `409` conflicts.
+- Authorization tests use Vitest + React Testing Library. Focused coverage includes permission predicates/gates, stale-`403` recovery, user-role drafts/conflicts, permission matrix/deletion safeguards, and immutable audit details.
 
 ## 📂 Architectural Decisions
 
@@ -28,7 +38,7 @@ DO NOT delete historical context if it is still relevant. Compress older complet
 
 - **2026-04-05** — Phase 1 complete. Auth pages (login/register/forgot-password/reset-password) were pre-built. `useSearchParams()` wrapped in `<Suspense>` in login and reset-password pages (Next.js 15 requirement). `src/lib/query-keys.ts` added. `src/types/index.ts` re-exports from `src/types/auth.ts` and adds content/comment/notification types. `src/types/auth.ts` extended with `displayName` and `bio` on User. Sonner toast installed; `<Toaster />` in root layout. shadcn Phase 1 components installed (button, input, label, card, separator, sonner).
 
-*(Log specific choices made during the build here so future agents respect them)*
+_(Log specific choices made during the build here so future agents respect them)_
 
 - **2026-04-05** — Using Next.js 15 App Router with route groups: `(auth)` for unauthenticated pages, `(main)` for the main layout with header/nav.
 - **2026-04-05** — Zustand 5 for UI/persistent state; TanStack Query for ALL server data fetching. Never use `useEffect` + `fetch` directly for API calls.
@@ -40,7 +50,11 @@ DO NOT delete historical context if it is still relevant. Compress older complet
 
 ## 🐛 Known Issues & Quirks
 
-*(Log current bugs or weird workarounds here — none yet)*
+- Repository-wide TypeScript currently has unrelated baseline errors in `title-edit-modal.tsx`, `notification-panel.tsx`, and `toc-drawer.tsx`.
+- Repository-wide lint currently has unrelated baseline errors in `title-edit-modal.tsx`, `settings-view.tsx`, and `chapter-list.tsx`.
+- Repository-wide `prettier --check .` currently reports historical formatting drift across roughly 200 files; authorization-owned source files are formatted, while generated `docs/swagger.yaml` is kept byte-identical to the backend generator output.
+- `next/font` can require outbound network access during `next build`; treat a restricted-environment font fetch separately from authorization feature regressions.
+- Backend race verification needs CGO plus `gcc`, which is not installed in the current Windows environment; `golangci-lint` is also not installed. The full Go test suite and `go vet ./...` pass.
 
 ## 📜 Phase Progress
 
@@ -52,12 +66,15 @@ DO NOT delete historical context if it is still relevant. Compress older complet
 - [x] **Phase 6** — Notifications, RBAC Polish, Performance Audit
 
 ### Phase 3 work done (Detail Pages & Comments):
+
 - `TitleDetailView` with separated views.
 - `TitleHero` for cover, nested `useFollow` interaction.
 - `ChapterList` with virtual scrolling (`@tanstack/react-virtual`), indicates "Cur" for current read chapter based on `useReadingHistories`.
 - Comment Section: Optimistic Add/Delete. Real-time nested UI max-depth 2.
 - Comment Reactions: Hooks `useToggleReaction` integrating with `useComments` optimistic updater. Like button fully wired to API.
+
 ### Notification work done (Phase 6 partial):
+
 - Fixed `useNotifications`/`useUnreadCount` — `enabled` tied to `isAuthenticated`
 - `NotificationProvider` (SSE + polling) mounted in `(main)/layout.tsx`
 - `useNotificationStream` — SSE EventSource, auto-reconnects
@@ -66,12 +83,14 @@ DO NOT delete historical context if it is still relevant. Compress older complet
 - `notification-bell.tsx` — animated badge (zoom-in), type-safe
 
 ### Reading Experience work done:
+
 - `createReadingHistory()` called on chapter open (MangaReader)
 - `markChapterRead()` wired into VerticalScrollView (last page visible) + SinglePageView (last page nav)
 - Library page: tabs "Đang theo dõi" + "Lịch sử đọc" with delete
 - `ReadingHistoryEntry` type + `deleteReadingHistory`, `updateReadingHistory` in apiClient
 
 ### UI Overhaul & UX Polish (April 2026 Phase 7 Initiative):
+
 - Fixed `reading-histories` UUID length error in `useChapter`.
 - Polished guest UX by adding auth paths gracefully to `BottomNav` and integrating a back button in `/login`.
 - Transformed `UploadTitleForm` to use generic Combobox for Genres & Select for Translation Group to eliminate massive nested lists.

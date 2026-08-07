@@ -2,6 +2,8 @@ basePath: /
 definitions:
   manga-go_internal_app_api_common_response.Response:
     properties:
+      code:
+        type: string
       data: {}
       error:
         type: string
@@ -14,6 +16,8 @@ definitions:
     type: object
   manga-go_internal_app_api_common_response.Result:
     properties:
+      code:
+        type: string
       data: {}
       error: {}
       httpStatus:
@@ -42,6 +46,9 @@ definitions:
     x-enum-varnames:
     - ContentTypeImage
     - ContentTypeText
+  manga-go_internal_pkg_common.JSONMap:
+    additionalProperties: {}
+    type: object
   manga-go_internal_pkg_constant.ComicAgeRating:
     enum:
     - ALL
@@ -80,6 +87,52 @@ definitions:
     - ComicTypeManhua
     - ComicTypeComic
     - ComicTypeNovel
+  manga-go_internal_pkg_constant.CommentReportReason:
+    enum:
+    - SPAM
+    - OFFENSIVE
+    - HARASSMENT
+    - ADULT_CONTENT
+    type: string
+    x-enum-varnames:
+    - CommentReportReasonSpam
+    - CommentReportReasonOffensive
+    - CommentReportReasonHarassment
+    - CommentReportReasonAdultContent
+  manga-go_internal_pkg_constant.FollowStatus:
+    enum:
+    - reading
+    - planned
+    - completed
+    - dropped
+    - favorite
+    type: string
+    x-enum-varnames:
+    - FollowStatusReading
+    - FollowStatusPlanned
+    - FollowStatusCompleted
+    - FollowStatusDropped
+    - FollowStatusFavorite
+  manga-go_internal_pkg_notification.Category:
+    enum:
+    - comic
+    - comment
+    - system
+    type: string
+    x-enum-varnames:
+    - CategoryComic
+    - CategoryComment
+    - CategorySystem
+  manga-go_internal_pkg_notification.Type:
+    enum:
+    - comic.new_chapter
+    - comment.reply
+    - system.test
+    type: string
+    x-enum-varnames:
+    - TypeComicNewChapter
+    - TypeCommentNew
+    - TypeSystemTest
   manga-go_internal_pkg_request_author.CreateAuthorRequest:
     properties:
       name:
@@ -105,13 +158,13 @@ definitions:
         minItems: 1
         type: array
       slug:
+        description: Optional - auto-generated from title if not provided
         type: string
       title:
         type: string
     required:
     - number
     - pages
-    - slug
     - title
     type: object
   manga-go_internal_pkg_request_chapter.PageRequest:
@@ -209,6 +262,13 @@ definitions:
     - slug
     - title
     type: object
+  manga-go_internal_pkg_request_comic.FollowComicRequest:
+    properties:
+      followStatus:
+        $ref: '#/definitions/manga-go_internal_pkg_constant.FollowStatus'
+    required:
+    - followStatus
+    type: object
   manga-go_internal_pkg_request_comic.PublishComicRequest:
     properties:
       isPublished:
@@ -276,7 +336,7 @@ definitions:
   manga-go_internal_pkg_request_comment.AddReactionRequest:
     properties:
       type:
-        example: like
+        example: LIKE
         type: string
     required:
     - type
@@ -285,6 +345,11 @@ definitions:
     properties:
       chapterId:
         type: string
+      comicId:
+        description: |-
+          Comic-level comment: provide comicId only
+          Chapter/Page-level comment: provide chapterId (comicId inferred from chapter)
+        type: string
       content:
         type: string
       pageIndex:
@@ -292,8 +357,17 @@ definitions:
       parentId:
         type: string
     required:
-    - chapterId
     - content
+    type: object
+  manga-go_internal_pkg_request_comment.ReportCommentRequest:
+    properties:
+      details:
+        maxLength: 500
+        type: string
+      reason:
+        $ref: '#/definitions/manga-go_internal_pkg_constant.CommentReportReason'
+    required:
+    - reason
     type: object
   manga-go_internal_pkg_request_comment.UpdateCommentRequest:
     properties:
@@ -332,22 +406,36 @@ definitions:
     - name
     - slug
     type: object
-  manga-go_internal_pkg_request_permission.CreatePermissionRequest:
+  manga-go_internal_pkg_request_notification.CreateTestNotificationRequest:
     properties:
-      name:
+      body:
         type: string
+      category:
+        $ref: '#/definitions/manga-go_internal_pkg_notification.Category'
+      payload:
+        $ref: '#/definitions/manga-go_internal_pkg_common.JSONMap'
+      title:
+        type: string
+      type:
+        $ref: '#/definitions/manga-go_internal_pkg_notification.Type'
     required:
-    - name
+    - body
+    - category
+    - title
+    - type
     type: object
-  manga-go_internal_pkg_request_permission.UpdatePermissionRequest:
+  manga-go_internal_pkg_request_page.AddReactionRequest:
     properties:
-      name:
+      type:
+        example: LIKE
         type: string
     required:
-    - name
+    - type
     type: object
   manga-go_internal_pkg_request_rating.CreateRatingRequest:
     properties:
+      comment:
+        type: string
       score:
         maximum: 5
         minimum: 1
@@ -381,24 +469,33 @@ definitions:
     type: object
   manga-go_internal_pkg_request_role.AssignPermissionRequest:
     properties:
-      permissionIds:
+      permissions:
         items:
           type: string
-        minItems: 1
         type: array
     required:
-    - permissionIds
+    - permissions
     type: object
   manga-go_internal_pkg_request_role.CreateRoleRequest:
     properties:
+      description:
+        maxLength: 1000
+        type: string
       name:
+        maxLength: 100
+        minLength: 2
         type: string
     required:
     - name
     type: object
   manga-go_internal_pkg_request_role.UpdateRoleRequest:
     properties:
+      description:
+        maxLength: 1000
+        type: string
       name:
+        maxLength: 100
+        minLength: 2
         type: string
     required:
     - name
@@ -445,13 +542,14 @@ definitions:
       role_ids:
         items:
           type: string
-        minItems: 1
         type: array
     required:
     - role_ids
     type: object
   manga-go_internal_pkg_request_user.CreateUserRequest:
     properties:
+      avatar:
+        type: string
       email:
         type: string
       name:
@@ -509,6 +607,13 @@ definitions:
       seenNotificationCenter:
         type: boolean
     type: object
+  manga-go_internal_pkg_request_user.UpdateUserProfileRequest:
+    properties:
+      avatar:
+        type: string
+      name:
+        type: string
+    type: object
 host: localhost:8080
 info:
   contact:
@@ -526,6 +631,119 @@ info:
   title: Manga-Go API
   version: "1.0"
 paths:
+  /admin/comic-stats/trigger-all:
+    post:
+      consumes:
+      - application/json
+      description: Trigger recomputation of stats for all comics in the system
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+      security:
+      - AccessToken: []
+      summary: Trigger comic stats update for all comics
+      tags:
+      - Comic Stats
+  /admin/comic-stats/trigger/{id}:
+    post:
+      consumes:
+      - application/json
+      description: Trigger recomputation of stats for a specific comic
+      parameters:
+      - description: Comic ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+      security:
+      - AccessToken: []
+      summary: Trigger comic stats update
+      tags:
+      - Comic Stats
+  /authorization/audit-logs:
+    get:
+      parameters:
+      - description: Page
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: limit
+        type: integer
+      - description: Actor name or email
+        in: query
+        name: actor
+        type: string
+      - description: Action
+        in: query
+        name: action
+        type: string
+      - description: Target type
+        in: query
+        name: target_type
+        type: string
+      - description: Target ID
+        in: query
+        name: target_id
+        type: string
+      - description: Start time
+        in: query
+        name: start_at
+        type: string
+      - description: End time
+        in: query
+        name: end_at
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+      summary: List authorization audit logs
+      tags:
+      - Authorization
   /authors:
     get:
       consumes:
@@ -721,6 +939,38 @@ paths:
       summary: Get all authors
       tags:
       - Author
+  /chapters/recent-updates:
+    get:
+      consumes:
+      - application/json
+      description: Get list of recently updated chapters across all comics
+      parameters:
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+      summary: Get recent chapter updates
+      tags:
+      - Chapter
   /comics:
     get:
       consumes:
@@ -768,12 +1018,6 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
-      security:
-      - AccessToken: []
       summary: List comics
       tags:
       - Comic
@@ -864,16 +1108,10 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
         "404":
           description: Not Found
           schema:
             $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
-      security:
-      - AccessToken: []
       summary: Get comic by slug
       tags:
       - Comic
@@ -947,12 +1185,6 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
-      security:
-      - AccessToken: []
       summary: List chapters
       tags:
       - Chapter
@@ -1019,16 +1251,10 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
         "404":
           description: Not Found
           schema:
             $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
-      security:
-      - AccessToken: []
       summary: Get chapter by slug
       tags:
       - Chapter
@@ -1343,6 +1569,11 @@ paths:
         name: comicSlug
         required: true
         type: string
+      - description: Follow comic request
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/manga-go_internal_pkg_request_comic.FollowComicRequest'
       produces:
       - application/json
       responses:
@@ -1400,6 +1631,50 @@ paths:
       security:
       - AccessToken: []
       summary: Get comic follow status
+      tags:
+      - Comic
+    patch:
+      consumes:
+      - application/json
+      description: Update follow status for a followed comic of current user
+      parameters:
+      - description: Comic slug
+        in: path
+        name: comicSlug
+        required: true
+        type: string
+      - description: Follow status update request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/manga-go_internal_pkg_request_comic.FollowComicRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+      security:
+      - AccessToken: []
+      summary: Update comic follow status
       tags:
       - Comic
   /comics/{comicSlug}/publish:
@@ -1482,6 +1757,34 @@ paths:
       security:
       - AccessToken: []
       summary: Update comic status
+      tags:
+      - Comic
+  /comics/trending:
+    get:
+      consumes:
+      - application/json
+      description: Get list of trending comics based on follow count
+      parameters:
+      - description: Number of trending comics (max 50, default 5)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+      summary: Get trending comics
       tags:
       - Comic
   /comments:
@@ -1771,6 +2074,90 @@ paths:
       summary: List comment replies
       tags:
       - Comment
+  /comments/{id}/report:
+    post:
+      consumes:
+      - application/json
+      description: Report an inappropriate comment for moderation review
+      parameters:
+      - description: Comment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Report details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/manga-go_internal_pkg_request_comment.ReportCommentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+      security:
+      - AccessToken: []
+      summary: Report a comment
+      tags:
+      - Comment
+  /comments/new:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve paginated newest top-level comments across all comics
+        and chapters
+      parameters:
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Records per page (default: 20)'
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+      security:
+      - AccessToken: []
+      summary: List newest comments
+      tags:
+      - Comment
   /files/content/{filename}:
     get:
       consumes:
@@ -1781,6 +2168,10 @@ paths:
         in: path
         name: filename
         required: true
+        type: string
+      - description: 'Size: small|medium|large|normal (default: normal)'
+        in: query
+        name: size
         type: string
       produces:
       - '*/*'
@@ -1839,17 +2230,32 @@ paths:
     post:
       consumes:
       - multipart/form-data
-      description: Upload a file to object storage
+      description: 'Queue image processing to generate WebP variants (small/medium/large/normal).
+        For chapter type: if chapterSlug provided -> comics/{comicSlug}/chapters/{chapterSlug}/pages/page-{pageIdx}.webp.
+        For cover -> comics/{comicSlug}/cover/{uuid}.webp'
       parameters:
-      - description: File to upload (max 10MB)
+      - description: Image file (max 10MB, image/* only)
         in: formData
         name: file
         required: true
         type: file
-      - description: Optional filename (if not provided, original filename will be
-          used)
+      - description: 'Image type: ''chapter'' or ''cover'''
         in: formData
-        name: filename
+        name: type
+        required: true
+        type: string
+      - description: Comic ID (UUID)
+        in: formData
+        name: comicId
+        required: true
+        type: string
+      - description: Chapter slug (required for chapter type)
+        in: formData
+        name: chapterSlug
+        type: string
+      - description: Page index (required for chapter type)
+        in: formData
+        name: pageIdx
         type: string
       produces:
       - application/json
@@ -1866,13 +2272,17 @@ paths:
           description: Unauthorized
           schema:
             $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+        "413":
+          description: Request Entity Too Large
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
         "500":
           description: Internal Server Error
           schema:
             $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
       security:
       - AccessToken: []
-      summary: Upload file
+      summary: Upload image (chapter or comic cover)
       tags:
       - File
   /genres:
@@ -2071,6 +2481,28 @@ paths:
       tags:
       - Genre
   /notifications:
+    delete:
+      description: Soft delete all notifications for the current user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+      security:
+      - AccessToken: []
+      summary: Delete all notifications
+      tags:
+      - Notification
     get:
       consumes:
       - application/json
@@ -2114,6 +2546,43 @@ paths:
       security:
       - AccessToken: []
       summary: List notifications
+      tags:
+      - Notification
+  /notifications/{id}:
+    delete:
+      description: Soft delete a notification for the current user
+      parameters:
+      - description: Notification id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+      security:
+      - AccessToken: []
+      summary: Delete notification
       tags:
       - Notification
   /notifications/{id}/read:
@@ -2231,20 +2700,18 @@ paths:
       summary: Stream notifications
       tags:
       - Notification
-  /permissions:
-    get:
+  /notifications/test:
+    post:
       consumes:
       - application/json
-      description: Get paginated list of permissions
+      description: Create a test notification for the current user and publish it
+        over SSE
       parameters:
-      - description: Page number
-        in: query
-        name: page
-        type: integer
-      - description: Items per page
-        in: query
-        name: limit
-        type: integer
+      - description: Test notification request
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/manga-go_internal_pkg_request_notification.CreateTestNotificationRequest'
       produces:
       - application/json
       responses:
@@ -2255,162 +2722,37 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
       security:
       - AccessToken: []
-      summary: List permissions
+      summary: Create test notification
       tags:
-      - Permission
+      - Notification
+  /pages/{pageId}/reactions:
     post:
       consumes:
       - application/json
-      description: Create a new permission
+      description: Add or remove a reaction for a specific page
       parameters:
-      - description: Permission creation request
+      - description: Page ID
+        in: path
+        name: pageId
+        required: true
+        type: string
+      - description: Reaction data
         in: body
-        name: body
+        name: request
         required: true
         schema:
-          $ref: '#/definitions/manga-go_internal_pkg_request_permission.CreatePermissionRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
-      security:
-      - AccessToken: []
-      summary: Create permission
-      tags:
-      - Permission
-  /permissions/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: Delete a permission by ID
-      parameters:
-      - description: Permission ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
-      security:
-      - AccessToken: []
-      summary: Delete permission
-      tags:
-      - Permission
-    put:
-      consumes:
-      - application/json
-      description: Update permission information
-      parameters:
-      - description: Permission ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Permission update request
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/manga-go_internal_pkg_request_permission.UpdatePermissionRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
-      security:
-      - AccessToken: []
-      summary: Update permission
-      tags:
-      - Permission
-  /permissions/all:
-    get:
-      consumes:
-      - application/json
-      description: Get all permissions without pagination
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
-      security:
-      - AccessToken: []
-      summary: Get all permissions
-      tags:
-      - Permission
-  /ratings/comics/{comicSlug}:
-    get:
-      consumes:
-      - application/json
-      description: Get paginated ratings in the current comic context
-      parameters:
-      - description: Comic slug
-        in: path
-        name: comicSlug
-        required: true
-        type: string
-      - description: Page number
-        in: query
-        name: page
-        type: integer
-      - description: Items per page
-        in: query
-        name: limit
-        type: integer
+          $ref: '#/definitions/manga-go_internal_pkg_request_page.AddReactionRequest'
       produces:
       - application/json
       responses:
@@ -2436,7 +2778,72 @@ paths:
             $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
       security:
       - AccessToken: []
-      summary: List ratings
+      summary: Handle reaction for a page
+      tags:
+      - Page
+  /permissions:
+    get:
+      consumes:
+      - application/json
+      description: List every permission that can be granted to a role. The catalog
+        is defined in code, so it is fixed for a given deployment.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+      security:
+      - AccessToken: []
+      summary: List permissions
+      tags:
+      - Permission
+  /ratings/comics/{comicSlug}:
+    get:
+      consumes:
+      - application/json
+      description: Get the current user's rating for the specified comic
+      parameters:
+      - description: Comic slug
+        in: path
+        name: comicSlug
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+      security:
+      - AccessToken: []
+      summary: Get user rating
       tags:
       - Rating
     post:
@@ -2902,6 +3309,10 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+        "409":
+          description: ROLE_IN_USE or AUTHORIZATION_STATE_CHANGED
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
       security:
       - AccessToken: []
       summary: Delete role
@@ -2976,6 +3387,10 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+        "409":
+          description: AUTHORIZATION_STATE_CHANGED
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
       security:
       - AccessToken: []
       summary: Update role
@@ -2985,7 +3400,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Assign one or more permissions to a role
+      description: Replace the role's permissions with the given set. Names come from
+        GET /permissions, e.g. "comic:write".
       parameters:
       - description: Role ID
         in: path
@@ -3004,34 +3420,39 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
       security:
       - AccessToken: []
       summary: Assign permissions to role
       tags:
       - Role
-  /roles/{id}/permissions/{permissionId}:
+  /roles/{id}/permissions/{permissionName}:
     delete:
       consumes:
       - application/json
-      description: Remove a permission from a role
+      description: Revoke a single permission from a role, named as in GET /permissions,
+        e.g. "comic:write".
       parameters:
       - description: Role ID
         in: path
         name: id
         required: true
         type: string
-      - description: Permission ID
+      - description: Permission name, e.g. comic:write
         in: path
-        name: permissionId
+        name: permissionName
         required: true
         type: string
       produces:
@@ -3040,15 +3461,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
       security:
       - AccessToken: []
       summary: Remove permission from role
@@ -3411,7 +3836,118 @@ paths:
       summary: Transfer translation group ownership
       tags:
       - TranslationGroup
+  /translation-groups/{translationGroupSlug}/logo:
+    put:
+      consumes:
+      - multipart/form-data
+      description: Upload logo for Translation Group
+      parameters:
+      - description: Translation Group slug
+        in: path
+        name: translationGroupSlug
+        required: true
+        type: string
+      - description: Image file
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+      security:
+      - AccessToken: []
+      summary: Upload Translation Group logo
+      tags:
+      - Translation Group
+  /translation-groups/{translationGroupSlug}/members:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of members in the translation group
+      parameters:
+      - description: Translation Group slug
+        in: path
+        name: translationGroupSlug
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+      security:
+      - AccessToken: []
+      summary: Get translation group members
+      tags:
+      - Translation Group
   /users:
+    get:
+      parameters:
+      - description: Page
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: limit
+        type: integer
+      - description: Name or email
+        in: query
+        name: search
+        type: string
+      - description: Role ID
+        in: query
+        name: role_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+      summary: List users for authorization administration
+      tags:
+      - User
     post:
       consumes:
       - application/json
@@ -3439,6 +3975,47 @@ paths:
           schema:
             $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
       summary: Create new user account
+      tags:
+      - User
+  /users/{id}:
+    patch:
+      consumes:
+      - application/json
+      description: Update profile information of a user by id
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User profile update request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/manga-go_internal_pkg_request_user.UpdateUserProfileRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Result'
+      security:
+      - AccessToken: []
+      summary: Update user profile
       tags:
       - User
   /users/{id}/roles:
@@ -3584,6 +4161,26 @@ paths:
       security:
       - AccessToken: []
       summary: Get current user profile
+      tags:
+      - User
+  /users/me/authorization:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/manga-go_internal_app_api_common_response.Response'
+      summary: Get the current user's effective authorization profile
       tags:
       - User
   /users/me/config:
