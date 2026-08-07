@@ -16,6 +16,19 @@ export type {
   AssignRolePermissionsPayload,
   AssignUserRolesPayload,
   UserRolesResponse,
+  PermissionDefinition,
+  RoleAccessSummary,
+  AuthorizationProfile,
+  AdminUserSummary,
+  AuthorizationAuditAction,
+  AuthorizationAuditLog,
+  PagedAdminResult,
+  AuthorizationUserFilters,
+  AuthorizationAuditFilters,
+  ReplaceRolePermissionsPayload,
+  ReplaceUserRolesPayload,
+  CreateRolePayload,
+  UpdateRolePayload,
 } from '@/types/rbac';
 
 // ─── API ────────────────────────────────────────────────────────────────────
@@ -76,7 +89,7 @@ export interface TranslatorGroup {
 export interface ChapterSummary {
   id: string;
   slug: string;
-  number: string;       // backend stores as string (supports "1", "1.5", "EX1")
+  number: string; // backend stores as string (supports "1", "1.5", "EX1")
   title: string | null;
   publishedAt: string;
   group: TranslatorGroup | null;
@@ -89,10 +102,9 @@ export interface RecentUpdateChapter {
   chapter: ChapterSummary;
 }
 
-
 export interface Manga {
   id: string;
-  slug: string;             // primary URL identifier
+  slug: string; // primary URL identifier
   title: string;
   alternativeTitles: string[];
   description: string | null;
@@ -128,12 +140,12 @@ export interface Manga {
 }
 
 export interface Chapter extends ChapterSummary {
-  comicSlug: string;    // needed to build API URLs and reader links
+  comicSlug: string; // needed to build API URLs and reader links
   mangaId: string;
-  pages: string[];      // image URLs for manga; empty for novel
+  pages: string[]; // image URLs for manga; empty for novel
   content: string | null; // HTML content for novel; null for manga
-  prevChapter: { slug: string; number: string; } | null;
-  nextChapter: { slug: string; number: string; } | null;
+  prevChapter: { slug: string; number: string } | null;
+  nextChapter: { slug: string; number: string } | null;
 }
 
 // ─── Rating & Follow ──────────────────────────────────────────────────────────
@@ -179,7 +191,7 @@ export interface ReadingHistoryEntry {
 
 export interface CommentAuthor {
   id: string;
-  name: string;         // backend field (was: username / displayName)
+  name: string; // backend field (was: username / displayName)
   avatarUrl: string | null;
 }
 
@@ -191,13 +203,13 @@ export interface CommentReaction {
 
 export interface Comment {
   id: string;
-  content: string;      // backend field (was: body)
-  comicId?: string;     // For comic-level comments
-  chapterId?: string;   // For chapter/page comments
+  content: string; // backend field (was: body)
+  comicId?: string; // For comic-level comments
+  chapterId?: string; // For chapter/page comments
   pageIndex: number | null;
   author: CommentAuthor;
   parentId: string | null;
-  mentions?: CommentAuthor[];  // Users mentioned in this reply
+  mentions?: CommentAuthor[]; // Users mentioned in this reply
   replies: Comment[];
   reactions: CommentReaction[];
   createdAt: string;
@@ -247,7 +259,7 @@ export type GroupRole = 'admin' | 'member';
 export interface GroupMember {
   id: string;
   userId: string;
-  name: string;         // backend field (was: username / displayName)
+  name: string; // backend field (was: username / displayName)
   avatarUrl: string | null;
   role: GroupRole;
   joinedAt: string;
@@ -279,7 +291,7 @@ export interface DashboardTitle {
 export interface UploadChapterPayload {
   comicSlug: string;
   slug: string;
-  number: string;       // backend stores as string
+  number: string; // backend stores as string
   title: string | null;
   pages: string[];
   content: string | null;

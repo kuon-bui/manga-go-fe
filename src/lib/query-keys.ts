@@ -65,13 +65,22 @@ export const queryKeys = {
     groupMembers: (slug: string) => ['dashboard', 'group', slug, 'members'] as const,
   },
   browse: {
-    results: (filters: Record<string, unknown>) =>
-      ['browse', filters] as const,
+    results: (filters: Record<string, unknown>) => ['browse', filters] as const,
   },
   rbac: {
     roles: () => ['rbac', 'roles'] as const,
     roleDetail: (roleId: string) => ['rbac', 'roles', roleId] as const,
     permissions: () => ['rbac', 'permissions'] as const,
     userRoles: (userId: string) => ['rbac', 'user', userId, 'roles'] as const,
+  },
+  authorization: {
+    all: () => ['authorization'] as const,
+    me: () => ['authorization', 'me'] as const,
+    users: (filters: Record<string, unknown>) => ['authorization', 'users', filters] as const,
+    user: (userId: string) => ['authorization', 'users', userId] as const,
+    roles: () => ['authorization', 'roles'] as const,
+    role: (roleId: string) => ['authorization', 'roles', roleId] as const,
+    catalog: () => ['authorization', 'catalog'] as const,
+    audit: (filters: Record<string, unknown>) => ['authorization', 'audit', filters] as const,
   },
 } as const;
