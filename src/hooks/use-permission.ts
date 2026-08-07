@@ -1,24 +1,17 @@
-'use client'
+'use client';
 
-import { useAuthStore } from '@/stores/auth-store'
-import { normalizeRoleName, roleHasPermission, type Permission } from '@/lib/permissions'
+import { useAuthorization } from '@/components/auth/authorization-provider';
+import { roleHasPermission, type Permission } from '@/lib/permissions';
+import { useAuthStore } from '@/stores/auth-store';
 
-/**
- * Returns true if the current user has the given permission.
- * Reads from the auth store (roles fetched at login time) — no extra API calls.
- * Unauthenticated users are treated as 'guest'.
- */
+/** Resolves semantic product permissions from current backend role names. */
 export function usePermission(permission: Permission): boolean {
-  const user = useAuthStore((s) => s.user)
-  const roles = useAuthStore((s) => s.roles)
+  const user = useAuthStore((state) => state.user);
+  const { profile } = useAuthorization();
 
-  if (!user) return roleHasPermission('guest', permission)
-
-  // Check against all backend roles stored at login time (with normalization)
-  if (roles.length > 0) {
-    return roles.some((roleName) => roleHasPermission(normalizeRoleName(roleName), permission))
+  if (!user) return roleHasPermission('guest', permission);
+  if (profile?.roles.length) {
+    return profile.roles.some((role) => roleHasPermission(role.name, permission));
   }
-
-  // Fallback to the static role field on the user object
-  return roleHasPermission(user.role ?? 'guest', permission)
+  return roleHasPermission(user.role ?? 'guest', permission);
 }

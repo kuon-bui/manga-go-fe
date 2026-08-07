@@ -16,7 +16,11 @@ export default function LoginPage() {
   return (
     <Suspense>
       <div className="relative">
-        <Button variant="ghost" asChild className="absolute -top-12 left-0 text-muted-foreground hover:text-foreground">
+        <Button
+          variant="ghost"
+          asChild
+          className="absolute -top-12 left-0 text-muted-foreground hover:text-foreground"
+        >
           <Link href="/">
             <ArrowLeft className="mr-2 h-4 w-4" /> TRANG CHỦ
           </Link>
@@ -49,16 +53,7 @@ function LoginPageContent() {
     setLoading(true);
     try {
       const { user } = await apiClient.login(email, password);
-      // Fetch dynamic roles from backend right after login
-      let roles: string[] = [];
-      try {
-        const userRoles = await apiClient.getUserRoles(user.id);
-        roles = userRoles.map((r) => r.name);
-      } catch {
-        // roles fetch failed — fallback to user.role from profile
-        if (user.role) roles = [user.role];
-      }
-      setAuth(user, roles);
+      setAuth(user);
       const from = searchParams.get('from') ?? '/';
       router.push(from);
     } catch (err) {
@@ -122,7 +117,10 @@ function LoginPageContent() {
 
         <form onSubmit={handleSubmit} className="space-y-4" noValidate>
           {error && (
-            <p role="alert" className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            <p
+              role="alert"
+              className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive"
+            >
               {error}
             </p>
           )}

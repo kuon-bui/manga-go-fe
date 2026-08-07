@@ -30,7 +30,13 @@ function PasswordStrength({ password }: { password: string }) {
       {PASSWORD_RULES.map(({ label, test }) => {
         const passed = test(password);
         return (
-          <li key={label} className={cn('flex items-center gap-1.5 text-xs', passed ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground')}>
+          <li
+            key={label}
+            className={cn(
+              'flex items-center gap-1.5 text-xs',
+              passed ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'
+            )}
+          >
             {passed ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
             {label}
           </li>
@@ -73,15 +79,7 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       const { user } = await apiClient.register(name, email, password);
-      // Fetch dynamic roles from backend right after register
-      let roles: string[] = [];
-      try {
-        const userRoles = await apiClient.getUserRoles(user.id);
-        roles = userRoles.map((r) => r.name);
-      } catch {
-        if (user.role) roles = [user.role];
-      }
-      setAuth(user, roles);
+      setAuth(user);
       router.push('/');
     } catch (err) {
       if (err instanceof ApiClientError) {
@@ -107,7 +105,10 @@ export default function RegisterPage() {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4" noValidate>
           {error && (
-            <p role="alert" className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            <p
+              role="alert"
+              className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive"
+            >
               {error}
             </p>
           )}

@@ -4,11 +4,11 @@ export type UserRole = 'guest' | 'member' | 'translator' | 'group_admin' | 'mode
 
 export interface User {
   id: string;
-  name: string;         // backend field (was: displayName / username)
+  name: string; // backend field (was: displayName / username)
   email: string;
   avatarUrl: string | null;
   bio: string | null;
-  role: UserRole;
+  role?: UserRole;
   translationGroupId?: string | null;
   translationGroup?: {
     id: string;
@@ -25,7 +25,7 @@ export interface LoginPayload {
 }
 
 export interface RegisterPayload {
-  name: string;         // backend field (was: username)
+  name: string; // backend field (was: username)
   email: string;
   password: string;
   confirmPassword: string; // client-only validation, not sent to API

@@ -19,6 +19,11 @@ import type {
   GroupMember,
   DashboardTitle,
   TranslatorGroup,
+  AdminUserSummary,
+  AuthorizationAuditLog,
+  AuthorizationProfile,
+  PermissionDefinition,
+  RoleAccessSummary,
 } from '@/types';
 
 // ─── Users ────────────────────────────────────────────────────────────────────
@@ -47,6 +52,110 @@ export const MOCK_ADMIN_USER: User = {
 export const MOCK_AUTH_RESPONSE: AuthResponse = {
   user: MOCK_USER,
 };
+
+export const MOCK_AUTHORIZATION_ROLES: RoleAccessSummary[] = [
+  {
+    id: 'role-admin',
+    name: 'Administrator',
+    description: 'Quản lý phân quyền hệ thống',
+    permissions: ['audit_log:read', 'permission:read', 'role:manage', 'user:read'],
+    assignedUserCount: 1,
+    authorizationVersion: 'g1',
+  },
+  {
+    id: 'role-reader',
+    name: 'Reader',
+    description: null,
+    permissions: ['comic:read'],
+    assignedUserCount: 1,
+    authorizationVersion: 'g1',
+  },
+  {
+    id: 'role-in-use',
+    name: 'Translator',
+    description: 'Role được dùng để kiểm thử xung đột',
+    permissions: ['chapter:write', 'comic:read'],
+    assignedUserCount: 2,
+    authorizationVersion: 'g1',
+  },
+];
+
+export const MOCK_AUTHORIZATION_PROFILE: AuthorizationProfile = {
+  userId: MOCK_ADMIN_USER.id,
+  roles: MOCK_AUTHORIZATION_ROLES.slice(0, 1).map(({ id, name, description }) => ({
+    id,
+    name,
+    description,
+  })),
+  permissions: [...MOCK_AUTHORIZATION_ROLES[0].permissions],
+  version: 'g1:u1',
+};
+
+export const MOCK_AUTHORIZATION_USERS: AdminUserSummary[] = [
+  {
+    id: MOCK_ADMIN_USER.id,
+    name: MOCK_ADMIN_USER.name,
+    email: MOCK_ADMIN_USER.email,
+    roles: MOCK_AUTHORIZATION_PROFILE.roles,
+    authorizationVersion: 'g1:u1',
+  },
+  {
+    id: MOCK_USER.id,
+    name: MOCK_USER.name,
+    email: MOCK_USER.email,
+    roles: [
+      {
+        id: MOCK_AUTHORIZATION_ROLES[1].id,
+        name: MOCK_AUTHORIZATION_ROLES[1].name,
+        description: MOCK_AUTHORIZATION_ROLES[1].description,
+      },
+    ],
+    authorizationVersion: 'g1:u1',
+  },
+];
+
+export const MOCK_PERMISSION_CATALOG: PermissionDefinition[] = [
+  {
+    name: 'audit_log:read',
+    object: 'audit_log',
+    action: 'read',
+    grants: ['read'],
+    contexts: ['any'],
+  },
+  { name: 'comic:read', object: 'comic', action: 'read', grants: ['read'], contexts: ['any'] },
+  {
+    name: 'comic:write',
+    object: 'comic',
+    action: 'write',
+    grants: ['create', 'update', 'publish'],
+    contexts: ['any'],
+  },
+  {
+    name: 'permission:read',
+    object: 'permission',
+    action: 'read',
+    grants: ['read'],
+    contexts: ['any'],
+  },
+  { name: 'role:manage', object: 'role', action: 'manage', grants: ['manage'], contexts: ['any'] },
+  { name: 'user:read', object: 'user', action: 'read', grants: ['read'], contexts: ['any'] },
+];
+
+export const MOCK_AUTHORIZATION_AUDIT_LOGS: AuthorizationAuditLog[] = [
+  {
+    id: 'audit-1',
+    actorUserId: MOCK_ADMIN_USER.id,
+    actorName: MOCK_ADMIN_USER.name,
+    actorEmail: MOCK_ADMIN_USER.email,
+    action: 'user.roles_replaced',
+    targetType: 'user',
+    targetId: MOCK_USER.id,
+    targetName: MOCK_USER.name,
+    before: { roleIds: [] },
+    after: { roleIds: ['role-reader'] },
+    createdAt: '2026-08-07T03:00:00Z',
+  },
+];
 
 // ─── Genres ───────────────────────────────────────────────────────────────────
 
@@ -128,7 +237,8 @@ export const MOCK_MANGA_LIST: Manga[] = [
     isPublished: true,
     isHot: true,
     isFeatured: false,
-    description: 'A hardened warrior roams a land torn by war, seeking redemption for sins he cannot forget.',
+    description:
+      'A hardened warrior roams a land torn by war, seeking redemption for sins he cannot forget.',
     authors: [AUTHORS.tanaka],
     artistId: AUTHORS.yamamoto.id,
     artist: AUTHORS.yamamoto,
@@ -156,7 +266,8 @@ export const MOCK_MANGA_LIST: Manga[] = [
     isPublished: true,
     isHot: false,
     isFeatured: true,
-    description: 'Students gifted with cosmic powers must master their abilities before a celestial disaster destroys everything.',
+    description:
+      'Students gifted with cosmic powers must master their abilities before a celestial disaster destroys everything.',
     authors: [AUTHORS.seo],
     artistId: null,
     artist: null,
@@ -212,7 +323,8 @@ export const MOCK_MANGA_LIST: Manga[] = [
     isPublished: true,
     isHot: false,
     isFeatured: false,
-    description: 'A wanderer who can traverse dimensional rifts must prevent the collapse of multiple realities.',
+    description:
+      'A wanderer who can traverse dimensional rifts must prevent the collapse of multiple realities.',
     authors: [AUTHORS.chen],
     artistId: null,
     artist: null,
@@ -306,8 +418,9 @@ export const MOCK_CHAPTERS: Record<string, Chapter> = {
     title: 'Prologue',
     publishedAt: '2022-03-15T00:00:00Z',
     group: MOCK_TRANSLATOR_GROUP,
-    pages: Array.from({ length: 22 }, (_, i) =>
-      `https://picsum.photos/seed/steelshadowch1p${i + 1}/800/1200`
+    pages: Array.from(
+      { length: 22 },
+      (_, i) => `https://picsum.photos/seed/steelshadowch1p${i + 1}/800/1200`
     ),
     content: null,
     prevChapter: null,
@@ -322,8 +435,9 @@ export const MOCK_CHAPTERS: Record<string, Chapter> = {
     title: 'The Final Stand',
     publishedAt: new Date(Date.now() - 86_400_000).toISOString(),
     group: MOCK_TRANSLATOR_GROUP,
-    pages: Array.from({ length: 30 }, (_, i) =>
-      `https://picsum.photos/seed/steelshadowch58p${i + 1}/800/1200`
+    pages: Array.from(
+      { length: 30 },
+      (_, i) => `https://picsum.photos/seed/steelshadowch58p${i + 1}/800/1200`
     ),
     content: null,
     prevChapter: { slug: 'chapter-57', number: '57' },
