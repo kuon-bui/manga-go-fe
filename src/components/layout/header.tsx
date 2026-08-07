@@ -18,6 +18,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useAuthStore } from '@/stores/auth-store';
 import { PermissionGate } from '@/components/auth/permission-gate';
+import { AuthorizationGate } from '@/components/auth/authorization-gate';
+import { ADMIN_ENTRY_PERMISSIONS } from '@/components/admin/access/access-tabs';
 
 const NAV_LINKS = [
   { href: '/',          label: 'Home' },
@@ -100,13 +102,13 @@ function UserMenu() {
             </Link>
           </DropdownMenuItem>
         </PermissionGate>
-        <PermissionGate allowedRoles={['admin', 'superadmin']}>
+        <AuthorizationGate anyOf={ADMIN_ENTRY_PERMISSIONS}>
           <DropdownMenuItem asChild className="rounded-xl">
             <Link href="/admin" className="flex items-center gap-2">
               <Shield className="h-4 w-4 text-primary" /> Admin
             </Link>
           </DropdownMenuItem>
-        </PermissionGate>
+        </AuthorizationGate>
         <PermissionGate permission="create_title">
           <DropdownMenuItem asChild className="rounded-xl">
             <Link href="/dashboard/upload/title" className="flex items-center gap-2">

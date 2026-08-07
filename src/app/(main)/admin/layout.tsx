@@ -1,41 +1,39 @@
-import { ReactNode } from 'react'
-import Link from 'next/link'
-import { ShieldAlert } from 'lucide-react'
+import { ShieldAlert } from 'lucide-react';
+import Link from 'next/link';
+import type { ReactNode } from 'react';
 
-import { PermissionGate } from '@/components/auth/permission-gate'
-import { AdminNav }       from '@/components/admin/admin-nav'
+import { AdminNav } from '@/components/admin/admin-nav';
+import { ADMIN_ENTRY_PERMISSIONS } from '@/components/admin/access/access-tabs';
+import { AuthorizationGate } from '@/components/auth/authorization-gate';
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
-    <PermissionGate
-      permission="admin_panel"
-      allowedRoles={['admin', 'superadmin']}
+    <AuthorizationGate
+      anyOf={ADMIN_ENTRY_PERMISSIONS}
       fallback={
-        <div className="flex min-h-[50vh] flex-col items-center justify-center px-4 py-16 text-center gap-4">
-          <ShieldAlert className="h-16 w-16 text-destructive" />
+        <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 px-4 py-16 text-center">
+          <ShieldAlert className="h-16 w-16 text-destructive" aria-hidden="true" />
           <h1 className="text-2xl font-bold">Truy cập bị từ chối</h1>
-          <p className="text-muted-foreground max-w-sm text-sm">
-            Bạn không có quyền truy cập vào khu vực quản trị.
+          <p className="max-w-sm text-sm text-muted-foreground">
+            Bạn không có quyền truy cập khu vực quản trị.
           </p>
           <Link
             href="/"
-            className="rounded-full bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 transition-opacity"
+            className="rounded-full bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
           >
             Quay về trang chủ
           </Link>
         </div>
       }
     >
-      <div className="mx-auto max-w-7xl px-4 md:px-6 pt-2 pb-10 space-y-4 md:space-y-0">
-        <div className="flex flex-col gap-4 md:flex-row md:gap-6 md:items-start">
+      <div className="mx-auto max-w-7xl space-y-4 px-4 pb-10 pt-2 md:space-y-0 md:px-6">
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:gap-6">
           <AdminNav />
           <main className="min-w-0 flex-1">
-            <div className="cute-card overflow-hidden min-h-[500px]">
-              {children}
-            </div>
+            <div className="cute-card min-h-[500px] overflow-hidden">{children}</div>
           </main>
         </div>
       </div>
-    </PermissionGate>
-  )
+    </AuthorizationGate>
+  );
 }

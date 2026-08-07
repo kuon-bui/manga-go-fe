@@ -1,5 +1,5 @@
-import { RoleManager } from '@/components/admin/role-manager'
+import { redirect } from 'next/navigation';
 
-export default function AdminRolesPage() {
-  return <RoleManager />
+export default function LegacyAdminRolesPage() {
+  redirect('/admin/access/roles');
 }

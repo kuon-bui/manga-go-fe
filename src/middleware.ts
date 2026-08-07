@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 // Routes that require authentication
-const PROTECTED_PREFIXES = ['/library', '/profile', '/settings', '/dashboard', '/upload'];
+const PROTECTED_PREFIXES = ['/library', '/profile', '/settings', '/dashboard', '/upload', '/admin'];
 
 // Routes that should redirect authenticated users away (auth pages)
 const AUTH_ROUTES = ['/login', '/register', '/forgot-password', '/reset-password'];
