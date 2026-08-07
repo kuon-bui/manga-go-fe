@@ -1,6 +1,12 @@
-# Changelog
+# Changelog (legacy)
 
-All notable changes to the Vibe-Coding Prompt Template will be documented in this file.
+> Archived. This is the changelog inherited from the Vibe-Coding Prompt Template this repo was
+> scaffolded from, kept for historical reference only. The current changelog is `CHANGELOG.md`
+> at the repo root and is generated automatically by
+> [release-please](https://github.com/googleapis/release-please) from conventional commits — do
+> not edit either file by hand.
+
+All notable changes to the Vibe-Coding Prompt Template were documented in this file.
 
 ## [Unreleased] - August 2026 — Admin Authorization Management
 
