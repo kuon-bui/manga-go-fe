@@ -23,7 +23,7 @@ import type { Manga, Author } from '@/types'
 interface TitleEditModalProps {
   title: Manga
   open: boolean
-  onOpenChange: (open: boolean) => void
+  onOpenChange: (_open: boolean) => void
 }
 
 function AuthorPicker({
@@ -132,11 +132,11 @@ export function TitleEditModal({ title: titleData, open: isOpen, onOpenChange }:
   // Form state
   const [titleName, setTitleName] = useState(title.title)
   const [altTitles, setAltTitles] = useState(title.alternativeTitles?.join(', ') ?? '')
-  const [description, setDescription] = useState(title.description)
+  const [description, setDescription] = useState(title.description ?? '')
   const [author, setAuthor] = useState<Author | null>(
     title.authors?.[0] ?? null
   )
-  const [artist, setArtist] = useState(title.artists?.[0] ?? null)
+  const [artist, setArtist] = useState(title.artist ?? null)
   const [selectedGenres, setSelectedGenres] = useState<string[]>(
     title.genres?.map((g) => g.slug) ?? []
   )

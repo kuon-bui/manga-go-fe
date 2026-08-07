@@ -20,12 +20,14 @@ import {
 import type { Notification, NotificationType } from '@/types'
 
 const TYPE_ICON: Record<NotificationType, React.ReactNode> = {
+  new_notification: <Bell className="h-4 w-4 text-muted-foreground" />,
   new_chapter: <BookOpen className="h-4 w-4 text-primary" />,
   comment_reply: <MessageSquare className="h-4 w-4 text-blue-500" />,
   system: <Bell className="h-4 w-4 text-muted-foreground" />,
 }
 
 const TYPE_LABELS: Record<NotificationType, string> = {
+  new_notification: 'Thông báo',
   new_chapter: 'Chương mới',
   comment_reply: 'Trả lời',
   system: 'Hệ thống',

@@ -57,7 +57,8 @@ export function ChapterList({
   isLoading,
   comicSlug,
   contentType,
-  lastReadChapterId,
+  // Accepted from callers but not rendered yet — the "continue reading" marker is unbuilt.
+  lastReadChapterId: _lastReadChapterId,
 }: ChapterListProps) {
   const parentRef = useRef<HTMLDivElement>(null)
 

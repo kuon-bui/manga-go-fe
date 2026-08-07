@@ -33,7 +33,7 @@ export function TOCDrawer({ chapter }: { chapter: Chapter }) {
             chapters={data?.data ?? []}
             isLoading={isLoading}
             comicSlug={chapter.comicSlug}
-            contentType={chapter.type ?? 'manga'}
+            contentType="manga"
             lastReadChapterId={chapter.id}
           />
         </div>
