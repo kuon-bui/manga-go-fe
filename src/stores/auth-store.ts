@@ -14,11 +14,8 @@ function clearFlagCookie() {
 
 interface AuthState {
   user: User | null;
-  /** Backend role names, e.g. ['admin', 'translator']. Stored after login. */
-  roles: string[];
   isAuthenticated: boolean;
-  setAuth: (_user: User, _roles?: string[]) => void;
-  setRoles: (_roles: string[]) => void;
+  setAuth: (_user: User) => void;
   logout: () => void;
   updateUser: (_user: Partial<User>) => void;
 }
@@ -27,21 +24,16 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       user: null,
-      roles: [],
       isAuthenticated: false,
 
-      setAuth: (user, roles = []) => {
+      setAuth: (user) => {
         setFlagCookie();
-        set({ user, roles, isAuthenticated: true });
-      },
-
-      setRoles: (roles) => {
-        set({ roles });
+        set({ user, isAuthenticated: true });
       },
 
       logout: () => {
         clearFlagCookie();
-        set({ user: null, roles: [], isAuthenticated: false });
+        set({ user: null, isAuthenticated: false });
       },
 
       updateUser: (partial) => {
@@ -53,10 +45,8 @@ export const useAuthStore = create<AuthState>()(
       name: 'manga-go-auth',
       partialize: (state) => ({
         user: state.user,
-        roles: state.roles,
         isAuthenticated: state.isAuthenticated,
       }),
     }
   )
 );
-

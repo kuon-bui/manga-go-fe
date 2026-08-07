@@ -1,10 +1,18 @@
 import type { User } from '@/types/auth';
 import type {
-  AssignRolePermissionsPayload,
-  AssignUserRolesPayload,
-  PermissionEntity,
+  AdminUserSummary,
+  AuthorizationAuditFilters,
+  AuthorizationAuditLog,
+  AuthorizationProfile,
+  AuthorizationUserFilters,
+  CreateRolePayload,
+  PagedAdminResult,
+  PermissionDefinition,
+  ReplaceRolePermissionsPayload,
+  ReplaceUserRolesPayload,
   Role,
-  RoleDetail,
+  RoleAccessSummary,
+  UpdateRolePayload,
 } from '@/types/rbac';
 import type {
   Manga,
@@ -32,6 +40,7 @@ export interface ValidationFieldError {
 export interface ApiEnvelope<T> {
   data: T;
   message: string;
+  code?: string;
   error: string;
   validation_errors: ValidationFieldError[];
   success?: boolean;
@@ -44,17 +53,20 @@ export interface ApiEnvelope<T> {
 interface ApiErrorInit {
   message: string;
   statusCode: number;
+  code?: string;
   validationErrors?: ValidationFieldError[];
 }
 
 export class ApiClientError extends Error {
   statusCode: number;
+  code?: string;
   validationErrors: ValidationFieldError[];
 
-  constructor({ message, statusCode, validationErrors = [] }: ApiErrorInit) {
+  constructor({ message, statusCode, code, validationErrors = [] }: ApiErrorInit) {
     super(message);
     this.name = 'ApiClientError';
     this.statusCode = statusCode;
+    this.code = code;
     this.validationErrors = validationErrors;
   }
 }
@@ -125,7 +137,7 @@ export interface FileUploadResponse {
   size: number;
 }
 
-export interface ChapterImageUploadResponse extends FileUploadResponse { }
+export interface ChapterImageUploadResponse extends FileUploadResponse {}
 
 export interface CoverUploadResponse {
   url: string;
@@ -155,7 +167,7 @@ export interface UpdateGroupPayload {
 type RawComment = Record<string, unknown>;
 
 export function normalizeComment(raw: RawComment): Comment {
-  const user = (raw.user ?? {}) as { id?: string; name?: string; };
+  const user = (raw.user ?? {}) as { id?: string; name?: string };
   const author = (raw.author ?? {
     id: user.id ?? '',
     name: user.name ?? 'Unknown',
@@ -218,20 +230,23 @@ class ApiClient {
 
     if (!response.ok) {
       let message = response.statusText;
+      let code: string | undefined;
       let validationErrors: ValidationFieldError[] = [];
       try {
         const body = (await response.json()) as {
           message?: string;
           error?: string;
+          code?: string;
           validation_errors?: ValidationFieldError[];
           validationErrors?: ValidationFieldError[];
         };
         message = body.message ?? body.error ?? message;
+        code = body.code;
         validationErrors = body.validation_errors ?? body.validationErrors ?? [];
       } catch {
         // ignore parse error
       }
-      throw new ApiClientError({ message, statusCode: response.status, validationErrors });
+      throw new ApiClientError({ message, statusCode: response.status, code, validationErrors });
     }
 
     if (response.status === 204) return undefined as T;
@@ -278,20 +293,20 @@ class ApiClient {
 
   // ─── Auth ────────────────────────────────────────────────────────────────────
 
-  login(email: string, password: string): Promise<{ user: User; }> {
-    return this.post<{ user: User; }>('/users/sign-in', { email, password });
+  login(email: string, password: string): Promise<{ user: User }> {
+    return this.post<{ user: User }>('/users/sign-in', { email, password });
   }
 
-  register(name: string, email: string, password: string): Promise<{ user: User; }> {
-    return this.post<{ user: User; }>('/users', { name, email, password });
+  register(name: string, email: string, password: string): Promise<{ user: User }> {
+    return this.post<{ user: User }>('/users', { name, email, password });
   }
 
-  forgotPassword(email: string): Promise<{ message: string; }> {
-    return this.post<{ message: string; }>('/users/request-reset-password', { email });
+  forgotPassword(email: string): Promise<{ message: string }> {
+    return this.post<{ message: string }>('/users/request-reset-password', { email });
   }
 
-  resetPassword(token: string, newPassword: string): Promise<{ message: string; }> {
-    return this.post<{ message: string; }>('/users/reset-password', {
+  resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
+    return this.post<{ message: string }>('/users/reset-password', {
       token,
       new_password: newPassword,
     });
@@ -309,36 +324,80 @@ class ApiClient {
     return this.getCurrentUserProfile().then((res) => res.user);
   }
 
-  getCurrentUserProfile(): Promise<{ user: User; }> {
-    return this.get<{ user: User; }>('/users/me');
+  getCurrentUserProfile(): Promise<{ user: User }> {
+    return this.get<{ user: User }>('/users/me');
   }
 
-  getAllRoles(): Promise<Role[]> {
-    return this.get<Role[]>('/roles/all');
+  getMyAuthorization(): Promise<AuthorizationProfile> {
+    return this.get<AuthorizationProfile>('/users/me/authorization');
   }
 
-  createRole(name: string, description?: string): Promise<Role> {
-    return this.post<Role>('/roles', { name, description });
+  getAuthorizationUsers(
+    filters: AuthorizationUserFilters = {}
+  ): Promise<PagedAdminResult<AdminUserSummary>> {
+    return this.get<PagedAdminResult<AdminUserSummary>>('/users', {
+      params: authorizationUserParams(filters),
+    });
   }
 
-  getRoleById(roleId: string): Promise<RoleDetail> {
-    return this.get<RoleDetail>(`/roles/${roleId}`);
+  getAuthorizationUser(userId: string): Promise<AdminUserSummary> {
+    return this.get<AdminUserSummary>(`/users/${userId}/authorization`);
   }
 
-  getAllPermissions(): Promise<PermissionEntity[]> {
-    return this.get<PermissionEntity[]>('/permissions/all');
+  getAuthorizationRoles(): Promise<RoleAccessSummary[]> {
+    return this.get<RoleAccessSummary[]>('/roles/all');
   }
 
-  assignPermissionsToRole(roleId: string, payload: AssignRolePermissionsPayload): Promise<void> {
-    return this.post<void>(`/roles/${roleId}/permissions`, payload);
+  getAuthorizationAuditLogs(
+    filters: AuthorizationAuditFilters = {}
+  ): Promise<PagedAdminResult<AuthorizationAuditLog>> {
+    return this.get<PagedAdminResult<AuthorizationAuditLog>>('/authorization/audit-logs', {
+      params: authorizationAuditParams(filters),
+    });
   }
 
-  assignRolesToUser(userId: string, payload: AssignUserRolesPayload): Promise<void> {
-    return this.post<void>(`/users/${userId}/roles`, payload);
+  createRole(payload: CreateRolePayload): Promise<Role> {
+    return this.post<Role>('/roles', payload);
   }
 
-  getUserRoles(userId: string): Promise<Role[]> {
-    return this.get<Role[]>(`/users/${userId}/roles`);
+  updateRole(
+    roleId: string,
+    payload: UpdateRolePayload,
+    expectedVersion: string
+  ): Promise<RoleAccessSummary> {
+    return this.put<RoleAccessSummary>(`/roles/${roleId}`, payload, {
+      headers: expectedVersionHeader(expectedVersion),
+    });
+  }
+
+  deleteRole(roleId: string, expectedVersion: string): Promise<void> {
+    return this.delete<void>(`/roles/${roleId}`, {
+      headers: expectedVersionHeader(expectedVersion),
+    });
+  }
+
+  replaceUserRoles(
+    userId: string,
+    payload: ReplaceUserRolesPayload,
+    expectedVersion: string
+  ): Promise<{ roleIds: string[]; version: string }> {
+    return this.post<{ roleIds: string[]; version: string }>(`/users/${userId}/roles`, payload, {
+      headers: expectedVersionHeader(expectedVersion),
+    });
+  }
+
+  replaceRolePermissions(
+    roleId: string,
+    payload: ReplaceRolePermissionsPayload,
+    expectedVersion: string
+  ): Promise<RoleAccessSummary> {
+    return this.post<RoleAccessSummary>(`/roles/${roleId}/permissions`, payload, {
+      headers: expectedVersionHeader(expectedVersion),
+    });
+  }
+
+  getAllPermissions(): Promise<PermissionDefinition[]> {
+    return this.get<PermissionDefinition[]>('/permissions');
   }
 
   // ─── Comics ──────────────────────────────────────────────────────────────────
@@ -351,8 +410,8 @@ class ApiClient {
     return this.get<Manga>(`/comics/${slug}`);
   }
 
-  createComic(payload: CreateComicPayload): Promise<{ id: string; slug: string; }> {
-    return this.post<{ id: string; slug: string; }>('/comics', payload);
+  createComic(payload: CreateComicPayload): Promise<{ id: string; slug: string }> {
+    return this.post<{ id: string; slug: string }>('/comics', payload);
   }
 
   updateComic(slug: string, payload: UpdateComicPayload): Promise<Manga> {
@@ -388,30 +447,41 @@ class ApiClient {
   }
 
   getTrendingComics(limit = 10): Promise<PaginatedResponse<Manga>> {
-    return this.get<PaginatedResponse<Manga>>('/comics/trending', { params: { limit: String(limit) } });
+    return this.get<PaginatedResponse<Manga>>('/comics/trending', {
+      params: { limit: String(limit) },
+    });
   }
 
-  getRecentChapterUpdates(params?: Record<string, string>): Promise<PaginatedResponse<RecentUpdateChapter>> {
+  getRecentChapterUpdates(
+    params?: Record<string, string>
+  ): Promise<PaginatedResponse<RecentUpdateChapter>> {
     return this.get<PaginatedResponse<RecentUpdateChapter>>('/chapters/recent-updates', { params });
   }
 
-  getFollowedComics(params?: Record<string, string>): Promise<PaginatedResponse<{
-    id: string;
-    comicId: string;
-    comic: Manga;
-    createdAt: string | null;
-  }>> {
-    return this.get<PaginatedResponse<{
+  getFollowedComics(params?: Record<string, string>): Promise<
+    PaginatedResponse<{
       id: string;
       comicId: string;
       comic: Manga;
       createdAt: string | null;
-    }>>('/users/me/followed-comics', { params });
+    }>
+  > {
+    return this.get<
+      PaginatedResponse<{
+        id: string;
+        comicId: string;
+        comic: Manga;
+        createdAt: string | null;
+      }>
+    >('/users/me/followed-comics', { params });
   }
 
   // ─── Chapters ───────────────────────────────────────────────────────────────
 
-  getChapters(comicSlug: string, params?: Record<string, string>): Promise<PaginatedResponse<ChapterSummary>> {
+  getChapters(
+    comicSlug: string,
+    params?: Record<string, string>
+  ): Promise<PaginatedResponse<ChapterSummary>> {
     return this.get<PaginatedResponse<ChapterSummary>>(`/comics/${comicSlug}/chapters`, { params });
   }
 
@@ -419,24 +489,33 @@ class ApiClient {
     return this.get<Chapter>(`/comics/${comicSlug}/chapters/${chapterSlug}`);
   }
 
-  createChapter(comicSlug: string, payload: CreateChapterPayload): Promise<{ id: string; slug: string; }> {
-    return this.post<{ id: string; slug: string; }>(`/comics/${comicSlug}/chapters`, payload);
+  createChapter(
+    comicSlug: string,
+    payload: CreateChapterPayload
+  ): Promise<{ id: string; slug: string }> {
+    return this.post<{ id: string; slug: string }>(`/comics/${comicSlug}/chapters`, payload);
   }
 
-  updateChapter(comicSlug: string, chapterSlug: string, payload: UpdateChapterPayload): Promise<void> {
+  updateChapter(
+    comicSlug: string,
+    chapterSlug: string,
+    payload: UpdateChapterPayload
+  ): Promise<void> {
     return this.put<void>(`/comics/${comicSlug}/chapters/${chapterSlug}`, payload);
   }
 
   updateChapterPages(
     comicId: string,
     chapterId: string,
-    pages: Array<{ pageType: 'image'; imageUrl: string; }>
+    pages: Array<{ pageType: 'image'; imageUrl: string }>
   ): Promise<void> {
     return this.put<void>(`/comics/${comicId}/chapters/${chapterId}/pages`, { pages });
   }
 
   publishChapter(comicSlug: string, chapterSlug: string, isPublished: boolean): Promise<void> {
-    return this.patch<void>(`/comics/${comicSlug}/chapters/${chapterSlug}/publish`, { isPublished });
+    return this.patch<void>(`/comics/${comicSlug}/chapters/${chapterSlug}/publish`, {
+      isPublished,
+    });
   }
 
   markChapterRead(comicSlug: string, chapterSlug: string): Promise<void> {
@@ -513,12 +592,22 @@ class ApiClient {
 
   // ─── Comments ────────────────────────────────────────────────────────────────
 
-  getComments(chapterId: string, params?: Record<string, string>): Promise<PaginatedResponse<Comment>> {
-    return this.get<PaginatedResponse<RawComment>>('/comments', { params: { chapterId, ...params } })
-      .then((res) => ({ ...res, data: res.data.map(normalizeComment) }));
+  getComments(
+    chapterId: string,
+    params?: Record<string, string>
+  ): Promise<PaginatedResponse<Comment>> {
+    return this.get<PaginatedResponse<RawComment>>('/comments', {
+      params: { chapterId, ...params },
+    }).then((res) => ({ ...res, data: res.data.map(normalizeComment) }));
   }
 
-  createComment(payload: { comicId?: string; chapterId?: string; content: string; pageIndex?: number | null; parentId?: string | null; }): Promise<Comment> {
+  createComment(payload: {
+    comicId?: string;
+    chapterId?: string;
+    content: string;
+    pageIndex?: number | null;
+    parentId?: string | null;
+  }): Promise<Comment> {
     return this.post<RawComment>('/comments', payload).then(normalizeComment);
   }
 
@@ -540,7 +629,7 @@ class ApiClient {
 
   // ─── Files ───────────────────────────────────────────────────────────────────
 
-  async uploadFile(file: File): Promise<{ url: string; filename: string; }> {
+  async uploadFile(file: File): Promise<{ url: string; filename: string }> {
     const formData = new FormData();
     formData.append('file', file);
 
@@ -554,11 +643,11 @@ class ApiClient {
       throw new ApiClientError({ message: 'File upload failed', statusCode: response.status });
     }
 
-    const json = (await response.json()) as ApiEnvelope<{ url: string; filename: string; }>;
-    const data: { url: string; filename: string; } =
+    const json = (await response.json()) as ApiEnvelope<{ url: string; filename: string }>;
+    const data: { url: string; filename: string } =
       'data' in json && json.data !== undefined
         ? json.data
-        : (json as unknown as { url: string; filename: string; });
+        : (json as unknown as { url: string; filename: string });
     // url is a relative path (/files/content/…) — make it absolute
     if (data.url.startsWith('/')) {
       data.url = `${this.baseUrl}${data.url}`;
@@ -605,7 +694,8 @@ class ApiClient {
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
       throw new ApiClientError({
-        message: (error as Record<string, unknown>).error as string || 'Chapter image upload failed',
+        message:
+          ((error as Record<string, unknown>).error as string) || 'Chapter image upload failed',
         statusCode: response.status,
       });
     }
@@ -634,7 +724,7 @@ class ApiClient {
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
       throw new ApiClientError({
-        message: (error as Record<string, unknown>).error as string || 'Cover upload failed',
+        message: ((error as Record<string, unknown>).error as string) || 'Cover upload failed',
         statusCode: response.status,
       });
     }
@@ -648,8 +738,8 @@ class ApiClient {
     return data;
   }
 
-  getPresignedUrl(filename: string): Promise<{ url: string; }> {
-    return this.get<{ url: string; }>(`/files/presign/${encodeURIComponent(filename)}`);
+  getPresignedUrl(filename: string): Promise<{ url: string }> {
+    return this.get<{ url: string }>(`/files/presign/${encodeURIComponent(filename)}`);
   }
 
   updateComicThumbnail(comicId: string, thumbnail: string): Promise<Manga> {
@@ -662,7 +752,9 @@ class ApiClient {
     return this.post<void>('/reading-histories', { comicId, chapterId });
   }
 
-  getReadingHistories(params?: Record<string, string>): Promise<PaginatedResponse<ReadingHistoryEntry>> {
+  getReadingHistories(
+    params?: Record<string, string>
+  ): Promise<PaginatedResponse<ReadingHistoryEntry>> {
     return this.get<PaginatedResponse<ReadingHistoryEntry>>('/reading-histories', { params });
   }
 
@@ -676,7 +768,9 @@ class ApiClient {
 
   // ─── Notifications ───────────────────────────────────────────────────────────
 
-  getNotifications(params?: Record<string, string>): Promise<PaginatedResponse<Record<string, unknown>>> {
+  getNotifications(
+    params?: Record<string, string>
+  ): Promise<PaginatedResponse<Record<string, unknown>>> {
     return this.get<PaginatedResponse<Record<string, unknown>>>('/notifications', { params });
   }
 
@@ -724,7 +818,7 @@ class ApiClient {
     return this.get<unknown[]>(`/translation-groups/${slug}/members`);
   }
 
-  async uploadGroupLogo(slug: string, file: File): Promise<{ url: string; }> {
+  async uploadGroupLogo(slug: string, file: File): Promise<{ url: string }> {
     const formData = new FormData();
     formData.append('file', file);
     const response = await fetch(`${this.baseUrl}/translation-groups/${slug}/logo`, {
@@ -735,28 +829,44 @@ class ApiClient {
     if (!response.ok) {
       throw new ApiClientError({ message: 'Logo upload failed', statusCode: response.status });
     }
-    const json = (await response.json()) as ApiEnvelope<{ url: string; }>;
-    return 'data' in json && json.data ? json.data : (json as unknown as { url: string; });
+    const json = (await response.json()) as ApiEnvelope<{ url: string }>;
+    return 'data' in json && json.data ? json.data : (json as unknown as { url: string });
   }
 
   // ─── Reading progress ────────────────────────────────────────────────────────
 
-  getReadingProgress(comicSlug: string, chapterSlug: string): Promise<{ scrollPercent: number; }> {
-    return this.get<{ scrollPercent: number; }>(`/comics/${comicSlug}/chapters/${chapterSlug}/reading-progress`);
+  getReadingProgress(comicSlug: string, chapterSlug: string): Promise<{ scrollPercent: number }> {
+    return this.get<{ scrollPercent: number }>(
+      `/comics/${comicSlug}/chapters/${chapterSlug}/reading-progress`
+    );
   }
 
-  updateReadingProgress(comicSlug: string, chapterSlug: string, scrollPercent: number): Promise<void> {
-    return this.patch<void>(`/comics/${comicSlug}/chapters/${chapterSlug}/reading-progress`, { scrollPercent });
+  updateReadingProgress(
+    comicSlug: string,
+    chapterSlug: string,
+    scrollPercent: number
+  ): Promise<void> {
+    return this.patch<void>(`/comics/${comicSlug}/chapters/${chapterSlug}/reading-progress`, {
+      scrollPercent,
+    });
   }
 
   // ─── Comment extras ──────────────────────────────────────────────────────────
 
-  getCommentReplies(id: string, params?: Record<string, string>): Promise<PaginatedResponse<Comment>> {
-    return this.get<PaginatedResponse<RawComment>>(`/comments/${id}/replies`, { params })
-      .then((res) => ({ ...res, data: res.data.map(normalizeComment) }));
+  getCommentReplies(
+    id: string,
+    params?: Record<string, string>
+  ): Promise<PaginatedResponse<Comment>> {
+    return this.get<PaginatedResponse<RawComment>>(`/comments/${id}/replies`, { params }).then(
+      (res) => ({ ...res, data: res.data.map(normalizeComment) })
+    );
   }
 
-  reportComment(id: string, reason: 'SPAM' | 'OFFENSIVE' | 'HARASSMENT' | 'ADULT_CONTENT', details?: string): Promise<void> {
+  reportComment(
+    id: string,
+    reason: 'SPAM' | 'OFFENSIVE' | 'HARASSMENT' | 'ADULT_CONTENT',
+    details?: string
+  ): Promise<void> {
     return this.post<void>(`/comments/${id}/report`, { reason, details });
   }
 }
@@ -764,3 +874,41 @@ class ApiClient {
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080';
 
 export const apiClient = new ApiClient(API_BASE_URL);
+
+function expectedVersionHeader(expectedVersion: string): HeadersInit {
+  return expectedVersion ? { 'If-Match': expectedVersion } : {};
+}
+
+function authorizationUserParams(filters: AuthorizationUserFilters): Record<string, string> {
+  return compactParams({
+    page: filters.page,
+    limit: filters.limit,
+    search: filters.search,
+    role_id: filters.roleId,
+  });
+}
+
+function authorizationAuditParams(filters: AuthorizationAuditFilters): Record<string, string> {
+  return compactParams({
+    page: filters.page,
+    limit: filters.limit,
+    actor: filters.actor,
+    action: filters.action,
+    target_type: filters.targetType,
+    target_id: filters.targetId,
+    start_at: filters.startAt,
+    end_at: filters.endAt,
+  });
+}
+
+function compactParams(
+  values: Record<string, string | number | undefined>
+): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(values)
+      .filter(
+        (entry): entry is [string, string | number] => entry[1] !== undefined && entry[1] !== ''
+      )
+      .map(([key, value]) => [key, String(value)])
+  );
+}
