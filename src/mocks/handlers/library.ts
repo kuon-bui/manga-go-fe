@@ -1,6 +1,8 @@
 import { http, HttpResponse } from 'msw'
 
-const BASE = 'http://localhost:8080'
+import { API_PROXY_BASE_URL } from '@/lib/api-config'
+
+const BASE = `*${API_PROXY_BASE_URL}`
 
 const ratings = new Map<string, { id: string; score: number; createdAt: string; updatedAt: string }>([
   ['manga-1', { id: 'rating-1', score: 5, createdAt: '2025-01-01T00:00:00Z', updatedAt: '2025-01-01T00:00:00Z' }],

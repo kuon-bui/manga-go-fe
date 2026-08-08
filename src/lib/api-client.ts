@@ -1,3 +1,4 @@
+import { API_PROXY_BASE_URL } from '@/lib/api-config';
 import type { User } from '@/types/auth';
 import type {
   AdminUserSummary,
@@ -871,9 +872,7 @@ class ApiClient {
   }
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080';
-
-export const apiClient = new ApiClient(API_BASE_URL);
+export const apiClient = new ApiClient(API_PROXY_BASE_URL);
 
 function expectedVersionHeader(expectedVersion: string): HeadersInit {
   return expectedVersion ? { 'If-Match': expectedVersion } : {};

@@ -1295,7 +1295,7 @@ export function useNotificationPoller() {
 ```typescript
 import { useAuthStore } from '@/stores/use-auth-store';
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080/api/v1';
+const BASE_URL = '/api/proxy';
 
 class ApiClient {
   private async request<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -1342,7 +1342,7 @@ export const apiClient = new ApiClient();
 
 ```bash
 # .env.local
-NEXT_PUBLIC_API_URL=http://localhost:8080/api/v1
+BACKEND_INTERNAL_URL=http://localhost:8080
 NEXT_PUBLIC_GOOGLE_CLIENT_ID=...
 NEXT_PUBLIC_FACEBOOK_APP_ID=...
 ```

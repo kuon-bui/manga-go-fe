@@ -1,6 +1,8 @@
 import { type NextRequest, NextResponse } from 'next/server'
 
-const BACKEND = process.env.BACKEND_INTERNAL_URL ?? 'http://localhost:8080'
+import { requireBackendInternalUrl } from '@/lib/backend-config'
+
+const BACKEND = requireBackendInternalUrl()
 
 // Headers that must not be forwarded to the upstream backend
 const DROP_REQ = new Set(['host', 'origin', 'connection', 'transfer-encoding'])

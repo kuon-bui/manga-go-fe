@@ -326,7 +326,7 @@ const mutation = useMutation({
 
 ```bash
 # .env.local (create this file — never commit it)
-NEXT_PUBLIC_API_URL=http://localhost:8080/api/v1
+BACKEND_INTERNAL_URL=http://localhost:8080
 NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id
 NEXT_PUBLIC_FACEBOOK_APP_ID=your_facebook_app_id
 ```

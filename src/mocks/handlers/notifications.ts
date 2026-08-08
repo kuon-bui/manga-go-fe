@@ -1,9 +1,10 @@
 import { http, HttpResponse } from 'msw';
 
+import { API_PROXY_BASE_URL } from '@/lib/api-config';
 import type { Notification, PaginatedResponse } from '@/types';
 import { MOCK_NOTIFICATIONS } from '@/mocks/data';
 
-const BASE = 'http://localhost:8080';
+const BASE = `*${API_PROXY_BASE_URL}`;
 
 // Mutable in-memory state
 const notifications: Notification[] = [...MOCK_NOTIFICATIONS];
