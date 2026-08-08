@@ -372,15 +372,3 @@ function NotificationsTab() {
     </div>
   )
 }
-
-/* ── Notification row (legacy) ─────────────────────────────────────────────── */
-
-function NotifRow({ label, defaultChecked }: { label: string; defaultChecked?: boolean }) {
-  const [checked, setChecked] = useState(defaultChecked ?? false)
-  return (
-    <div className="flex items-center justify-between py-3 border-b border-border/60 last:border-0">
-      <Label className="cursor-pointer text-sm font-medium text-foreground">{label}</Label>
-      <Switch checked={checked} onCheckedChange={setChecked} aria-label={label} />
-    </div>
-  )
-}

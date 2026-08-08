@@ -1,0 +1,25 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+# Releases create tags, so an in-flight run must never be cancelled.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      # Configuration lives in release-please-config.json / .release-please-manifest.json.
+      # release-type "node" keeps the version field in package.json in sync.
+      - name: Run release-please
+        uses: googleapis/release-please-action@v4
