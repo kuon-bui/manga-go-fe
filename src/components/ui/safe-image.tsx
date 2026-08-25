@@ -1,25 +1,25 @@
-'use client'
+'use client';
 
-import NextImage, { type ImageProps } from 'next/image'
+import NextImage, { type ImageProps } from 'next/image';
 
 function isLocalOrBlobSource(src: ImageProps['src']): boolean {
-  if (typeof src !== 'string') return false
-  if (!src.trim()) return false
+  if (typeof src !== 'string') return false;
+  if (!src.trim()) return false;
 
-  if (src.startsWith('blob:') || src.startsWith('data:')) return true
+  if (src.startsWith('blob:') || src.startsWith('data:')) return true;
 
   // Proxy paths must be unoptimized — the image optimizer makes cookie-less requests
-  if (src.startsWith('/api/proxy/')) return true
+  if (src.startsWith('/api/')) return true;
 
   // Other relative paths use normal optimization flow
-  if (src.startsWith('/')) return false
+  if (src.startsWith('/')) return false;
 
   try {
-    const url = new URL(src)
-    const host = url.hostname
+    const url = new URL(src);
+    const host = url.hostname;
 
     if (host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0') {
-      return true
+      return true;
     }
 
     // Common private network ranges used by local backends
@@ -43,35 +43,35 @@ function isLocalOrBlobSource(src: ImageProps['src']): boolean {
       host.startsWith('172.30.') ||
       host.startsWith('172.31.')
     ) {
-      return true
+      return true;
     }
   } catch {
     // Non-URL values (relative paths) should use normal optimization flow.
   }
 
-  return false
+  return false;
 }
 
 function resolveBackendUrl(src: ImageProps['src']): ImageProps['src'] {
-  if (typeof src !== 'string') return src
-  if (src.startsWith('blob:') || src.startsWith('data:')) return src
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:8080'
-  if (src.startsWith(backendUrl)) return src.replace(backendUrl, '/api/proxy')
+  if (typeof src !== 'string') return src;
+  if (src.startsWith('blob:') || src.startsWith('data:')) return src;
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:8080';
+  if (src.startsWith(backendUrl)) return src.replace(backendUrl, '/api');
   // Backend content paths (e.g. /files/content/...) must be proxied
-  if (src.startsWith('/files/')) return `/api/proxy${src}`
+  if (src.startsWith('/files/')) return `/api${src}`;
   // Bare relative paths without leading slash (e.g. "comics/slug/cover/...")
-  if (!src.startsWith('/') && !src.startsWith('http')) return `/api/proxy/${src}`
-  return src
+  if (!src.startsWith('/') && !src.startsWith('http')) return `/api/${src}`;
+  return src;
 }
 
 export function SafeImage(props: ImageProps) {
-  const { src, unoptimized, ...rest } = props
+  const { src, unoptimized, ...rest } = props;
 
   if (!src || (typeof src === 'string' && !src.trim())) {
-    return null
+    return null;
   }
 
-  const resolvedSrc = resolveBackendUrl(src)
+  const resolvedSrc = resolveBackendUrl(src);
 
   return (
     <NextImage
@@ -79,5 +79,5 @@ export function SafeImage(props: ImageProps) {
       unoptimized={unoptimized ?? isLocalOrBlobSource(resolvedSrc)}
       {...rest}
     />
-  )
+  );
 }

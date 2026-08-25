@@ -3,12 +3,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
+import { API_PROXY_BASE_URL } from '@/lib/api-config';
 import { apiClient } from '@/lib/api-client';
 import { queryKeys } from '@/lib/query-keys';
 import { useAuthStore } from '@/stores/auth-store';
 import type { Notification, NotificationType, PaginatedResponse } from '@/types';
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080';
 
 const notificationQueryOptions = {
   staleTime: Infinity,
@@ -441,7 +440,7 @@ export function useNotificationStream(isEnabled = true) {
       // Close any existing connection
       esRef.current?.close();
 
-      const es = new EventSource(`${API_BASE}/notifications/stream`, {
+      const es = new EventSource(`${API_PROXY_BASE_URL}/notifications/stream`, {
         withCredentials: true,
       });
       esRef.current = es;
