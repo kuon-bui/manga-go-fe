@@ -12,13 +12,13 @@ afterAll(() => server.close());
 
 describe('proxy-aware mock handlers', () => {
   it('handles notification requests sent through the API proxy', async () => {
-    const response = await fetch('http://frontend.test/api/proxy/notifications');
+    const response = await fetch('http://frontend.test/api/notifications');
 
     expect(response.status).toBe(200);
   });
 
   it('handles library requests sent through the API proxy', async () => {
-    const response = await fetch('http://frontend.test/api/proxy/ratings/comics/manga-1');
+    const response = await fetch('http://frontend.test/api/ratings/comics/manga-1');
 
     expect(response.status).toBe(200);
   });

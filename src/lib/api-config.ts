@@ -1,1 +1,1 @@
-export const API_PROXY_BASE_URL = '/api/proxy';
+export const API_PROXY_BASE_URL = '/api';

@@ -18,10 +18,10 @@ async function proxy(req: NextRequest, segments: string[]): Promise<NextResponse
     if (!DROP_REQ.has(k.toLowerCase())) reqHeaders.set(k, v)
   })
   // Spoof origin as localhost so the backend treats this as a same-site request:
-  //   → SameSite=Lax cookies (no Secure flag required, works over plain HTTP)
-  //   → CORS: localhost is always in the backend's allowed-origins list
+  //   -> SameSite=Lax cookies (no Secure flag required, works over plain HTTP)
+  //   -> CORS: localhost is always in the backend's allowed-origins list
   reqHeaders.set('origin', 'http://localhost:3000')
-  // Tell backend not to compress — proxy streams raw bytes; double-decompression breaks browser
+  // Tell backend not to compress -- proxy streams raw bytes; double-decompression breaks browser
   reqHeaders.set('accept-encoding', 'identity')
 
   const hasBody = req.method !== 'GET' && req.method !== 'HEAD'
@@ -42,7 +42,7 @@ async function proxy(req: NextRequest, segments: string[]): Promise<NextResponse
     }
   })
 
-  // Forward each Set-Cookie separately — Headers.append keeps them distinct
+  // Forward each Set-Cookie separately -- Headers.append keeps them distinct
   const raw = upstream.headers as Headers & { getSetCookie?(): string[] }
   for (const cookie of raw.getSetCookie?.() ?? []) {
     resHeaders.append('set-cookie', cookie)

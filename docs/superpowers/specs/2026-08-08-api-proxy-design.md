@@ -6,18 +6,18 @@ Route every browser-originated backend API request through the Next.js same-orig
 
 ## Decisions
 
-- The frontend API base URL is the fixed relative path `/api/proxy`.
+- The frontend API base URL is the fixed relative path `/api`.
 - `NEXT_PUBLIC_API_URL` is removed from frontend runtime configuration.
 - The proxy requires the server-only `BACKEND_INTERNAL_URL` environment variable.
 - Missing or blank `BACKEND_INTERNAL_URL` is a configuration error. There is no localhost fallback.
-- Existing image URL resolution and image proxy routes remain unchanged.
+- `SafeImage` rewrites backend image paths to `/api`, while the dedicated `/api/files/content/[...path]` route continues to take precedence.
 
 ## Request Flow
 
-Normal API calls, multipart uploads, and the notification SSE connection use paths under `/api/proxy`:
+Normal API calls, multipart uploads, and the notification SSE connection use paths under `/api`:
 
 ```text
-Browser -> Next.js /api/proxy/<path> -> BACKEND_INTERNAL_URL/<path>
+Browser -> Next.js /api/<path> -> BACKEND_INTERNAL_URL/<path>
 ```
 
 The existing catch-all proxy continues to forward the HTTP method, query string, request body, supported headers, response stream, status, and cookies. SSE uses the same streaming proxy route.
@@ -40,7 +40,7 @@ This change does not modify `SafeImage`, `/api/files/content/[...path]`, or any 
 
 Automated tests will verify:
 
-- API client requests target `/api/proxy/<endpoint>`.
+- API client requests target `/api/<endpoint>`.
 - Missing or blank `BACKEND_INTERNAL_URL` produces the expected configuration error.
 - A configured backend URL is returned unchanged for proxy use.
 
@@ -51,4 +51,4 @@ The final verification runs the focused tests, the full test suite, linting, and
 - No normal API, upload, or notification SSE request uses `NEXT_PUBLIC_API_URL` or a direct backend origin.
 - The general API proxy has no backend URL fallback.
 - Missing backend configuration fails with a clear error.
-- Image-related source files are unchanged.
+- Image requests remain same-origin and resolve through the dedicated file-content route when applicable.

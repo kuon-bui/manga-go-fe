@@ -34,12 +34,14 @@ npx shadcn@latest init
 ```
 
 Select during init:
+
 - **Style:** Default
 - **Base color:** Slate
 - **CSS variables:** Yes (required for theme system — see Section 3)
 - **RSC:** Yes
 
 This creates/updates:
+
 - `src/components/ui/` — component output folder
 - `src/lib/utils.ts` — adds `cn()` helper (already in project ✅)
 - `components.json` — shadcn config file (do not delete)
@@ -50,11 +52,13 @@ This creates/updates:
 Install components as each phase requires them. Never install components not yet needed.
 
 **Phase 1 (Auth & Shell):**
+
 ```bash
 npx shadcn@latest add button input label card separator
 ```
 
 **Phase 2 (Content Discovery):**
+
 ```bash
 npx shadcn@latest add badge skeleton scroll-area checkbox radio-group select
 npx shadcn@latest add sheet          # filter panel drawer on mobile
@@ -63,6 +67,7 @@ npx shadcn@latest add sonner         # toast notifications
 ```
 
 **Phase 3 (Detail Pages):**
+
 ```bash
 npx shadcn@latest add dialog tabs avatar textarea progress alert
 npx shadcn@latest add dropdown-menu  # chapter list actions menu
@@ -70,6 +75,7 @@ npx shadcn@latest add popover        # rating widget popover
 ```
 
 **Phase 4 (Readers):**
+
 ```bash
 npx shadcn@latest add slider         # typography controls (font size, line height)
 npx shadcn@latest add drawer         # mobile reader settings bottom sheet
@@ -77,6 +83,7 @@ npx shadcn@latest add switch         # toggle controls in settings
 ```
 
 **Phase 5 (Dashboard):**
+
 ```bash
 npx shadcn@latest add table          # member table, uploads table
 npx shadcn@latest add alert-dialog   # delete confirmation dialogs
@@ -84,32 +91,32 @@ npx shadcn@latest add alert-dialog   # delete confirmation dialogs
 
 ### 1.4 Component Mapping
 
-| UI Element | shadcn Component | Custom? |
-|---|---|---|
-| Buttons | `Button` (`default`, `outline`, `ghost`, `destructive`, `link`) | No |
-| Text inputs | `Input`, `Textarea`, `Label` | No |
-| Cards | `Card`, `CardHeader`, `CardTitle`, `CardContent`, `CardFooter` | No |
-| Badges (status, type) | `Badge` + custom variants via `cva` | Extend |
-| User avatars | `Avatar`, `AvatarImage`, `AvatarFallback` | No |
-| Modals/Dialogs | `Dialog`, `DialogContent`, `DialogHeader`, `DialogTitle` | No |
-| Confirmation dialogs | `AlertDialog` | No |
-| Bottom sheet (mobile) | `Drawer` (vaul, via shadcn) | No |
-| Side panels (filter, settings) | `Sheet`, `SheetContent` | No |
-| Tab navigation | `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent` | No |
-| Loading skeletons | `Skeleton` | No |
-| Toast notifications | `Sonner` (`toast()` function) | No |
-| Range sliders | `Slider` (reader typography controls) | No |
-| Dropdowns / selects | `Select`, `DropdownMenu` | No |
-| Search with suggestions | `Command`, `CommandInput`, `CommandList` | No |
-| Chapter list actions | `DropdownMenu` | No |
-| Tables (dashboard) | `Table`, `TableHeader`, `TableRow`, `TableCell` | No |
-| Scroll area (long lists) | `ScrollArea` | No |
-| Toggles | `Switch` | No |
-| Checkboxes / radios | `Checkbox`, `RadioGroup` | No |
-| Reading progress bar | — | **Custom** (`progress-bar.tsx`) |
-| Star rating widget | — | **Custom** (`star-rating.tsx`) |
-| Bottom nav (mobile) | — | **Custom** (`bottom-nav.tsx`) |
-| Manga page image | — | **Custom** (`manga-page-image.tsx`) |
+| UI Element                     | shadcn Component                                                | Custom?                             |
+| ------------------------------ | --------------------------------------------------------------- | ----------------------------------- |
+| Buttons                        | `Button` (`default`, `outline`, `ghost`, `destructive`, `link`) | No                                  |
+| Text inputs                    | `Input`, `Textarea`, `Label`                                    | No                                  |
+| Cards                          | `Card`, `CardHeader`, `CardTitle`, `CardContent`, `CardFooter`  | No                                  |
+| Badges (status, type)          | `Badge` + custom variants via `cva`                             | Extend                              |
+| User avatars                   | `Avatar`, `AvatarImage`, `AvatarFallback`                       | No                                  |
+| Modals/Dialogs                 | `Dialog`, `DialogContent`, `DialogHeader`, `DialogTitle`        | No                                  |
+| Confirmation dialogs           | `AlertDialog`                                                   | No                                  |
+| Bottom sheet (mobile)          | `Drawer` (vaul, via shadcn)                                     | No                                  |
+| Side panels (filter, settings) | `Sheet`, `SheetContent`                                         | No                                  |
+| Tab navigation                 | `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent`                | No                                  |
+| Loading skeletons              | `Skeleton`                                                      | No                                  |
+| Toast notifications            | `Sonner` (`toast()` function)                                   | No                                  |
+| Range sliders                  | `Slider` (reader typography controls)                           | No                                  |
+| Dropdowns / selects            | `Select`, `DropdownMenu`                                        | No                                  |
+| Search with suggestions        | `Command`, `CommandInput`, `CommandList`                        | No                                  |
+| Chapter list actions           | `DropdownMenu`                                                  | No                                  |
+| Tables (dashboard)             | `Table`, `TableHeader`, `TableRow`, `TableCell`                 | No                                  |
+| Scroll area (long lists)       | `ScrollArea`                                                    | No                                  |
+| Toggles                        | `Switch`                                                        | No                                  |
+| Checkboxes / radios            | `Checkbox`, `RadioGroup`                                        | No                                  |
+| Reading progress bar           | —                                                               | **Custom** (`progress-bar.tsx`)     |
+| Star rating widget             | —                                                               | **Custom** (`star-rating.tsx`)      |
+| Bottom nav (mobile)            | —                                                               | **Custom** (`bottom-nav.tsx`)       |
+| Manga page image               | —                                                               | **Custom** (`manga-page-image.tsx`) |
 
 ### 1.5 Extending shadcn Components
 
@@ -128,13 +135,17 @@ const badgeVariants = cva(
         destructive: 'border-transparent bg-destructive text-destructive-foreground',
         outline: 'text-foreground',
         // Manga Go custom: content status
-        ongoing: 'border-transparent bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-        completed: 'border-transparent bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-        hiatus: 'border-transparent bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+        ongoing:
+          'border-transparent bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+        completed:
+          'border-transparent bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+        hiatus:
+          'border-transparent bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
         cancelled: 'border-transparent bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
         // Manga Go custom: content type
         manga: 'border-transparent bg-sky-100 text-sky-800 dark:bg-sky-900 dark:text-sky-200',
-        novel: 'border-transparent bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+        novel:
+          'border-transparent bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
       },
     },
     defaultVariants: { variant: 'default' },
@@ -152,7 +163,7 @@ shadcn/ui uses CSS variables for theming which integrate with Tailwind's `class`
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
-    --primary: 199 89% 48%;       /* sky-500 — matches project primary */
+    --primary: 199 89% 48%; /* sky-500 — matches project primary */
     /* ... more variables ... */
   }
   .dark {
@@ -169,14 +180,14 @@ shadcn/ui uses CSS variables for theming which integrate with Tailwind's `class`
 
 Use the right shadcn primitive for each interaction pattern:
 
-| Pattern | Component | When |
-|---|---|---|
-| Confirmation (irreversible action) | `AlertDialog` | Delete chapter, delete group |
-| Form modal (add/edit) | `Dialog` | Rate title, invite member |
-| Mobile filter panel (bottom) | `Drawer` | Search filters on mobile |
-| Desktop settings panel (side) | `Sheet` side="right" | Reader settings on desktop |
-| Mobile reader settings (bottom) | `Drawer` | Reader settings on mobile |
-| Notification dropdown | Custom (absolute positioned panel) | Notification bell |
+| Pattern                            | Component                          | When                         |
+| ---------------------------------- | ---------------------------------- | ---------------------------- |
+| Confirmation (irreversible action) | `AlertDialog`                      | Delete chapter, delete group |
+| Form modal (add/edit)              | `Dialog`                           | Rate title, invite member    |
+| Mobile filter panel (bottom)       | `Drawer`                           | Search filters on mobile     |
+| Desktop settings panel (side)      | `Sheet` side="right"               | Reader settings on desktop   |
+| Mobile reader settings (bottom)    | `Drawer`                           | Reader settings on mobile    |
+| Notification dropdown              | Custom (absolute positioned panel) | Notification bell            |
 
 ---
 
@@ -349,6 +360,7 @@ src/
 ### 1.2 Server vs. Client Component Boundaries
 
 **Server Components (default — no `'use client'`):**
+
 - All page files (`page.tsx`) that fetch initial data
 - `title-header.tsx` — static metadata display
 - `synopsis.tsx` — static text (only JavaScript for expand toggle)
@@ -358,6 +370,7 @@ src/
 - `footer.tsx`
 
 **Client Components (require `'use client'`):**
+
 - All form components (login-form, register-form, filter-panel, upload forms)
 - All interactive readers (novel-reader, manga-viewer and their sub-components)
 - All store-connected components (action-buttons, notification-bell, library-controls)
@@ -365,6 +378,7 @@ src/
 - Hooks-using leaf components (comment-form, rating-modal, avatar-crop-modal)
 
 **Pattern: Server Shell + Client Island**
+
 ```typescript
 // app/(main)/manga/[slug]/page.tsx  — Server Component
 export default async function MangaDetailPage({ params }: { params: { slug: string } }) {
@@ -384,6 +398,7 @@ export default async function MangaDetailPage({ params }: { params: { slug: stri
 ### 1.3 Key Compound Component Patterns
 
 **Reader Toolbar (Compound):**
+
 ```typescript
 // Usage in novel-reader.tsx
 <NovelToolbar>
@@ -395,6 +410,7 @@ export default async function MangaDetailPage({ params }: { params: { slug: stri
 ```
 
 **Comment Thread (Recursive):**
+
 ```typescript
 // comment-thread.tsx
 function CommentThread({ comment, depth = 0 }: CommentThreadProps) {
@@ -421,6 +437,7 @@ function CommentThread({ comment, depth = 0 }: CommentThreadProps) {
 The project already uses Tailwind's `class` dark mode strategy. The `useThemeStore` will manage the `dark` class on the `<html>` element.
 
 **Store: `src/stores/use-theme-store.ts`**
+
 ```typescript
 'use client';
 
@@ -445,7 +462,8 @@ export const useThemeStore = create<ThemeState>()(
         appTheme: 'system',
         readerTheme: 'day',
         setAppTheme: (theme: AppTheme) => set({ appTheme: theme }, false, 'setAppTheme'),
-        setReaderTheme: (theme: ReaderTheme) => set({ readerTheme: theme }, false, 'setReaderTheme'),
+        setReaderTheme: (theme: ReaderTheme) =>
+          set({ readerTheme: theme }, false, 'setReaderTheme'),
         resolvedAppTheme: () => {
           const { appTheme } = get();
           if (appTheme === 'system') {
@@ -465,6 +483,7 @@ export const useThemeStore = create<ThemeState>()(
 ```
 
 **Provider: `src/providers/theme-provider.tsx`**
+
 ```typescript
 'use client';
 
@@ -501,6 +520,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 Reader themes apply CSS custom properties to the `.reader-root` element. This isolates reader theming from the app-level dark mode.
 
 **`src/app/globals.css` additions:**
+
 ```css
 .reader-root[data-theme='day'] {
   --reader-bg: #ffffff;
@@ -525,6 +545,7 @@ Reader themes apply CSS custom properties to the `.reader-root` element. This is
 ```
 
 **Usage in `novel-reader.tsx`:**
+
 ```typescript
 const readerTheme = useThemeStore((state) => state.readerTheme);
 
@@ -549,6 +570,7 @@ return (
 ### 3.1 Novel Reader Store
 
 **`src/stores/use-novel-reader-store.ts`**
+
 ```typescript
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
@@ -558,9 +580,9 @@ type TextWidth = 'narrow' | 'medium' | 'wide';
 
 interface NovelReaderState {
   fontFamily: FontFamily;
-  fontSize: number;          // px: 14–24
-  lineHeight: number;        // 1.4–2.2
-  paragraphSpacing: number;  // px: 0–32
+  fontSize: number; // px: 14–24
+  lineHeight: number; // 1.4–2.2
+  paragraphSpacing: number; // px: 0–32
   textWidth: TextWidth;
   setFontFamily: (_v: FontFamily) => void;
   setFontSize: (_v: number) => void;
@@ -603,6 +625,7 @@ export const useNovelReaderStore = create<NovelReaderState>()(
 ### 3.2 Manga Viewer Store
 
 **`src/stores/use-manga-viewer-store.ts`**
+
 ```typescript
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
@@ -614,9 +637,9 @@ interface MangaViewerState {
   readingMode: ReadingMode;
   currentPage: number;
   totalPages: number;
-  zoom: number;             // 1.0 = 100%
+  zoom: number; // 1.0 = 100%
   imageQuality: ImageQuality;
-  preloadQueue: string[];   // URLs pre-fetched
+  preloadQueue: string[]; // URLs pre-fetched
   setReadingMode: (_mode: ReadingMode) => void;
   setCurrentPage: (_page: number) => void;
   setTotalPages: (_total: number) => void;
@@ -659,6 +682,7 @@ export const useMangaViewerStore = create<MangaViewerState>()(
 ### 3.3 Scroll-to-Progress Tracking (Novel Reader)
 
 **`src/hooks/use-scroll-progress.ts`**
+
 ```typescript
 'use client';
 
@@ -700,12 +724,13 @@ export function useScrollProgress(chapterId: string) {
 ```
 
 **`src/stores/use-reading-progress-store.ts`**
+
 ```typescript
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 
 interface ReadingProgressState {
-  progress: Record<string, number>;  // chapterId → scroll %
+  progress: Record<string, number>; // chapterId → scroll %
   saveProgress: (_chapterId: string, _progress: number) => void;
   getProgress: (_chapterId: string) => number;
 }
@@ -716,7 +741,11 @@ export const useReadingProgressStore = create<ReadingProgressState>()(
       (set, get) => ({
         progress: {},
         saveProgress: (chapterId, p) =>
-          set((state) => ({ progress: { ...state.progress, [chapterId]: p } }), false, 'saveProgress'),
+          set(
+            (state) => ({ progress: { ...state.progress, [chapterId]: p } }),
+            false,
+            'saveProgress'
+          ),
         getProgress: (chapterId) => get().progress[chapterId] ?? 0,
       }),
       { name: 'reading-progress', partialize: (state) => ({ progress: state.progress }) }
@@ -729,6 +758,7 @@ export const useReadingProgressStore = create<ReadingProgressState>()(
 ### 3.4 Image Pre-Fetching Logic (Manga Viewer)
 
 **`src/hooks/use-image-preloader.ts`**
+
 ```typescript
 'use client';
 
@@ -763,6 +793,7 @@ export function useImagePreloader(pageUrls: string[], currentPage: number) {
 ### 3.5 Keyboard Shortcuts Hook
 
 **`src/hooks/use-keyboard-shortcuts.ts`**
+
 ```typescript
 'use client';
 
@@ -807,6 +838,7 @@ export function useKeyboardShortcuts(shortcuts: ShortcutMap, enabled = true) {
 ### 4.1 Permission Constants
 
 **`src/lib/permissions.ts`**
+
 ```typescript
 import type { UserRole } from '@/types';
 
@@ -827,8 +859,25 @@ const ROLE_PERMISSIONS: Record<AppRole, Permission[]> = {
   guest: [],
   user: ['follow', 'rate', 'comment', 'report'],
   group_member: ['follow', 'rate', 'comment', 'report', 'upload_chapter'],
-  group_admin: ['follow', 'rate', 'comment', 'report', 'upload_chapter', 'manage_group', 'create_title'],
-  admin: ['follow', 'rate', 'comment', 'report', 'upload_chapter', 'manage_group', 'create_title', 'admin_panel'],
+  group_admin: [
+    'follow',
+    'rate',
+    'comment',
+    'report',
+    'upload_chapter',
+    'manage_group',
+    'create_title',
+  ],
+  admin: [
+    'follow',
+    'rate',
+    'comment',
+    'report',
+    'upload_chapter',
+    'manage_group',
+    'create_title',
+    'admin_panel',
+  ],
 };
 
 export function hasPermission(role: AppRole, permission: Permission): boolean {
@@ -839,6 +888,7 @@ export function hasPermission(role: AppRole, permission: Permission): boolean {
 ### 4.2 Permission Hook
 
 **`src/hooks/use-permission.ts`**
+
 ```typescript
 'use client';
 
@@ -855,6 +905,7 @@ export function usePermission(permission: Permission): boolean {
 ### 4.3 PermissionGate Component
 
 **`src/components/shared/permission-gate.tsx`**
+
 ```typescript
 'use client';
 
@@ -885,6 +936,7 @@ export function PermissionGate({ permission, fallback = null, children }: Permis
 ### 4.4 Route-level Protection (Next.js Middleware)
 
 **`src/middleware.ts`**
+
 ```typescript
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
@@ -900,7 +952,9 @@ export function middleware(request: NextRequest) {
   const isGuestOnly = GUEST_ONLY_ROUTES.some((r) => pathname.startsWith(r));
 
   if (isProtected && !token) {
-    return NextResponse.redirect(new URL(`/login?redirect=${encodeURIComponent(pathname)}`, request.url));
+    return NextResponse.redirect(
+      new URL(`/login?redirect=${encodeURIComponent(pathname)}`, request.url)
+    );
   }
 
   if (isGuestOnly && token) {
@@ -921,21 +975,22 @@ export const config = {
 
 ### 5.1 Store Split Strategy
 
-| Store | Purpose | Persist |
-|---|---|---|
-| `useAuthStore` | User session, profile, token | Token only |
-| `useThemeStore` | App theme + reader theme | Yes |
-| `useReadingProgressStore` | Chapter scroll/page progress (all chapters) | Yes |
-| `useNovelReaderStore` | Novel typography + theme preferences | Yes |
-| `useMangaViewerStore` | Manga reading mode + quality preferences | Mode + quality only |
-| `useLibraryStore` | Optimistic follow/unfollow state | No (server is source of truth) |
-| `useNotificationStore` | Notification list + unread count | No |
+| Store                     | Purpose                                     | Persist                        |
+| ------------------------- | ------------------------------------------- | ------------------------------ |
+| `useAuthStore`            | User session, profile, token                | Token only                     |
+| `useThemeStore`           | App theme + reader theme                    | Yes                            |
+| `useReadingProgressStore` | Chapter scroll/page progress (all chapters) | Yes                            |
+| `useNovelReaderStore`     | Novel typography + theme preferences        | Yes                            |
+| `useMangaViewerStore`     | Manga reading mode + quality preferences    | Mode + quality only            |
+| `useLibraryStore`         | Optimistic follow/unfollow state            | No (server is source of truth) |
+| `useNotificationStore`    | Notification list + unread count            | No                             |
 
 ### 5.2 TanStack Query for Server Data
 
 Install: `@tanstack/react-query`
 
 **Query Key Conventions:**
+
 ```typescript
 // src/lib/query-keys.ts
 export const queryKeys = {
@@ -959,13 +1014,14 @@ export const queryKeys = {
 ```
 
 **Provider setup in `src/providers/app-providers.tsx`:**
+
 ```typescript
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5,  // 5 minutes
+      staleTime: 1000 * 60 * 5, // 5 minutes
       retry: 2,
     },
   },
@@ -975,6 +1031,7 @@ const queryClient = new QueryClient({
 ### 5.3 Optimistic Updates Pattern
 
 **Library follow/unfollow (optimistic):**
+
 ```typescript
 // In action-buttons.tsx
 const queryClient = useQueryClient();
@@ -1002,6 +1059,7 @@ const followMutation = useMutation({
 ### 5.4 Auth Store
 
 **`src/stores/use-auth-store.ts`**
+
 ```typescript
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
@@ -1048,15 +1106,15 @@ Add to `src/types/index.ts`:
 ```typescript
 export interface Comment {
   id: string;
-  contentId: string;        // mangaId or novelId
+  contentId: string; // mangaId or novelId
   contentType: 'manga' | 'novel';
-  parentId: string | null;  // null = top-level
+  parentId: string | null; // null = top-level
   author: Pick<User, 'id' | 'name' | 'avatar'>;
-  body: string;             // raw text with [spoiler] tags
+  body: string; // raw text with [spoiler] tags
   likeCount: number;
   isLikedByMe: boolean;
   replyCount: number;
-  replies?: Comment[];      // populated on expand
+  replies?: Comment[]; // populated on expand
   isDeleted: boolean;
   createdAt: string;
   editedAt: string | null;
@@ -1245,6 +1303,7 @@ export function ChapterList({ chapters }: { chapters: Chapter[] }) {
 ### 7.4 Notification Polling
 
 **`src/hooks/use-notification-poller.ts`**
+
 ```typescript
 'use client';
 
@@ -1292,10 +1351,11 @@ export function useNotificationPoller() {
 ### 8.1 API Client
 
 **`src/lib/api-client.ts`**
+
 ```typescript
 import { useAuthStore } from '@/stores/use-auth-store';
 
-const BASE_URL = '/api/proxy';
+const BASE_URL = '/api';
 
 class ApiClient {
   private async request<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -1325,14 +1385,18 @@ class ApiClient {
     return response.json() as Promise<T>;
   }
 
-  get<T>(path: string) { return this.request<T>(path); }
+  get<T>(path: string) {
+    return this.request<T>(path);
+  }
   post<T>(path: string, body?: unknown) {
     return this.request<T>(path, { method: 'POST', body: JSON.stringify(body) });
   }
   put<T>(path: string, body?: unknown) {
     return this.request<T>(path, { method: 'PUT', body: JSON.stringify(body) });
   }
-  delete<T>(path: string) { return this.request<T>(path, { method: 'DELETE' }); }
+  delete<T>(path: string) {
+    return this.request<T>(path, { method: 'DELETE' });
+  }
 }
 
 export const apiClient = new ApiClient();
@@ -1349,50 +1413,50 @@ NEXT_PUBLIC_FACEBOOK_APP_ID=...
 
 ### 8.3 API Endpoints Reference
 
-| Domain | Method | Path | Description |
-|---|---|---|---|
-| **Auth** | POST | `/auth/login` | Email/password login |
-| | POST | `/auth/register` | Register new account |
-| | POST | `/auth/logout` | Invalidate token |
-| | POST | `/auth/refresh` | Refresh access token |
-| | POST | `/auth/forgot-password` | Request reset email |
-| | POST | `/auth/reset-password` | Submit new password |
-| | GET | `/auth/oauth/:provider` | OAuth redirect |
-| **Users** | GET | `/users/:username` | User profile |
-| | PUT | `/users/me` | Update profile |
-| | POST | `/users/me/avatar` | Upload avatar |
-| **Manga** | GET | `/manga` | List with filters |
-| | GET | `/manga/:slug` | Detail |
-| | POST | `/manga` | Create (group admin+) |
-| | PUT | `/manga/:id` | Update |
-| **Novel** | GET | `/novels` | List with filters |
-| | GET | `/novels/:slug` | Detail |
-| **Chapters** | GET | `/manga/:id/chapters` | List chapters |
-| | GET | `/chapters/:id` | Chapter content (pages) |
-| | POST | `/manga/:id/chapters` | Upload chapter |
-| | PUT | `/chapters/:id` | Edit chapter |
-| | DELETE | `/chapters/:id` | Delete chapter |
-| **Library** | GET | `/library` | User's followed titles |
-| | POST | `/library/:mangaId` | Follow |
-| | DELETE | `/library/:mangaId` | Unfollow |
-| **Comments** | GET | `/comments?contentId=&page=` | List comments |
-| | POST | `/comments` | Post comment |
-| | PUT | `/comments/:id` | Edit comment |
-| | DELETE | `/comments/:id` | Delete comment |
-| | POST | `/comments/:id/like` | Toggle like |
-| | GET | `/comments/:id/replies` | Load replies |
-| **Ratings** | POST | `/ratings` | Submit rating |
-| | DELETE | `/ratings/:contentId` | Remove rating |
-| **Groups** | GET | `/groups` | User's groups |
-| | POST | `/groups` | Create group |
-| | GET | `/groups/:id` | Group detail |
-| | PUT | `/groups/:id` | Update group |
-| | DELETE | `/groups/:id` | Delete group |
-| | POST | `/groups/:id/members` | Invite member |
-| | DELETE | `/groups/:id/members/:userId` | Remove member |
-| **Notifications** | GET | `/notifications` | List |
-| | POST | `/notifications/read-all` | Mark all read |
-| | POST | `/notifications/:id/read` | Mark one read |
+| Domain            | Method | Path                          | Description             |
+| ----------------- | ------ | ----------------------------- | ----------------------- |
+| **Auth**          | POST   | `/auth/login`                 | Email/password login    |
+|                   | POST   | `/auth/register`              | Register new account    |
+|                   | POST   | `/auth/logout`                | Invalidate token        |
+|                   | POST   | `/auth/refresh`               | Refresh access token    |
+|                   | POST   | `/auth/forgot-password`       | Request reset email     |
+|                   | POST   | `/auth/reset-password`        | Submit new password     |
+|                   | GET    | `/auth/oauth/:provider`       | OAuth redirect          |
+| **Users**         | GET    | `/users/:username`            | User profile            |
+|                   | PUT    | `/users/me`                   | Update profile          |
+|                   | POST   | `/users/me/avatar`            | Upload avatar           |
+| **Manga**         | GET    | `/manga`                      | List with filters       |
+|                   | GET    | `/manga/:slug`                | Detail                  |
+|                   | POST   | `/manga`                      | Create (group admin+)   |
+|                   | PUT    | `/manga/:id`                  | Update                  |
+| **Novel**         | GET    | `/novels`                     | List with filters       |
+|                   | GET    | `/novels/:slug`               | Detail                  |
+| **Chapters**      | GET    | `/manga/:id/chapters`         | List chapters           |
+|                   | GET    | `/chapters/:id`               | Chapter content (pages) |
+|                   | POST   | `/manga/:id/chapters`         | Upload chapter          |
+|                   | PUT    | `/chapters/:id`               | Edit chapter            |
+|                   | DELETE | `/chapters/:id`               | Delete chapter          |
+| **Library**       | GET    | `/library`                    | User's followed titles  |
+|                   | POST   | `/library/:mangaId`           | Follow                  |
+|                   | DELETE | `/library/:mangaId`           | Unfollow                |
+| **Comments**      | GET    | `/comments?contentId=&page=`  | List comments           |
+|                   | POST   | `/comments`                   | Post comment            |
+|                   | PUT    | `/comments/:id`               | Edit comment            |
+|                   | DELETE | `/comments/:id`               | Delete comment          |
+|                   | POST   | `/comments/:id/like`          | Toggle like             |
+|                   | GET    | `/comments/:id/replies`       | Load replies            |
+| **Ratings**       | POST   | `/ratings`                    | Submit rating           |
+|                   | DELETE | `/ratings/:contentId`         | Remove rating           |
+| **Groups**        | GET    | `/groups`                     | User's groups           |
+|                   | POST   | `/groups`                     | Create group            |
+|                   | GET    | `/groups/:id`                 | Group detail            |
+|                   | PUT    | `/groups/:id`                 | Update group            |
+|                   | DELETE | `/groups/:id`                 | Delete group            |
+|                   | POST   | `/groups/:id/members`         | Invite member           |
+|                   | DELETE | `/groups/:id/members/:userId` | Remove member           |
+| **Notifications** | GET    | `/notifications`              | List                    |
+|                   | POST   | `/notifications/read-all`     | Mark all read           |
+|                   | POST   | `/notifications/:id/read`     | Mark one read           |
 
 ### 8.4 Error Handling Strategy
 
@@ -1535,4 +1599,4 @@ src/
 
 ---
 
-*For product requirements, user flows, and UX specifications, see [docs/PRD-MangaReader-MVP](./PRD-MangaReader-MVP.md).*
+_For product requirements, user flows, and UX specifications, see [docs/PRD-MangaReader-MVP](./PRD-MangaReader-MVP.md)._

@@ -27,6 +27,8 @@ DO NOT delete historical context if it is still relevant. Compress older complet
 
 ## 📂 Architectural Decisions
 
+- **2026-08-25** — The same-origin backend proxy is rooted at `/api/<path>` (without an extra `/proxy` segment). `src/app/api/[...path]/route.ts` forwards unmatched API paths; the more-specific `/api/files/content/[...path]` image route takes precedence.
+
 - **2026-04-16** — Komikku (Android manga reader) analyzed for UI/UX standards. Key patterns adopted:
   - Trending section = horizontal scroll row with rank number watermarks (#1–#10), not a grid
   - HeroSection: gradient text, entrance animations via `animate-in` / `fade-in`, animated bg blobs

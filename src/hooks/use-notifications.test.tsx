@@ -49,7 +49,7 @@ describe('useNotificationStream', () => {
       ),
     });
 
-    expect(EventSourceStub.instances[0]?.url).toBe('/api/proxy/notifications/stream');
+    expect(EventSourceStub.instances[0]?.url).toBe('/api/notifications/stream');
     expect(EventSourceStub.instances[0]?.options).toEqual({ withCredentials: true });
   });
 });

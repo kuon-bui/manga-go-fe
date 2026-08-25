@@ -23,7 +23,7 @@ describe('apiClient routing', () => {
     await apiClient.getAllGenres();
 
     expect(fetch).toHaveBeenCalledWith(
-      '/api/proxy/genres/all',
+      '/api/genres/all',
       expect.objectContaining({ credentials: 'include' })
     );
   });
